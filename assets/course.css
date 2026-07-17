@@ -193,3 +193,47 @@ footer { border-top: 1px solid var(--rule); background: var(--card); color: var(
   html { scroll-behavior: auto; }
   * { transition: none !important; }
 }
+
+/* Readability helpers for the beginner-friendly walkthrough */
+.plain {
+  margin: 16px 0;
+  border-left: 4px solid var(--green);
+  background: var(--green-soft);
+  border-radius: 0 10px 10px 0;
+  padding: 14px 18px;
+}
+.plain > span {
+  display: block;
+  color: var(--green-dark);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.plain p:last-child { margin-bottom: 0; }
+.does {
+  margin: 16px 0 8px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.does strong { color: var(--ink); }
+details.deep {
+  margin: 16px 0;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 10px 16px;
+}
+details.deep > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--saffron-text);
+  font-size: 14.5px;
+}
+details.deep[open] > summary { margin-bottom: 8px; }
+.term {
+  font-style: normal;
+  border-bottom: 1px dotted var(--saffron);
+  cursor: help;
+}
