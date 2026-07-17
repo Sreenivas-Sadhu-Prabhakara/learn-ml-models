@@ -56,43 +56,43 @@
 
     <section class="step">
       <span class="step-chip">CELL 1 OF 6</span>
-      <h2>Upload your data into Colab</h2>
-      <p>Open a new Colab notebook and keep it for the whole course. Upload one CSV or Excel file; the code reads the uploaded bytes directly.</p>
+      <h2>Load a dataset into Colab</h2>
+      <p>Open a new Colab notebook and keep it open for the whole course. This cell runs as-is on a small <strong>example dataset</strong> so you can see everything work first. When you are ready, switch to your own file with one small edit—the instructions are right there in the cell.</p>
 
     <div class="codecard">
       <div class="codecard-head">
-        <span>CELL 1 · UPLOAD + LOAD</span>
-        <button class="copy" type="button" aria-label="Copy UPLOAD + LOAD code">Copy</button>
+        <span>CELL 1 · LOAD YOUR DATA</span>
+        <button class="copy" type="button" aria-label="Copy LOAD YOUR DATA code">Copy</button>
       </div>
-      <pre><code>from google.colab import files
-import io
+      <pre><code>import io
 import pandas as pd
 import numpy as np
 
-uploaded = files.upload()
+# ---- OPTION A: follow along with the example (just run this cell) ----------
+# One row = one student. We will predict whether they passed.
+example_url = (
+    &quot;https://raw.githubusercontent.com/Sreenivas-Sadhu-Prabhakara/&quot;
+    &quot;learn-ml-models/main/data/study_habits.csv&quot;
+)
+df = pd.read_csv(example_url)
 
-if len(uploaded) != 1:
-    raise ValueError(&quot;Please upload exactly one CSV or Excel file.&quot;)
+# ---- OPTION B: use YOUR OWN file instead -----------------------------------
+# 1) Put a &quot;#&quot; in front of the &quot;df = pd.read_csv(example_url)&quot; line above.
+# 2) Delete the &quot;#&quot; in front of the four lines below.
+# 3) Run the cell and pick your .csv or .xlsx file when Colab asks.
+# from google.colab import files
+# uploaded = files.upload()
+# name = next(iter(uploaded))
+# df = pd.read_csv(io.BytesIO(uploaded[name])) if name.lower().endswith(&quot;.csv&quot;) else pd.read_excel(io.BytesIO(uploaded[name]))
 
-file_name, file_bytes = next(iter(uploaded.items()))
-lower_name = file_name.lower()
-
-if lower_name.endswith(&quot;.csv&quot;):
-    df = pd.read_csv(io.BytesIO(file_bytes))
-elif lower_name.endswith((&quot;.xlsx&quot;, &quot;.xls&quot;)):
-    df = pd.read_excel(io.BytesIO(file_bytes))
-else:
-    raise ValueError(&quot;Please upload a .csv, .xlsx, or .xls file.&quot;)
-
-print(f&quot;Loaded: {file_name}&quot;)
 print(f&quot;Rows: {len(df):,}&quot;)
-print(f&quot;Columns: {len(df.columns)}&quot;)
-display(df.head())</code></pre>
+print(f&quot;Columns: {list(df.columns)}&quot;)
+df.head()</code></pre>
     </div>
 
         <div class="checkpoint">
-          <span>CHECKPOINT</span>
-          <p>You should see your own file name, row count, column count, and first five rows. There is no course-wide expected number.</p>
+          <span>WHAT YOU SHOULD SEE</span>
+          <p>With the example, you should see <strong>Rows: 320</strong> and a table whose columns include <code>hours_studied</code>, <code>previous_score</code>, <code>participated</code>, and <code>passed</code>. With your own file you will see your own rows and column names instead—there is no &quot;correct&quot; number.</p>
         </div>
 
 
@@ -110,25 +110,33 @@ display(df.head())</code></pre>
         <span>CELL 2 · PROJECT CONFIGURATION</span>
         <button class="copy" type="button" aria-label="Copy PROJECT CONFIGURATION code">Copy</button>
       </div>
-      <pre><code># Explain the project before configuring the model.
-ROW_MEANING = &quot;One row represents ...&quot;
-PREDICTION_GOAL = &quot;I want to predict ...&quot;
-COSTLY_MISTAKE = &quot;The most costly wrong prediction would be ...&quot;
+      <pre><code># The values below already work for the EXAMPLE dataset, so you can run this
+# cell as-is. When you switch to your own file, change the lines marked  &lt;--
 
-# Choose the task and columns from your uploaded file.
-TASK = &quot;classification&quot;       # &quot;classification&quot; or &quot;regression&quot;
-TARGET = &quot;replace_with_your_target_column&quot;
-FEATURES = [
-    &quot;replace_with_a_feature_column&quot;,
-    # &quot;add_more_feature_columns&quot;,
+# In plain words, describe your project (these are notes for you):
+ROW_MEANING = &quot;one student and how they studied&quot;              # &lt;-- what is one row?
+PREDICTION_GOAL = &quot;whether the student passed&quot;                # &lt;-- what do you want to predict?
+COSTLY_MISTAKE = &quot;telling an at-risk student they will pass&quot;  # &lt;-- which mistake hurts most?
+
+# Is your answer a category or a number?
+TASK = &quot;classification&quot;       # &lt;-- &quot;classification&quot; for a category, &quot;regression&quot; for a number
+
+# Which column is the answer, and which columns are the clues?
+TARGET = &quot;passed&quot;             # &lt;-- the column you want to predict
+FEATURES = [                  # &lt;-- the columns used as clues (never include TARGET)
+    &quot;hours_studied&quot;,
+    &quot;attendance_percent&quot;,
+    &quot;previous_score&quot;,
+    &quot;sleep_hours&quot;,
+    &quot;participated&quot;,
 ]
 
-# Choose the split that imitates how new data will arrive.
+# How should new data arrive? Keep &quot;random&quot; unless you have a reason to change it.
 SPLIT_MODE = &quot;random&quot;         # &quot;random&quot;, &quot;time&quot;, or &quot;group&quot;
-TIME_COLUMN = None             # example: &quot;event_date&quot;
-GROUP_COLUMN = None            # example: &quot;customer_id&quot;
-TEST_SIZE = 0.25
-RANDOM_STATE = 42</code></pre>
+TIME_COLUMN = None             # only for a time split, e.g. &quot;event_date&quot;
+GROUP_COLUMN = None            # only for a group split, e.g. &quot;customer_id&quot;
+TEST_SIZE = 0.25              # keep 25% of rows for the final test
+RANDOM_STATE = 42            # any fixed number, so results repeat</code></pre>
     </div>
 
         <div class="checkpoint">

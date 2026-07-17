@@ -1073,8 +1073,14 @@ directories and are not overwritten by this script.
 ''')
 
 
+# The live pages under the repo root are hand-tuned for readability and are the
+# source of truth. This generator now writes into scripts/preview/ only, so it
+# can be used as a scaffold reference without ever clobbering the live course.
+PREVIEW = "scripts/preview"
+
+
 def write(relative: str, content: str) -> None:
-    destination = ROOT / relative
+    destination = ROOT / PREVIEW / relative
     destination.parent.mkdir(parents=True, exist_ok=True)
     lines = (line.rstrip() for line in content.rstrip().splitlines())
     destination.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -1090,4 +1096,4 @@ def build() -> None:
 
 if __name__ == "__main__":
     build()
-    print("Generated shared course foundation pages.")
+    print(f"Wrote scaffold reference into {PREVIEW}/ (live pages untouched).")
