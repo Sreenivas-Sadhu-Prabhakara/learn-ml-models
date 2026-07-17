@@ -21,43 +21,47 @@
   <header class="hero wrap">
     <p class="eyebrow">Start here · before every model</p>
     <h1>Make the course yours.</h1>
-    <p class="lede">Bring one tabular dataset and one question you care about. You will turn them into a reusable, leakage-safe Colab workflow—then keep the same notebook and swap models one lesson at a time.</p>
-    <div class="meta-chips"><span class="chip">CSV or Excel</span><span class="chip">classification or regression</span><span class="chip">~35 minutes</span></div>
+    <p class="lede">This page sets up the one notebook you will keep for the whole course. Together we will load some data, say plainly what you want to predict, split the rows fairly, tidy the columns, and get a first honest result to beat. Take it slowly—there is no rush.</p>
+    <div class="meta-chips"><span class="chip">CSV or Excel</span><span class="chip">predict a category or a number</span><span class="chip">~35 minutes</span></div>
+    <div class="plain"><span>Start with our example, then bring your own</span><p>You do not need any data of your own to begin. Every cell on this page already runs on a small set of example students. So the friendly way to start is: run all six cells in order and watch the whole thing work end to end. Once you have seen it, come back to Cell 1 and Cell 2 and point them at your own file—each one tells you exactly which line to change.</p></div>
   </header>
 
   <main class="wrap">
 
 <section class="scope-banner">
-  <h3>Do not start by choosing a model</h3>
-  <p>Start by defining what one row represents, what must be predicted, what information will exist at prediction time, and which mistake costs more. Those choices determine the target, features, split, and metric.</p>
+  <h3>You do not pick a model yet</h3>
+  <p>It is tempting to jump straight to a fancy model, but the important choices come first. Before anything else we decide four small things: what one row of your data stands for, what you are trying to predict, what information you would actually have on hand at the moment of predicting, and which kind of mistake would hurt you more. Answer those, and the rest of the setup almost writes itself.</p>
 </section>
 
 <section class="step">
   <span class="step-chip">DECISION 1</span>
-  <h2>Which learning path fits your target?</h2>
+  <h2>Is your answer a category or a number?</h2>
+  <p>The <em class="term" title="The one column you want the model to fill in—the answer.">target</em> is the column holding the answer you wish you could predict. Look at yours and ask a simple question: is each answer a label you could sort into buckets, or is it a measured number? That single question decides which path you are on. If you are not sure yet, the example on this page uses a category, so you can just follow along.</p>
   <div class="decision-grid">
-    <div class="decision-card"><h3>Classification</h3><p>The target is a category: approved/declined, species, status, segment, or another finite label.</p></div>
-    <div class="decision-card"><h3>Regression</h3><p>The target is a measured number: time, amount, demand, score, temperature, or another continuous quantity.</p></div>
-    <div class="decision-card"><h3>No target</h3><p>You have no answer column. This supervised path is not the right one; use the upcoming clustering path.</p></div>
+    <div class="decision-card"><h3>Classification</h3><p>The answer is a category—one of a limited set of labels. Think approved or declined, pass or fail, which of three plans, spam or not. If you can list the possible answers, you are here.</p></div>
+    <div class="decision-card"><h3>Regression</h3><p>The answer is a measured amount that can slide anywhere along a range—minutes, rupees, a score, a temperature, tomorrow's demand. If it makes sense to ask "how much" or "how many", you are here.</p></div>
+    <div class="decision-card"><h3>No answer column</h3><p>Your file has no column with the answer in it. That is fine, but this particular path needs one to learn from. The clustering lesson later is built for exactly this case.</p></div>
   </div>
 </section>
 
 <section class="step">
   <span class="step-chip">DECISION 2</span>
-  <h2>Choose an exam that resembles reality</h2>
+  <h2>How will you set the fair final exam?</h2>
+  <p>To find out if the model really learned anything, we hold back some rows as a <em class="term" title="A slice of rows the model never trains on, kept aside so its final score is honest.">test set</em>—a final exam the model never gets to study. The only question is how to pick which rows go into that exam. There are three honest styles. For the example on this page, and for most first projects, plain <strong>random</strong> is the right choice.</p>
   <div class="decision-grid">
-    <div class="decision-card"><h3>Random</h3><p>Use when rows are independent and future rows come from the same process as past rows.</p></div>
-    <div class="decision-card"><h3>Time</h3><p>Use when the real job predicts later events from earlier events. Training must come before testing.</p></div>
-    <div class="decision-card"><h3>Group</h3><p>Use when the same person, device, company, patient, or case can appear in several rows.</p></div>
+    <div class="decision-card"><h3>Random</h3><p>Shuffle the rows and deal some aside. Right when each row stands on its own and tomorrow's rows come from the same kind of situation as today's. This is the usual default.</p></div>
+    <div class="decision-card"><h3>Time</h3><p>Predict the future from the past. If the real job is to guess what happens next, then everything you train on must come from before the moment you are predicting—so older rows train, newer rows test.</p></div>
+    <div class="decision-card"><h3>Group</h3><p>Keep the same person on one side only. When one customer, patient, or device shows up in many rows, put all of that person's rows together in train or in test—never split across both.</p></div>
   </div>
-  <div class="callout danger"><h3>Why this matters</h3><p>A random split can leak information when related rows land on both sides. A high score from the wrong exam is worse than a modest score from the right one.</p></div>
+  <div class="callout danger"><h3>Why this matters</h3><p>If closely related rows end up on both sides of the exam, the model can quietly "recognise" test rows it has effectively already seen, and its score looks better than it is. A modest score from the honest exam tells you far more than an impressive score from a leaky one.</p></div>
 </section>
 
 
     <section class="step">
       <span class="step-chip">CELL 1 OF 6</span>
-      <h2>Load a dataset into Colab</h2>
-      <p>Open a new Colab notebook and keep it open for the whole course. This cell runs as-is on a small <strong>example dataset</strong> so you can see everything work first. When you are ready, switch to your own file with one small edit—the instructions are right there in the cell.</p>
+      <h2>Load some data into the notebook</h2>
+      <p>Open a new <a href="https://colab.research.google.com" target="_blank" rel="noopener">Google Colab</a> notebook—it is a free page in your browser where you paste and run these cells—and keep that one notebook open for the whole course. This first cell brings in a small set of <strong>example students</strong> so you can see everything work before touching your own data. When you are ready to use your own file, there is a clearly labelled Option B inside the cell that tells you exactly which line to change.</p>
+      <p class="does"><strong>What this does:</strong> it reads a spreadsheet of example students into the notebook and prints how many rows and which columns it found.</p>
 
     <div class="codecard">
       <div class="codecard-head">
@@ -91,8 +95,8 @@ df.head()</code></pre>
     </div>
 
         <div class="checkpoint">
-          <span>WHAT YOU SHOULD SEE</span>
-          <p>With the example, you should see <strong>Rows: 320</strong> and a table whose columns include <code>hours_studied</code>, <code>previous_score</code>, <code>participated</code>, and <code>passed</code>. With your own file you will see your own rows and column names instead—there is no &quot;correct&quot; number.</p>
+          <span>WHAT YOU'LL SEE</span>
+          <p>With the example, roughly <strong>Rows: 320</strong> and a small table whose columns include <code>hours_studied</code>, <code>previous_score</code>, <code>participated</code>, and <code>passed</code>. That first peek at the table is just to confirm the data arrived. When you swap in your own file you will see your own row count and your own column names—there is no &quot;correct&quot; number here, only a check that the load worked.</p>
         </div>
 
 
@@ -102,8 +106,11 @@ df.head()</code></pre>
 
     <section class="step">
       <span class="step-chip">CELL 2 OF 6</span>
-      <h2>Write your project card</h2>
-      <p>Replace every placeholder. Feature selection is deliberately explicit: automatic “use everything” code would quietly include IDs, future information, or the answer under another name.</p>
+      <h2>Fill in your project card</h2>
+      <p>This is where you tell the notebook what you are doing, in plain terms. The good news is that it already comes filled in for the example students, so you can run it untouched the first time. Here you will meet the <em class="term" title="The one column the model tries to predict—the answer.">target</em> (the answer column) and the <em class="term" title="The clue columns the model is allowed to look at when it guesses.">features</em> (the clue columns it is allowed to look at).</p>
+      <div class="plain"><span>In plain words</span><p>Target is the answer you want; features are the clues. On a class register, "did they pass?" is the target, and "hours studied", "attendance", and so on are the features. The golden rule: the answer is never allowed to be one of its own clues.</p></div>
+      <p>Notice you list the clue columns by hand rather than telling it to "use everything". That is on purpose. A "grab every column" shortcut would quietly hand the model things it should not have—an ID number, a fact that only exists after the answer is known, or the answer itself wearing a different label—and that quietly ruins the result.</p>
+      <p class="does"><strong>What this does:</strong> it writes down, in one place, what you are predicting, which column is the answer, and which columns are the clues.</p>
 
     <div class="codecard">
       <div class="codecard-head">
@@ -140,8 +147,8 @@ RANDOM_STATE = 42            # any fixed number, so results repeat</code></pre>
     </div>
 
         <div class="checkpoint">
-          <span>CHECKPOINT</span>
-          <p>Read the three sentences aloud. If the goal or costly mistake still sounds vague, pause before modelling.</p>
+          <span>WHAT YOU'LL SEE</span>
+          <p>This cell does not print anything—it just quietly stores your choices. That silence is fine. The real check is you: read the three plain-English sentences at the top aloud. If your goal or your "costly mistake" still sounds fuzzy when you say it, that is worth a pause. A clear sentence here saves you a lot of confusion later. (With the example, it is all set already.)</p>
         </div>
 
 
@@ -151,8 +158,11 @@ RANDOM_STATE = 42            # any fixed number, so results repeat</code></pre>
 
     <section class="step">
       <span class="step-chip">CELL 3 OF 6</span>
-      <h2>Validate and inspect before modelling</h2>
-      <p>This cell catches missing configuration, removes rows with no target, profiles feature types and missingness, and flags possible identifiers. A warning is a prompt to think, not an automatic deletion.</p>
+      <h2>Let the notebook double-check your setup</h2>
+      <p>Before we go any further, this cell reads back what you filled in and makes sure it holds together—that the answer column really exists, that the answer is not hiding in the clues, and so on. If something is off, it stops with a short message telling you what to fix.</p>
+      <div class="plain"><span>An error here is a helper, not a scolding</span><p>If this cell turns red, nothing is broken and you did nothing wrong. It is the notebook catching a small slip—usually a typo in a column name—before it could waste your time downstream. Read the one-line message, fix that one thing, and run it again. That is the whole loop.</p></div>
+      <p>It also gives you a quick tour of your columns: which are numbers, which hold gaps, and whether any column looks more like a name tag than a real clue. Nothing gets deleted; a flag just means "take a look".</p>
+      <p class="does"><strong>What this does:</strong> it checks your choices make sense, drops rows that have no answer, and shows a quick summary of every clue column.</p>
 
     <div class="codecard">
       <div class="codecard-head">
@@ -244,21 +254,25 @@ if possible_identifiers:
     </div>
 
         <div class="checkpoint">
-          <span>CHECKPOINT</span>
-          <p>Explain the target distribution and name any feature that might leak the answer or identify a row rather than describe it.</p>
+          <span>WHAT YOU'LL SEE</span>
+          <p>A short recap of your project, a "usable rows" count, and a small table describing each clue column—its type, how many blanks it has, and how many distinct values. For the example you will also see how the pass/fail answers split. Glance at it and try to say in your own words: is the answer lopsided toward one option, and does any clue look like it might secretly give the answer away or just tag a row rather than describe it? Your numbers will differ from the example, and that is expected.</p>
         </div>
 
 
     </section>
 
 
-<div class="callout green"><h3>Keep the real class distribution</h3><p>Do not force every classification dataset to be 50/50. Preserve the distribution by default, use stratification where possible, and inspect balanced accuracy and macro-F1 alongside accuracy. Class weights or resampling can help when the costs justify them, but they belong inside training folds—never in the held-out test set.</p></div>
+<div class="callout green"><h3>Let the real balance be what it is</h3><p>If your categories are lopsided—say most students pass—do not "fix" that by forcing it to a tidy 50/50. The imbalance is a true fact about your world, and the model should learn on it as it really is. Keep the natural mix, and later judge the model on more than raw accuracy so a lazy "always guess the common answer" cannot look good.
+<details class="deep"><summary>Going deeper (optional)</summary><p>When you keep the natural mix, plain accuracy can be misleading, so we also watch <em class="term" title="Accuracy averaged evenly across every category, so a rare one still counts.">balanced accuracy</em> and macro-F1, which treat each category fairly rather than letting the biggest one dominate. If the costs really justify it, techniques like class weights or resampling can help—but they belong strictly inside the training rows. Never reshape the held-out test set; the final exam has to reflect reality.</p></details></p></div>
 
 
     <section class="step">
       <span class="step-chip">CELL 4 OF 6</span>
-      <h2>Create the honest train/test split</h2>
-      <p>The learner—not the library—chooses the split mode. Classification uses stratification when possible; time and group modes protect their real-world boundaries.</p>
+      <h2>Set aside the fair final exam</h2>
+      <p>Now we actually carve off the <em class="term" title="Rows kept aside for the final exam, never used for learning.">test set</em>—the rows the model will never learn from—using the split style you picked in Decision 2. You are the one choosing the style, on purpose, because only you know how your data behaves in the real world.</p>
+      <div class="plain"><span>Why hold rows back at all?</span><p>If you graded the model on the same rows it studied, of course it would look brilliant—it already saw the answers. Holding some rows aside gives it a genuine final exam on rows it has never met, which is the only fair way to know whether it truly learned or just memorised.</p></div>
+      <p>A quick reminder of the three styles: <strong>random</strong> shuffles the rows and deals some aside; <strong>time</strong> trains on the past and tests on the future; <strong>group</strong> keeps every row belonging to the same person or case entirely on one side. The example uses random.</p>
+      <p class="does"><strong>What this does:</strong> it splits your rows into a training pile the model learns from and a testing pile it is graded on, using the style you chose.</p>
 
     <div class="codecard">
       <div class="codecard-head">
@@ -362,8 +376,8 @@ elif SPLIT_MODE == &quot;group&quot;:
     </div>
 
         <div class="checkpoint">
-          <span>CHECKPOINT</span>
-          <p>Training rows plus testing rows should equal the usable rows. A group split should report zero shared groups. A time split should put all test dates after the training boundary.</p>
+          <span>WHAT YOU'LL SEE</span>
+          <p>Two counts, the training rows and the testing rows, which should add up to your usable rows from Cell 3—for the example that is roughly 240 for training and 80 for testing. If you chose a group split, it should report zero shared groups across the two piles (nobody is on both sides). A time split should show every test date falling after the training cutoff. Your own totals will differ; what matters is that the two piles add up and the boundary is clean.</p>
         </div>
 
 
@@ -373,8 +387,11 @@ elif SPLIT_MODE == &quot;group&quot;:
 
     <section class="step">
       <span class="step-chip">CELL 5 OF 6</span>
-      <h2>Prepare mixed data without leakage</h2>
-      <p>The reusable preprocessor learns medians, categories, encodings, and scales from the training fold only. Numeric and categorical columns can coexist; unseen categories are handled safely.</p>
+      <h2>Get the columns ready for a model</h2>
+      <p>Models are fussy eaters: they want every cell filled in, every word turned into a number, and the numbers on a comparable scale. This cell builds a small reusable helper, <code>make_preprocessor(...)</code>, that does all of that tidying for you.</p>
+      <div class="plain"><span>What the preprocessor does</span><p>Three quiet jobs. It <strong>fills blank cells</strong> with a sensible stand-in so no gaps remain. It <strong>turns words into numbers</strong>, because a model cannot do arithmetic on the word "yes". And it <strong>puts numbers on a fair scale</strong> so a column measured in thousands does not shout over a column measured in single digits. Crucially, it learns how to do all this from the <em class="term" title="The rows the model is allowed to study.">training rows only</em>—it never peeks at the test rows, so the final exam stays honest.</p></div>
+      <p>It handles number columns and word columns side by side, and if a brand-new category shows up in the test rows that it never saw in training, it shrugs it off safely instead of crashing.</p>
+      <p class="does"><strong>What this does:</strong> it builds a reusable tidy-up step that fills blanks, turns words into numbers, and evens out the scales—learning only from the training rows.</p>
 
     <div class="codecard">
       <div class="codecard-head">
@@ -443,8 +460,9 @@ def make_preprocessor(scale_numeric=False):
     </div>
 
         <div class="checkpoint">
-          <span>CHECKPOINT</span>
-          <p>Review the detected numeric and categorical lists. Raw dates, free text, and high-cardinality labels usually need deliberate feature engineering before continuing.</p>
+          <span>WHAT YOU'LL SEE</span>
+          <p>Two short lists: the columns it treated as numbers and the ones it treated as words. Take a second to check the sorting looks right for your data. For the example, the study columns land in the number list. If a column has a huge number of distinct text values, it gets gently flagged for a look—your own file may or may not show that, and either way it is just a heads-up.
+          <details class="deep"><summary>Going deeper (optional)</summary><p>Raw dates, free-form text, and columns with hundreds of distinct labels usually deserve some hand-crafting before they make good clues—turning a date into "day of week", for instance. You can leave that for later; the helper will still run without it.</p></details></p>
         </div>
 
 
@@ -454,8 +472,11 @@ def make_preprocessor(scale_numeric=False):
 
     <section class="step">
       <span class="step-chip">CELL 6 OF 6</span>
-      <h2>Build the baseline and results log</h2>
-      <p>A baseline is the simplest defensible strategy: always predict the most frequent training class or the training mean. Every later model will be measured against it using the same held-out rows. The cross-validation helper also preserves your random, time, or group boundary while models are tuned; model lessons pass <code>**CV_FIT_PARAMS</code> when fitting each search.</p>
+      <h2>Set the score to beat</h2>
+      <p>Last setup step, and a satisfying one: we build a <em class="term" title="The dumbest sensible guess—the score every real model must beat to be worth anything.">baseline</em>. Every real model you try later has to do better than this, or it is not earning its keep.</p>
+      <div class="plain"><span>What a baseline is</span><p>The baseline is the laziest guess that still makes sense. For a category, it always blurts out the most common answer; for a number, it always says the average. It looks at no clues at all. If a clever model cannot beat this, the clues are not helping—so the baseline is the honest bar every model must clear.</p></div>
+      <p>This cell also quietly prepares a couple of shared tools the model lessons lean on later: a <code>results_log</code> that keeps a running scoreboard, and a cross-validation helper that respects your random, time, or group boundary while models are being tuned. You do not need to fuss over those today—they are just waiting there for the next lessons.</p>
+      <p class="does"><strong>What this does:</strong> it makes the simplest possible guesser and scores it, giving you the number every real model has to beat.</p>
 
     <div class="codecard">
       <div class="codecard-head">
@@ -578,8 +599,8 @@ evaluate_predictions(&quot;Baseline&quot;, y_test, baseline_predictions, show_de
     </div>
 
         <div class="checkpoint">
-          <span>CHECKPOINT</span>
-          <p>Your baseline score is not supposed to be 50%. Record what it reveals about class imbalance or target variation.</p>
+          <span>WHAT YOU'LL SEE</span>
+          <p>A little scoreboard with one row—"Baseline"—and its score. For the example students, accuracy lands around 64%, because always guessing "pass" happens to be right about that often here. Do not expect 50%; a baseline reflects how lopsided your answers are, so yours will be its own number entirely. That figure is not a grade—it is simply the line in the sand your first real model needs to step over.</p>
         </div>
 
 
@@ -588,8 +609,8 @@ evaluate_predictions(&quot;Baseline&quot;, y_test, baseline_predictions, show_de
 
 <section class="step">
   <span class="step-chip">FOUNDATION COMPLETE</span>
-  <h2>Keep this notebook</h2>
-  <p>Each model lesson adds cells beneath these six. If Colab disconnects, choose <strong>Runtime → Run all</strong> to rebuild the variables. Do not create a new train/test split for each model; a fair comparison requires the same exam.</p>
+  <h2>Keep this one notebook</h2>
+  <p>That is the whole foundation—nicely done. From here, every model lesson simply adds new cells underneath these six and reuses everything you just built. So keep this notebook; do not start a fresh one each lesson. If Colab ever disconnects, no panic: choose <strong>Runtime → Run all</strong> and it rebuilds everything in order. One thing to hold onto: never make a new train/test split for each model. A fair comparison means every model sits the exact same final exam.</p>
 
     <div class="reflection">
       <span>PAUSE &amp; WRITE</span>
@@ -602,7 +623,7 @@ evaluate_predictions(&quot;Baseline&quot;, y_test, baseline_predictions, show_de
       <div>
         <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
         <h2>Save your work before moving on.</h2>
-        <p>Your result is evidence about your dataset—not a grade. Record what changed, what improved, and what you still do not understand.</p>
+        <p>Go at whatever pace suits you—there is no clock. And keep this in mind as you continue: your score is evidence about your data, not a grade about you. Jot down what you changed, what improved, and what still puzzles you; that little log is what turns each lesson into real understanding.</p>
       </div>
       <button class="complete-button" type="button" data-complete="start">Mark complete</button>
     </section>

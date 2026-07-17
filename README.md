@@ -23,7 +23,9 @@ one model at a time to the same notebook.
 ## Course principles
 
 - Learners select `TARGET`, `FEATURES`, and the task explicitly.
-- Data is uploaded into Colab; no course dataset or fixed output is required.
+- The foundation ships a small, neutral example dataset (`data/study_habits.csv`)
+  so the whole notebook runs top-to-bottom before a learner brings their own
+  file. Cell 1 has a clearly marked switch to upload a CSV or Excel file instead.
 - Random, time-based, and group-based train/test splits are supported.
 - Missing numeric and categorical values are handled inside scikit-learn
   pipelines, so preprocessing is learned from training data only.

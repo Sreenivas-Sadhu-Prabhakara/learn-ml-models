@@ -19,27 +19,34 @@
   </nav>
 
   <header class="hero hero-home wrap">
-    <p class="eyebrow">A bring-your-own-data course</p>
-    <h1>Bring your dataset.<br>Learn the model.</h1>
-    <p class="lede">You choose the question, target, features, and definition of success. The course gives you a reusable workflow in <strong>Google Colab</strong>, then helps you understand one model at a time—without prescribing one “correct” score.</p>
+    <p class="eyebrow">A gentle, self-paced course</p>
+    <h1>Learn machine learning,<br>one small idea at a time.</h1>
+    <p class="lede">Welcome. This is a friendly, no-rush way to learn what machine learning actually is—using a ready-made example, or your own spreadsheet if you have one. <strong>No maths, no installing anything, and nothing to break.</strong> You work entirely in your browser through <strong>Google Colab</strong> (it's free), and you learn one model at a time, at whatever pace feels good.</p>
   </header>
 
   <main class="wrap">
+    <div class="plain">
+      <span>How to begin</span>
+      <p><strong>1.</strong> Open a free notebook at <strong>colab.research.google.com</strong> (sign in with a Google account and click <em>New notebook</em>). Think of it as a page in your browser where little blocks of code run when you press play—you never write code from scratch, you just copy, paste, and run.</p>
+      <p><strong>2.</strong> Come back here, click <strong>“Start here”</strong> below, and follow the foundation page once, top to bottom. It sets everything up and comes ready to run with a built-in example, so you can watch it work before changing a thing.</p>
+      <p><strong>3.</strong> After that, pick <strong>any model lesson</strong> that interests you and add its blocks to the same notebook. There's no fixed order—go at your own pace, and there's nothing you can break.</p>
+    </div>
+
     <section class="start-banner">
       <div>
-        <p class="eyebrow">Required first stop</p>
-        <h2>Turn your file into an honest ML experiment.</h2>
-        <p>Frame the prediction problem, upload a CSV or Excel file, choose a realistic split, prepare mixed data safely, and build a baseline.</p>
+        <p class="eyebrow">Do this one first</p>
+        <h2>Set up once, then it all just works.</h2>
+        <p>The foundation page walks you through it gently: pick the question you want to answer, use the friendly built-in example (or upload your own spreadsheet), let the course split your data fairly, and set a simple <em class="term" title="A first, no-effort guess that every real model has to beat—like always predicting the most common answer.">baseline</em> to compare against later. It comes filled in and ready to run, so nothing is required from you on the first pass.</p>
       </div>
       <a class="button" href="start/">Start here →</a>
     </section>
 
     <div class="scope-banner">
-      <h3>This course has a clear boundary</h3>
-      <p>It is designed for <strong>tabular data</strong>: rows and columns in CSV or Excel, with one target column for supervised learning. If you have no target, the upcoming K-Means path will help. Images, raw text, audio, and forecasting need different workflows.</p>
+      <h3>What this course is (and isn't) for</h3>
+      <p>It's built for the kind of data that lives in a spreadsheet—<strong>rows and columns</strong> in a CSV or Excel file, where each row is one thing (say, one student) and one column is the answer you'd like to predict (like whether they passed). If your data has no such answer column, the upcoming K-Means lesson is for you. Photos, free-form text, audio, and predicting the future over time each need a different kind of course than this one.</p>
     </div>
 
-    <p class="section-label">Choose the next model that fits your task</p>
+    <p class="section-label">Once the foundation is done, pick any lesson that interests you</p>
     <div class="path-grid">
 
     <a class="lesson-card" href="start/" data-lesson-card="start">
@@ -48,7 +55,7 @@
         <span class="progress-status" data-progress-for="start">Not started</span>
       </div>
       <h3>Your problem, your data</h3>
-      <p>Define what one row means, choose the target and features, upload your file, split honestly, and create the baseline every model must beat.</p>
+      <p>Start here. Decide what one row stands for, pick the answer you want to predict and the clues you'll use, load the example (or your own file), and set the <em class="term" title="A first, no-effort guess that every real model has to beat.">baseline</em> that every model will be measured against.</p>
       <div class="lesson-meta"><span class="tag live">READY</span><span class="tag">classification</span><span class="tag">regression</span><span class="tag">~35 min</span></div>
     </a>
 
@@ -59,7 +66,7 @@
         <span class="progress-status" data-progress-for="knn">Not started</span>
       </div>
       <h3>K-Nearest Neighbours</h3>
-      <p>Predict from the most similar training rows. Learn why scaling matters and tune the number of neighbours with cross-validation.</p>
+      <p>The "ask a few similar people" model: it predicts by looking at the rows most like yours. You'll see why putting all the clues on a fair scale matters, and how to choose how many neighbours to ask.</p>
       <div class="lesson-meta"><span class="tag live">READY</span><span class="tag">both tasks</span><span class="tag">scaling</span><span class="tag">~30 min</span></div>
     </a>
 
@@ -70,7 +77,7 @@
         <span class="progress-status" data-progress-for="linear-regression">Not started</span>
       </div>
       <h3>Linear Regression</h3>
-      <p>Predict a number with a weighted formula. Inspect coefficients, residuals, Ridge, Lasso, and the danger of target leakage.</p>
+      <p>Predict a number by giving each clue its own weight and adding them up—simple enough to read like a recipe. You'll learn to see which clues matter most, and how to avoid accidentally letting the answer sneak into the clues.</p>
       <div class="lesson-meta"><span class="tag live">READY</span><span class="tag">numeric target</span><span class="tag">interpretable</span><span class="tag">~35 min</span></div>
     </a>
 
@@ -81,7 +88,7 @@
         <span class="progress-status" data-progress-for="logistic-regression">Not started</span>
       </div>
       <h3>Logistic Regression</h3>
-      <p>Predict a class and estimated probabilities. Inspect weights and learn why probability is not the same as certainty.</p>
+      <p>Sort each row into a category (yes/no, pass/fail) and get a sense of how confident the model is. You'll learn to read those confidence levels—and why "80% likely" is a leaning, not a promise.</p>
       <div class="lesson-meta"><span class="tag live">READY</span><span class="tag">categorical target</span><span class="tag">probabilities</span><span class="tag">~30 min</span></div>
     </a>
 
@@ -92,7 +99,7 @@
         <span class="progress-status" data-progress-for="decision-trees">Not started</span>
       </div>
       <h3>Decision Trees</h3>
-      <p>Let the model learn a sequence of yes/no questions, then control depth before memorisation takes over.</p>
+      <p>Like a game of twenty questions: the model learns a chain of simple yes/no questions to reach an answer. You'll see how to stop it before it starts memorising instead of truly learning.</p>
       <div class="lesson-meta"><span class="tag live">READY</span><span class="tag">both tasks</span><span class="tag">no scaling</span><span class="tag">~30 min</span></div>
     </a>
 
@@ -103,7 +110,7 @@
         <span class="progress-status" data-progress-for="random-forests">Not started</span>
       </div>
       <h3>Random Forests</h3>
-      <p>Combine many varied trees, tune on training folds, and measure feature importance without confusing association for cause.</p>
+      <p>Ask a whole crowd of decision trees and let them vote—a crowd is usually wiser than any one member. You'll also learn which clues the crowd leaned on, and why "leaned on" doesn't mean "caused".</p>
       <div class="lesson-meta"><span class="tag live">READY</span><span class="tag">both tasks</span><span class="tag">ensemble</span><span class="tag">~30 min</span></div>
     </a>
 
@@ -114,28 +121,28 @@
         <span class="progress-status" data-progress-for="gradient-boosting">Not started</span>
       </div>
       <h3>Gradient Boosting</h3>
-      <p>Build trees in sequence so each round corrects earlier mistakes, then compare every suitable model in your own results log.</p>
+      <p>Build small trees one after another, where each one fixes the mistakes of the last—learning by patient correction. Then compare every model you've tried, side by side, in your own results log.</p>
       <div class="lesson-meta"><span class="tag live">READY</span><span class="tag">both tasks</span><span class="tag">ensemble</span><span class="tag">~35 min</span></div>
     </a>
 
       <div class="lesson-card soon" aria-disabled="true">
         <div class="card-topline"><span>07 · UNSUPERVISED</span><span>Coming soon</span></div>
         <h3>K-Means</h3>
-        <p>No target column? Discover groups in your rows and learn how to judge clusters without a hidden answer sheet.</p>
+        <p>No answer column to predict? This finds natural groups hiding in your rows—and shows you how to tell whether the groups are meaningful when there's no answer key to check against.</p>
         <div class="lesson-meta"><span class="tag">NO TARGET NEEDED</span></div>
       </div>
     </div>
 
     <section class="course-rules" aria-label="How the course works">
-      <div class="rule-card"><strong>1 · Keep one notebook</strong><p>Build the foundation once, then append each model lesson. If Colab resets, use Runtime → Run all.</p></div>
-      <div class="rule-card"><strong>2 · Expect different scores</strong><p>Your output is not supposed to match anyone else's. Compare against your baseline and the cost of mistakes.</p></div>
-      <div class="rule-card"><strong>3 · Test once</strong><p>Choose dials with cross-validation on training data. The held-out test set is the final exam, not a practice sheet.</p></div>
+      <div class="rule-card"><strong>1 · Keep one notebook</strong><p>Do the foundation once, then add each new lesson underneath it in the same notebook. If Colab ever forgets where it was, just click Runtime → Run all and it picks right back up—nothing is lost.</p></div>
+      <div class="rule-card"><strong>2 · Your score is your own</strong><p>Your numbers won't (and shouldn't) match anyone else's—they depend on your data. There's no single right answer here. The only fair comparison is against your own baseline, and how much a mistake would cost you.</p></div>
+      <div class="rule-card"><strong>3 · Test yourself only once</strong><p>You tune a model using <em class="term" title="A fair way to practise: the model tries itself on parts of the training data it hasn't seen, so you can compare choices honestly before the real test.">cross-validation</em> on the practice data. The set-aside test data is like the final exam—you look at it once, at the very end, so the score stays honest.</p></div>
     </section>
   </main>
 
   <footer>
     <div class="foot-inner">
-      <span>Learn at your pace, on a problem you care about.</span>
+      <span>Take your time. Be kind to yourself. You've got this.</span>
       <a href="https://github.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models">Source on GitHub</a>
     </div>
   </footer>

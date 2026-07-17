@@ -20,50 +20,56 @@
 
   <header class="hero wrap">
     <p class="eyebrow">Regression only · your numeric target</p>
-    <h1>Build a prediction from weighted clues.</h1>
-    <p class="lede"><strong>Linear Regression</strong> turns every prepared feature into a weight, adds the contributions, and predicts a number. You will compare the plain model with Ridge and Lasso, choose the family and its strength using training-only cross-validation, then inspect one honest test result.</p>
+    <h1>Predict a number from weighted clues.</h1>
+    <p class="lede">Welcome back. In this lesson you will teach the computer to guess a <strong>number</strong> — like a final score — by giving each clue a weight and adding them up, the way a scorecard works. We will meet three close cousins (plain, Ridge, and Lasso), let the notebook pick the best one for you, and read one honest test result at the end. Go at your own pace; nothing here is a race.</p>
     <div class="meta-chips">
-      <span class="chip">numeric target</span>
-      <span class="chip">interpretable formula</span>
+      <span class="chip">predicts a number</span>
+      <span class="chip">easy to read the formula</span>
       <span class="chip">~35 minutes</span>
     </div>
   </header>
 
   <main class="wrap">
     <section class="scope-banner">
-      <h3>Continue in your foundation notebook</h3>
-      <p>This lesson assumes you completed <a href="../start/">Start with Your Problem</a> with <code>TASK = "regression"</code>. Add these cells beneath the foundation cells in the same Colab notebook. A categorical target belongs in the classification lessons.</p>
+      <h3>Keep working in the same notebook</h3>
+      <p>This lesson picks up right where the setup left off. It assumes you already ran <a href="../start/">Start with Your Problem</a> and set <code>TASK = "regression"</code> there — meaning your answer is a number, not a yes/no or a category. Just add the cells below <em>underneath</em> the setup cells in the same Colab notebook and run them in order. If your answer is really a category, this isn't the right lesson — the classification lessons are for you instead.</p>
     </section>
 
     <section class="step">
-      <span class="step-chip">IDEA 1</span>
-      <h2>The model is one weighted formula</h2>
-      <p>After missing values, categories, and numeric scales are prepared, the model calculates:</p>
+      <span class="step-chip">THE BIG IDEA</span>
+      <h2>It's really just a scorecard</h2>
+      <p>Picture a scorecard. Each clue about a student — hours studied, attendance, and so on — gets a <em class="term" title="A number that says how much a clue counts. Bigger number, bigger say in the answer.">weight</em>, a number that says how much that clue counts. You multiply each clue by its weight, add everything up, and out comes your predicted number. That's the whole idea.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Every clue gets a "how much does this matter?" score. The model adds up all those scores to make its guess. Clues that matter a lot get big weights; clues that barely matter get tiny ones.</p>
+      </div>
+      <p>Written out, the model's rule looks like this:</p>
       <div class="callout green">
         <h3>The complete rule</h3>
         <p><code>prediction = intercept + weight₁ × feature₁ + weight₂ × feature₂ + … + weightₚ × featureₚ</code></p>
       </div>
-      <p>The intercept is the starting point. A positive weight raises the prediction as that prepared feature rises; a negative weight lowers it. With several features, the formula describes a flat surface rather than a single line, but the rule is still “multiply, then add.”</p>
+      <p>The <em class="term" title="The model's starting guess before any clue is considered — a baseline number it adjusts up or down.">intercept</em> is just the starting point — the guess the model would make before looking at any clue. From there, a positive weight nudges the prediction <em>up</em> as that clue gets bigger, and a negative weight nudges it <em>down</em>. When there are several clues at once the picture is a little harder to draw, but the recipe never changes: multiply each clue by its weight, then add.</p>
       <div class="idea-grid">
         <div class="idea-card">
-          <h3>Strength</h3>
-          <p>The fitted rule is fast, inspectable, and often a strong benchmark for a numeric target.</p>
+          <h3>What's lovely about it</h3>
+          <p>It's fast, and you can actually read the finished scorecard to see which clues mattered. It's often a surprisingly strong first guess for any number you're trying to predict.</p>
         </div>
         <div class="idea-card">
-          <h3>Boundary</h3>
-          <p>It cannot discover curves, thresholds, or feature interactions unless your chosen features express them.</p>
+          <h3>Where it struggles</h3>
+          <p>It draws straight lines only. It can't spot curves, tipping points, or clues that only matter in combination — unless you hand it clues that already capture those things.</p>
         </div>
       </div>
-      <details>
-        <summary>Deep dive: what “best-fitting” means</summary>
-        <p>Plain Linear Regression chooses weights that minimise the sum of squared training residuals. Squaring makes large errors count disproportionately. The course still selects and reports models with MAE because MAE is easier to read in the target’s units and is already the foundation’s primary regression score.</p>
+      <details class="deep">
+        <summary>Going deeper (optional): what "best fit" means</summary>
+        <p>Plain Linear Regression picks the weights that make the training-set misses as small as possible — specifically, it squares each miss and adds them up, so a few big misses hurt far more than many tiny ones. We still <em>report</em> everything using MAE (average miss in your target's own units) because that's much easier to read, and it's the score your setup notebook already uses for regression.</p>
       </details>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 1 OF 5</span>
-      <h2>Take the regression path—or stop clearly</h2>
-      <p>Do not convert a genuine category into arbitrary numbers just to enter this lesson. If the target is categorical, keep the original task and use a classification model.</p>
+      <h2>A quick safety check</h2>
+      <p>Before we do anything else, this first cell just makes sure your setup cells ran and that you really are predicting a number. It's a friendly gatekeeper, nothing more. One gentle reminder: don't turn a real category (like "cat / dog / bird") into made-up numbers just to squeeze into this lesson — if your answer is a category, the classification lessons are the right home for it.</p>
+      <p class="does"><strong>What this does:</strong> Peeks to confirm the setup cells ran and that your task is set to predicting a number, then prints a tiny summary so you know all is well.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 1 · READINESS CHECK</span>
@@ -98,100 +104,117 @@ print("Testing shape: ", X_test.shape)
 print("Primary tuning score:", PRIMARY_SCORING)</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>You should see <code>regression</code>, your own shapes, and <code>neg_mean_absolute_error</code>. If not, return to the foundation configuration rather than editing this lesson around the error.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A few short lines: the word <code>regression</code>, the size of your training and testing data, and a scoring name like <code>neg_mean_absolute_error</code>. If instead it complains that something is missing, don't worry — just click <strong>Runtime → Run all</strong> to run the setup cells again, then try this one. There's nothing to fix in this lesson.</p>
       </div>
     </section>
 
     <section class="step">
-      <span class="step-chip">AUDIT BEFORE FIT</span>
-      <h2>Remove shortcuts that will not exist in reality</h2>
-      <p>Linear models make leakage especially visible because a leaked clue can receive a dominant weight—but by then the invalid result has already cost you time. Review each feature before fitting.</p>
+      <span class="step-chip">A GENTLE CHECK FIRST</span>
+      <h2>Watch out for clues that secretly hold the answer</h2>
+      <p>Here's the single most important idea in this whole lesson. Sometimes a clue quietly contains the answer itself. When that happens the model looks brilliant — near-perfect scores — but it has actually learned nothing useful, because in real life that clue wouldn't be available yet. This trap has a name: <em class="term" title="When a clue secretly carries the answer, so the model scores wonderfully in practice but is useless in the real world.">leakage</em>.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Imagine trying to predict a student's final score, but one of your clues is "did they pass?" — which is decided <em>by</em> the final score. Of course the guess looks perfect; you accidentally handed the model the answer. A perfect score is a reason to be suspicious, not proud.</p>
+      </div>
+      <p>Linear models make this trap easy to spot, because a leaky clue tends to grab a huge weight — but by then you may have wasted time trusting a fake result. So take a slow, honest look at each clue before you fit. Use these questions:</p>
+      <p>This table pairs a question to ask about each clue with the kind of thing that should make you pause.</p>
       <div class="tablewrap">
         <table>
           <thead>
             <tr>
-              <th>Leakage question</th>
-              <th>Generic warning sign</th>
+              <th>Ask yourself</th>
+              <th>A sign to slow down</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Was this feature known at prediction time?</td>
-              <td>A status, measurement, or total recorded after the outcome</td>
+              <td>Would you actually know this clue at the moment you make the guess?</td>
+              <td>A status, measurement, or total that only gets recorded <em>after</em> the outcome happens</td>
             </tr>
             <tr>
-              <td>Was it derived from the target?</td>
-              <td>A ratio, band, flag, or duplicate calculated using the answer</td>
+              <td>Was this clue built from the answer itself?</td>
+              <td>A ratio, band, flag, or copy that was calculated using the very thing you're predicting</td>
             </tr>
             <tr>
-              <td>Does it summarise other rows safely?</td>
-              <td>An aggregate that includes the current row or future rows</td>
+              <td>Does it summarise other rows in a fair way?</td>
+              <td>A total or average that sneakily includes the current row or rows from the future</td>
             </tr>
             <tr>
-              <td>Can the split reveal the same entity?</td>
-              <td>Repeated people, devices, cases, or dates on both sides</td>
+              <td>Could the same person or thing show up on both sides of the split?</td>
+              <td>The same people, devices, cases, or dates appearing in both training and testing</td>
             </tr>
             <tr>
-              <td>Is preprocessing learned only from training folds?</td>
-              <td>Imputation, scaling, or feature selection run before splitting</td>
+              <td>Is the data prep learned from training data only?</td>
+              <td>Filling gaps, scaling, or picking clues done before the data was split apart</td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="callout danger">
-        <h3>A near-perfect result is an audit trigger</h3>
-        <p>It may be real, but first look for target-derived features, post-outcome fields, duplicate rows, and an unrealistic split. The pipeline below protects preprocessing boundaries; only your understanding of the problem can protect prediction-time boundaries.</p>
+        <h3>If it looks too good to be true, pause and check</h3>
+        <p>A near-perfect score <em>might</em> be genuine — but treat it as a signal to look harder first. Hunt for clues built from the answer, fields recorded after the outcome, duplicate rows, and an unrealistic split. The <em class="term" title="An assembly line that carries out every data-prep step in the correct order, learning each step only from training data.">pipeline</em> you'll build below guards the data-prep steps for you, but only <em>you</em>, thinking about your own problem, can catch a clue that wouldn't exist yet in real life.</p>
       </div>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
         <ol>
-          <li>For every feature, when exactly does its value become available?</li>
-          <li>Could any calculation behind a feature use the target, future rows, or the current row’s outcome?</li>
-          <li>Which suspicious feature will you remove from <code>FEATURES</code> before continuing?</li>
+          <li>For each clue, when in real life does its value actually become known?</li>
+          <li>Could any clue have been built using the answer, using future rows, or using this row's own outcome?</li>
+          <li>Is there a suspicious clue you'll drop from <code>FEATURES</code> before going on?</li>
         </ol>
       </div>
     </section>
 
     <section class="step">
-      <span class="step-chip">IDEA 2</span>
+      <span class="step-chip">THREE CLOSE COUSINS</span>
       <h2>Plain, Ridge, or Lasso?</h2>
-      <p>All three use the same weighted formula. Ridge and Lasso add a cost for large weights, called regularisation. That can make the formula less sensitive to noise and overlapping clues.</p>
+      <p>All three build the exact same scorecard. The difference is how carefully they keep the weights in check. Here's the problem they solve: when several clues overlap and say almost the same thing, a plain scorecard can swing wildly — giving one clue a giant positive weight and its twin a giant negative one, so the two cancel out. That makes the model jumpy and easy to fool.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p><strong>Ridge</strong> gently reminds every weight to stay humble, so no single clue runs away with the answer. <strong>Lasso</strong> is stricter: it can push a useless clue's weight all the way to <em>zero</em>, quietly crossing that clue off the scorecard for you. Both are ways of saying "don't get carried away" — the fancy word for that is <em class="term" title="A polite rule that keeps the weights modest so the model doesn't overreact to noise or overlapping clues.">regularisation</em>.</p>
+      </div>
+      <p>Here's how the three compare at a glance.</p>
       <div class="tablewrap">
         <table>
           <thead>
             <tr>
-              <th>Family</th>
-              <th>What fitting rewards</th>
-              <th>Useful tendency</th>
+              <th>Which one</th>
+              <th>What it tries to do</th>
+              <th>Why you'd want it</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>LinearRegression</td>
-              <td>Small squared training errors</td>
-              <td>Unpenalised reference model</td>
+              <td>Plain (LinearRegression)</td>
+              <td>Just make the training misses as small as it can</td>
+              <td>The simplest starting point, with no restraint on the weights</td>
             </tr>
             <tr>
               <td>Ridge</td>
-              <td>Small errors plus a squared-weight penalty</td>
-              <td>Shrinks correlated or unstable weights</td>
+              <td>Small misses <em>and</em> humble weights</td>
+              <td>Calms down clues that overlap or behave unpredictably</td>
             </tr>
             <tr>
               <td>Lasso</td>
-              <td>Small errors plus an absolute-weight penalty</td>
-              <td>Can set some weights exactly to zero</td>
+              <td>Small misses <em>and</em> a firm nudge toward zero</td>
+              <td>Can drop useless clues entirely — automatic clue-picking</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p><code>alpha</code> controls penalty strength. Zero would remove the penalty; a very large value can flatten the model toward its intercept. The right family and alpha depend on your training data, so neither is chosen by hand here.</p>
+      <p>There's one dial that sets how firm Ridge and Lasso are, called <em class="term" title="A setting you choose before training rather than something the model learns — here, how firmly it reins the weights in.">alpha</em>. (A dial you choose yourself, rather than one the model figures out, is called a <em class="term" title="A knob you set before training, as opposed to a weight the model learns from data.">hyperparameter</em>.) Turn alpha to zero and there's no restraint at all; turn it up very high and the model gets so cautious it barely reacts to any clue. The best cousin and the best alpha depend entirely on your data — so you won't guess them by hand. In the next cell, the notebook tries the options and picks for you.</p>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 2 OF 5</span>
-      <h2>Select the family and alpha inside training folds</h2>
-      <p>The same pipeline prepares every candidate. Numeric scaling is important because Ridge and Lasso penalise coefficients: without comparable scales, a feature’s unit would change how expensive its weight appears.</p>
+      <h2>Let the notebook pick the best cousin for you</h2>
+      <p>This cell does the choosing so you don't have to. It quietly tries plain, several Ridge settings, and several Lasso settings, and keeps whichever does best. It makes that choice using <em class="term" title="Practising on most of the training data and checking on the rest, several times over, so the choice is fair — the real test set is never touched.">cross-validation</em>: it practises on part of your training data and checks on the part it held back, over and over, so the winner is chosen fairly and your real test set stays sealed.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>It's like a taste test. The notebook tries each recipe on some of the training data, checks it on the rest, repeats a few times, and crowns the recipe that tastes best on average. The final test set is never touched during this — it's saved for one honest check later.</p>
+      </div>
+      <p>One quiet but important detail: before comparing weights, every clue is first put on a common scale (this is called <em class="term" title="Rescaling clues so they're measured in comparable units — otherwise a clue measured in big numbers would look more 'expensive' than one in small numbers.">standardising</em>). Without that, Ridge and Lasso would unfairly punish a clue just for happening to be measured in bigger numbers.</p>
+      <p class="does"><strong>What this does:</strong> Tries plain, Ridge, and Lasso at several strengths, uses the practise-and-check method to find the best combination, and prints which one it chose.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 2 · PIPELINE + MODEL SEARCH</span>
@@ -266,23 +289,24 @@ print("Selected family:", selected_family)
 print("Selected alpha: ", selected_alpha)</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>You should see plain Linear Regression once, several Ridge and Lasso candidates, their validation MAE, and a selected model. Lower MAE is better. Close scores or large fold variation mean the ranking is uncertain.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A little table listing plain Linear Regression once, plus several Ridge and Lasso options, each with its average miss (its <em class="term" title="Mean Absolute Error: the average distance between the guess and the real answer, in your target's own units.">MAE</em> — the typical distance between guess and truth). Then a line naming the winner. Smaller MAE is better. If the top few are almost tied, or the numbers jump around a lot between rounds, that just means the ranking is a bit unsure — that's normal, and your own data will land on different numbers than any example.</p>
       </div>
       <div class="callout green">
-        <h3>Why this search is honest</h3>
-        <p>Family, alpha, imputation, encoding, and scaling were all learned inside training folds. <code>CV_FIT_PARAMS</code> also preserves the foundation’s group boundary when your split mode uses groups. No test target influenced the choice.</p>
+        <h3>Why this choice is trustworthy</h3>
+        <p>Everything — the cousin, the alpha, the gap-filling, the scaling — was learned only from training data during the practise-and-check rounds. The <code>CV_FIT_PARAMS</code> from your setup also keeps any grouped rows from leaking across the split. Your test answers had no say in the choice, which is exactly what keeps the final result honest.</p>
       </div>
-      <details>
-        <summary>Deep dive: a warning may still be useful evidence</summary>
-        <p>Lasso can report that optimisation did not converge, especially with highly correlated features or an alpha that is too weak. Do not hide the warning. Increase <code>max_iter</code>, review redundant columns, or narrow the candidate range using training folds. Never choose a fix by looking at test performance.</p>
+      <details class="deep">
+        <summary>Going deeper (optional): a warning can be helpful, not scary</summary>
+        <p>Lasso sometimes prints a note that it "did not converge" — usually when clues overlap heavily or the alpha it's testing is very weak. Don't hide that note. You can raise <code>max_iter</code> to give it more time, trim clues that repeat the same information, or narrow the range being searched — always deciding based on the training rounds, never by peeking at the test score.</p>
       </details>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 3 OF 5</span>
-      <h2>Read the fitted formula</h2>
-      <p><code>GridSearchCV</code> has already refitted the winner on all training rows. Extract the transformed feature names and weights without touching the test set.</p>
+      <h2>Read the finished scorecard</h2>
+      <p>Now for the fun part: you get to open up the winner and see the weights it chose. Each weight is a <em class="term" title="A weight on the scorecard — how much the prediction moves when that clue goes up by one step.">coefficient</em>, which is just "how much this clue moves the prediction." A big number means that clue has a big say; a number near zero means it barely matters. The notebook already re-trained the winner on all your training data, so nothing here so much as glances at the test set.</p>
+      <p class="does"><strong>What this does:</strong> Pulls out the starting point and each clue's weight, then shows the clues with the biggest say, largest first.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 3 · COEFFICIENT INSPECTION</span>
@@ -321,27 +345,28 @@ display(
 )</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>You should see an intercept and up to 20 influential prepared columns. Numeric columns were standardised, while encoded categories are indicator columns, so their weights do not all represent the same kind of one-unit change.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A starting point (the intercept) and a list of up to twenty clues that had the biggest say, ranked by how much they move the guess. A small note: because the clues were put on a common scale — and because categories get split into yes/no columns — a weight of "1" doesn't mean the same real-world change for every clue. So read the list as "which clues matter most here," not as an exact price tag. Your own data will highlight different clues.</p>
       </div>
       <div class="callout">
-        <h3>Weights describe this fitted prediction rule—not causes</h3>
-        <p>A large weight can reflect association, scale, category coding, correlation, or leakage. Correlated features may exchange weight while predictions remain similar. A zero Lasso weight means “unused by this fitted model under this alpha,” not “irrelevant in the world.”</p>
+        <h3>Weights show what this model leans on — not what causes what</h3>
+        <p>Please resist reading these as causes. A big weight can come from a real link, from how a clue is scaled, from how a category was coded, from two clues overlapping — or from leakage. When two clues say almost the same thing they can trade weight back and forth while the predictions barely change. And a Lasso weight of zero only means "this model didn't use it here," not "this thing doesn't matter in real life."</p>
       </div>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
         <ol>
-          <li>Does each large-weight feature make sense at prediction time?</li>
-          <li>Which weights look unstable because features carry overlapping information?</li>
-          <li>Does the sign match your domain expectation, and what non-causal explanation could also produce it?</li>
+          <li>Does every big-weight clue make sense as something you'd actually know when you make the guess?</li>
+          <li>Which weights look shaky because two clues carry overlapping information?</li>
+          <li>Does the direction (up or down) match what you'd expect — and what innocent, non-causal reason could also explain it?</li>
         </ol>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 4 OF 5</span>
-      <h2>Open the test set once</h2>
-      <p>The family, alpha, and features are fixed. Create one prediction array and record it beside the same baseline used by every regression model.</p>
+      <h2>The one honest test</h2>
+      <p>This is the moment we've been protecting. Everything is now locked in — the cousin, the alpha, the clues. We open the test set a single time, make predictions, and write the score down next to the <em class="term" title="A dead-simple guess to beat — here, always predicting the average. If your model can't beat it, it hasn't earned its keep.">baseline</em>, the same humble yardstick every regression lesson uses. You test once and take the number as it comes; think of it as evidence, not a grade.</p>
+      <p class="does"><strong>What this does:</strong> Makes the winner's predictions on the untouched test data and records the score in your results log, right beside the simple baseline.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 4 · FINAL TEST</span>
@@ -358,15 +383,16 @@ linear_test_result = evaluate_predictions(
 )</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Your results log should now show the baseline and the selected linear-family model. MAE and RMSE are in your target’s units; lower is better. R² measures improvement over predicting the mean, but usefulness still depends on your problem.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>Your results log now shows two rows: the simple baseline and your chosen model. MAE and RMSE are the typical size of a miss, in your target's own units — smaller is better. <em class="term" title="R-squared: 0 means no better than always guessing the average; 1 would be perfect. It shows how much of the ups-and-downs your model captured.">R²</em> is a 0-to-1 score of how much better than "just guess the average" you did. For a rough feel, on the example students the baseline lands around a 10-point average miss with R² near 0, and a good linear model reaches an R² of about 0.64 — but your own data will land somewhere else entirely, and there's no single "right" number. What matters is that you beat your baseline.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 5 OF 5</span>
-      <h2>Inspect residuals, not only averages</h2>
-      <p>A residual is <code>actual - predicted</code>. Positive means the model predicted too low; negative means it predicted too high. Reuse the final predictions to find systematic misses.</p>
+      <h2>Look at the misses, not just the average</h2>
+      <p>An average score hides a lot. This last cell draws pictures of where the model missed, so you can spot patterns. A <em class="term" title="One miss: the real answer minus the model's guess. Positive means it guessed too low; negative means too high.">residual</em> is simply the real answer minus the guess. Positive means the model aimed too low; negative means it aimed too high. Scattered, patternless misses are healthy. A clear pattern is the model telling you something it couldn't capture.</p>
+      <p class="does"><strong>What this does:</strong> Lists the biggest misses and draws three quick pictures so you can see whether the misses form a telling pattern.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 5 · RESIDUAL REVIEW</span>
@@ -438,80 +464,82 @@ plt.tight_layout()
 plt.show()</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Look for curvature, a widening funnel, separated clusters, consistently positive or negative regions, and a few dominant errors. Those patterns are more informative than whether the dots look “good.”</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>Three little charts and a list of the biggest misses. Don't worry about whether the dots look "good" — instead look for shapes: a gentle curve, a funnel that widens, clumps that sit apart, whole regions that lean too high or too low, or a handful of dramatic misses. A shape is a hint about something the straight-line scorecard couldn't capture. Your own charts will look different, and that's expected.</p>
       </div>
+      <p>Here's a quick guide to the shapes you might notice and what each could be hinting at.</p>
       <div class="tablewrap">
         <table>
           <thead>
             <tr>
-              <th>Pattern</th>
-              <th>Possible interpretation</th>
-              <th>Training-only next question</th>
+              <th>If you see this shape</th>
+              <th>It might mean</th>
+              <th>A question to explore (training data only)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Curved residual band</td>
-              <td>The weighted straight rule misses non-linearity</td>
-              <td>Is a justified transformation or non-linear model appropriate?</td>
+              <td>A curved band of misses</td>
+              <td>The straight-line scorecard is missing a bend in the real pattern</td>
+              <td>Would a sensible reshaping of a clue, or a model that allows curves, fit better?</td>
             </tr>
             <tr>
-              <td>Funnel shape</td>
-              <td>Error spread changes with prediction size</td>
-              <td>Would a target transformation or segment-specific analysis help?</td>
+              <td>A funnel (misses spread out)</td>
+              <td>The model is more precise for some sizes of answer than others</td>
+              <td>Would reshaping the target, or studying groups separately, help?</td>
             </tr>
             <tr>
-              <td>Separate clusters</td>
-              <td>A group may follow a different relationship</td>
-              <td>Is a meaningful group feature missing or encoded poorly?</td>
+              <td>Separate clumps</td>
+              <td>One group of rows may follow a different pattern</td>
+              <td>Is there a meaningful group clue that's missing or poorly encoded?</td>
             </tr>
             <tr>
-              <td>A few huge misses</td>
-              <td>Outliers, data quality issues, or rare regimes</td>
-              <td>Are those rows valid, important, and represented in training?</td>
+              <td>A few enormous misses</td>
+              <td>Unusual rows, data-quality glitches, or rare situations</td>
+              <td>Are those rows real, important, and well represented in your training data?</td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="callout danger">
-        <h3>Do not repair the model against this test plot</h3>
-        <p>The plot diagnoses the final result. If it motivates another modelling round, evaluate that round with training-only validation and obtain a fresh untouched holdout before making a new final claim.</p>
+        <h3>Don't tweak the model to please this chart</h3>
+        <p>It's tempting, but resist. This chart is a diagnosis of your <em>final</em> result. If it inspires you to try another approach, that's fine — just judge the new attempt with the practise-and-check method on training data, and set aside a fresh, untouched slice of data before you make any new final claim. Once you've studied a test set, it's no longer an honest test.</p>
       </div>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
         <ol>
-          <li>How large is the MAE in the real units of your decision?</li>
-          <li>Which residual pattern is most important, and what are two possible explanations?</li>
-          <li>Does performance differ for a meaningful group, time period, or target range?</li>
-          <li>Would you use this model? State the decision and the evidence.</li>
+          <li>How big is the average miss (MAE) in the real units of your decision — is that close enough to be useful?</li>
+          <li>Which miss-pattern stands out most, and what are two possible explanations for it?</li>
+          <li>Does the model do noticeably better or worse for a certain group, time period, or range of answers?</li>
+          <li>Would you actually use this model? Write down your decision and the evidence behind it.</li>
         </ol>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">RECAP</span>
-      <h2>What you can now explain</h2>
+      <h2>What you can now explain to a friend</h2>
+      <p>You covered a lot. Here's the short version, in plain words:</p>
       <ol>
-        <li>A linear prediction is an intercept plus weighted prepared features.</li>
-        <li>Plain Linear Regression leaves weights unpenalised; Ridge shrinks them; Lasso can set some to zero.</li>
-        <li>Scaling belongs inside the pipeline, especially when coefficient penalties are compared.</li>
-        <li>Family and alpha are selected by cross-validation on training rows.</li>
-        <li>Coefficients are model associations, not causal effects.</li>
-        <li>Residual patterns expose errors hidden by MAE, RMSE, and R².</li>
-        <li>Leakage is a problem-definition failure that no modelling technique can rescue.</li>
+        <li>A linear prediction is a scorecard: a starting point plus each clue times its weight.</li>
+        <li>Plain regression lets the weights run free; Ridge keeps them humble; Lasso can cross useless clues off entirely.</li>
+        <li>Putting clues on a common scale matters, especially once you're comparing weights across the cousins.</li>
+        <li>You didn't hand-pick the cousin or its strength — the practise-and-check method did, using training data only.</li>
+        <li>Weights show what the model leans on, not what causes what.</li>
+        <li>Looking at the misses reveals problems that a single average score would hide.</li>
+        <li>Leakage is a problem with how the question was set up, and no clever model can rescue it.</li>
       </ol>
-      <details>
-        <summary>Optional deep dive: feature engineering without leaking</summary>
-        <p>A linear model can use a justified square, logarithm, rate, or interaction if it is computed from information available at prediction time. Add transformations inside a pipeline, describe why they match the domain, and compare them using training-only validation. Do not manufacture features after studying final test errors and then report the same test as untouched.</p>
+      <details class="deep">
+        <summary>Going deeper (optional): building new clues without leaking</summary>
+        <p>A linear model can happily use a sensible reshaping of a clue — a square, a logarithm, a rate, or two clues combined — as long as it's built only from information you'd genuinely have when making the guess. Add these inside the pipeline, jot down why each one makes sense for your problem, and compare them with the practise-and-check method. What you must never do is invent new clues after peeking at the final test misses and then still call that test "untouched."</p>
       </details>
     </section>
 
     <section class="completion-card">
       <div>
         <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
-        <h2>Save your model card before moving on.</h2>
-        <p>Record the selected family and alpha, cross-validation stability, baseline comparison, two coefficient cautions, one residual pattern, and your leakage audit conclusion.</p>
+        <h2>Jot down a few notes before you move on.</h2>
+        <p>Take a minute to write down: which cousin and strength won, how steady the practise-and-check scores were, how you compared against the baseline, two cautions about the weights, one miss-pattern you noticed, and what your leakage check concluded. Future-you will thank you.</p>
       </div>
       <button class="complete-button" type="button" data-complete="linear-regression">Mark complete</button>
     </section>

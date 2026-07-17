@@ -20,8 +20,8 @@
 
   <header class="hero wrap">
     <p class="eyebrow">Lesson 03 · Classification</p>
-    <h1>Turn a linear score into class probabilities</h1>
-    <p class="lede">Logistic regression is a strong, readable starting point for classification. You will tune its regularisation on <strong>training data only</strong>, take one honest look at the held-out test set, and interpret probabilities as estimates—not certainty.</p>
+    <h1>A model that sorts things into groups — and tells you how sure it is</h1>
+    <p class="lede">This lesson introduces a friendly, easy-to-read model for predicting a category — like "pass" or "not pass". Its special gift is that it doesn't just pick an answer; it tells you how confident it is, such as "about 80% likely to pass". We'll go slowly, one small idea at a time, at your own pace.</p>
     <div class="meta-chips">
       <span class="chip">your uploaded dataset</span>
       <span class="chip">classification only</span>
@@ -39,25 +39,34 @@
     </section>
 
     <section class="scope-banner">
-      <h3>What this model can answer</h3>
-      <p>Use logistic regression when the target is a category: yes/no, one of several types, or another finite label. If your target is a measured number, return to the model map and choose a regression lesson.</p>
+      <h3>The confusing name, cleared up first</h3>
+      <p>Yes, it's called logistic <em>regression</em> — but it is really a <em class="term" title="a model whose job is to sort each row into a category, not to predict a number">classifier</em>. That means its job is to sort each row into a group: yes/no, pass/fail, one of a few types. Don't let the word "regression" trip you up. If the thing you want to predict is a measured number instead (like a score or a price), head back to the model map and pick a regression lesson.</p>
     </section>
 
     <section>
       <p class="eyebrow">THE IDEA</p>
-      <h2>A boundary with a gradual transition</h2>
-      <p>The model gives each row a linear score made from its transformed features and learned coefficients. A sigmoid turns a binary score into a probability estimate; for multiple classes, a softmax turns the class scores into estimates that sum to one. The class with the largest value becomes the default prediction.</p>
-      <p>Regularisation controls how freely coefficients can grow. A smaller <code>C</code> means stronger regularisation and a simpler boundary; a larger <code>C</code> gives the model more freedom. Neither direction is automatically better, so you will compare them inside the training set.</p>
+      <h2>How it decides, in everyday terms</h2>
+      <p>Think of the model as a friendly judge weighing evidence. It looks at each clue in a row (each feature), decides how much each clue matters, and adds them up into a single running total. Then it converts that total into a probability — a number between 0 and 1 — that leans toward one group or another. Whichever group ends up most likely becomes its answer.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Each clue nudges the answer a little. A high total pushes toward one group; a low total pushes toward the other. The model smoothly slides from "probably this group" to "probably that group" rather than flipping abruptly — like a dimmer switch, not an on/off switch.</p>
+      </div>
+      <p>You'll also meet a setting the code calls <code>C</code>. It controls how much freedom the model has to react strongly to any one clue. A smaller <code>C</code> keeps the model calmer and simpler; a larger <code>C</code> lets it react more. Neither is automatically better, so instead of guessing, you'll let the data tell you which works best — using only the practice data, never the final exam.</p>
       <div class="callout">
-        <h3>Probabilities need honest language</h3>
-        <p>A value such as 0.80 is an <em>estimated probability produced by this fitted model</em>. It is not “80% certainty,” and it may be poorly calibrated when the sample is small, the future differs from training, or important information is missing.</p>
+        <h3>A probability is a considered opinion, not a promise</h3>
+        <p>When the model says "about 80% likely to pass," treat that as its best-informed guess, not a guarantee. It's a considered opinion from what it has seen so far. It can be off — especially when you have only a little data, when the future turns out different from the past, or when something important simply wasn't recorded.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 1 OF 5</span>
-      <h2>Confirm the task and build the pipeline</h2>
-      <p>Scaling happens inside the pipeline and is learned separately in every cross-validation fold. That keeps validation rows from influencing the training transformation.</p>
+      <h2>Get the model ready</h2>
+      <p>This first cell double-checks that your foundation setup ran, then assembles the model so it's ready to learn. It puts two steps together in order: first it puts every number on a comparable footing (called <em class="term" title="rescaling numbers so they sit on a similar range, so no single column dominates just because its values are larger">scaling</em>), then it hands the result to the model. Bundling these steps together is called a <em class="term" title="a tidy chain of steps that always run in the same order, so the exact same preparation is applied every time">pipeline</em>.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Scaling means measuring every clue with the same-sized ruler, so a column like "attendance percent" doesn't overpower a column like "sleep hours" just because its numbers happen to be bigger. The pipeline makes sure this same preparation happens every single time, automatically.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> Checks that your setup cells ran, confirms you're doing a category-prediction task, and builds the model together with its number-scaling step.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 1 · MODEL SETUP</span>
@@ -103,15 +112,20 @@ print("Held-out test rows:", len(X_test))
 print("Classes in training:", sorted(y_train.unique(), key=str))</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>You should see at least two training classes. If a class is absent—or has only one row—revisit your target definition and split before fitting any model.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A count of your practice rows and your set-aside test rows, plus a list of the groups the model will choose between (on the example students, "passed" is true or false — two groups). Your own data will differ. You just want to see at least two groups here. If a group is missing or has only a single row, that's a gentle nudge to revisit how you defined your target before going further. And if the cell complains that setup is missing, no worries — click Runtime then Run all and try again.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 2 OF 5</span>
-      <h2>Choose C with training-only cross-validation</h2>
-      <p>Each candidate is trained on part of <code>X_train</code> and checked on another part. The held-out test rows remain untouched. <code>refit=True</code> then trains the winning pipeline on all training rows.</p>
+      <h2>Let the data pick the best setting</h2>
+      <p>Remember that <code>C</code> setting? Rather than guessing it, we try a handful of values and let the practice data show which works best. The trick is a fair, careful trial called <em class="term" title="repeatedly training on most of the practice data and quizzing on the part held back, then rotating which part is held back">cross-validation</em>.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Cross-validation is like giving the model several small practice quizzes. Each time, it studies most of the practice data and gets quizzed on the slice it hasn't seen yet — then we rotate which slice is held back. Averaging those quiz scores gives an honest sense of how each setting performs. Crucially, the real final exam (your test set) stays sealed the whole time.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> Tries five different <code>C</code> values, quizzes each one fairly on the practice data, and keeps the setting that scored best — then retrains that winner on all the practice data.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 2 · CROSS-VALIDATION</span>
@@ -145,22 +159,27 @@ print("Chosen settings:", search.best_params_)
 print("Validation metric:", PRIMARY_SCORING)</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Look for a stable validation score, not a dramatic winning decimal. If several settings are nearly tied, the exact winner may change with different folds; that is useful evidence about uncertainty.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A small table ranking the five <code>C</code> values by their average quiz score, and a note of which one won. Don't chase a dazzling winning number — look for a score that stays steady. If several settings land almost neck-and-neck, that's genuinely useful: it tells you the exact winner might wobble a bit, which is honest information about how sure we can be. Your own data will differ, and there's no single "right" number here.</p>
       </div>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
         <ol>
-          <li>Did stronger or weaker regularisation work better on your training folds?</li>
-          <li>How large is the validation spread compared with the difference between candidates?</li>
+          <li>Did the calmer, simpler setting or the more reactive one work better on your practice quizzes?</li>
+          <li>How close were the top settings to each other, compared with the gap to the rest?</li>
         </ol>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 3 OF 5</span>
-      <h2>Take one final look at the test set</h2>
-      <p>The model and settings are now locked. Predict the held-out rows once and add this result to the same log as your baseline and earlier models.</p>
+      <h2>Take one honest look at the final exam</h2>
+      <p>The model and its setting are now locked in. This is the moment we open the sealed test set — the rows the model has never seen — and let it make its predictions, just once. We add the result to the same log as your <em class="term" title="a dead-simple stand-in that always guesses the most common answer; it's the score any real model should beat">baseline</em> and any earlier lessons.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>The baseline is the "do-nothing" comparison — it just guesses the most common answer every time. On the example students, always guessing "pass" is right about 64% of the time. That's the bar to clear. If your model can't beat guessing the obvious, it isn't yet earning its keep.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> Shows the locked model the test rows for the first and only time, scores how well it did, and records that score next to your baseline.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 3 · FINAL EVALUATION</span>
@@ -177,19 +196,24 @@ logistic_result = evaluate_predictions(
 print("Compare this row with the baseline using the metric that fits your problem.")</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Ask whether the model beat the baseline and which classes it misses. A single overall score can hide poor performance on a rare but costly class.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A single score for how often the model was right on the test rows. On the example students it usually lands around the mid-70s in percent — comfortably above the roughly 64% baseline. Your own data will differ, and there's no "correct" score to aim for: the honest question is simply "did it beat my baseline, and where does it still slip up?" A single overall number can quietly hide poor performance on a group that's rare but really matters, so it's worth a closer look.</p>
       </div>
       <div class="callout danger">
-        <h3>Do not return to tuning after seeing this result</h3>
-        <p>If you change <code>C</code>, features, or preprocessing because of the test score, the test set has become part of model development. Record the idea for a future experiment with a fresh test set.</p>
+        <h3>Resist the urge to keep tweaking now</h3>
+        <p>It's tempting, but if you change <code>C</code>, your features, or your preparation <em>because</em> of what you just saw on the test score, the test set quietly stops being a fair final exam. That's a subtle trap. Instead, jot the idea down as a future experiment — one you'd run with a fresh, untouched test set.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 4 OF 5</span>
-      <h2>Inspect estimated probabilities</h2>
-      <p>The columns align with <code>classes_</code>, and every row sums to one. Read these as model outputs conditional on your training data and chosen features.</p>
+      <h2>See how confident the model was</h2>
+      <p>This is the model's special gift. Instead of only saying "pass," it can say "about 80% likely to pass." This cell lays those confidence numbers out in a table next to what actually happened, so you can see not just what the model guessed, but how sure it was.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>For each row, the model spreads 100% of its confidence across the possible answers. If it's 80% sure of "pass," the remaining 20% goes to "not pass" — the numbers in a row always add up to a whole. A high number means "quite sure," a number near the middle means "honestly, this one's a toss-up."</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> Builds a table showing, for each test row, what actually happened, what the model guessed, and how confident it was in each possible answer.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 4 · PROBABILITY ESTIMATES</span>
@@ -213,22 +237,27 @@ print(
 )</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Find one correct low-probability prediction and one confident mistake, if they exist. Both are more informative than looking only at the easiest rows.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>The first several test rows, each with the true answer, the model's guess, and its confidence numbers — plus a tiny check confirming each row's confidence adds up to a whole. Your own data will differ. The interesting rows to hunt for are the two honest surprises: one where the model was unsure yet still got it right, and one where it was very confident yet wrong. Those two tell you far more than the easy rows it always nails.</p>
       </div>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
         <ol>
-          <li>Would your real decision use the largest probability, or a custom threshold based on the cost of mistakes?</li>
-          <li>What could make these estimates unreliable after deployment?</li>
+          <li>In a real decision, would you just take the model's top pick — or set your own cutoff based on how costly each kind of mistake is?</li>
+          <li>What might make these confidence numbers less trustworthy once you use the model on brand-new situations?</li>
         </ol>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 5 OF 5</span>
-      <h2>Read coefficients without overclaiming</h2>
-      <p>The preprocessor may expand one original category into several indicator columns. The code below uses those transformed names and handles binary and multiclass targets separately.</p>
+      <h2>Peek at which clues mattered</h2>
+      <p>One lovely thing about this model is that you can look inside and see what it learned. Each clue gets a weight — the code calls it a <em class="term" title="a learned weight showing how strongly, and in which direction, a clue pushes the model's answer">coefficient</em>. The sign tells you which group the clue leans toward, and the size hints at how strongly it pushed.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>A coefficient is just "how much this clue nudged the answer, and in which direction." A positive weight pushes toward one group; a negative weight pushes toward the other. On the study example, you might see that more hours studied and higher attendance push toward "pass" — which matches common sense, and that's reassuring.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> Lists the clues by how strongly they swayed the model, and notes which group the positive ones lean toward.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 5 · COEFFICIENTS</span>
@@ -279,18 +308,23 @@ else:
     display(top_by_class)</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>For a binary target, signs refer to the second class shown. For a multiclass target, read each class column separately. Numeric features were scaled; categorical indicators were not, so coefficient sizes are not a universal importance ranking.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A table of clues sorted by how strongly they swayed the model, with a note telling you which group the positive weights point toward. Your own data will differ, so read it as a story about your columns, not a verdict.</p>
       </div>
+      <details class="deep">
+        <summary>Going deeper (optional)</summary>
+        <p>A couple of honest cautions if you want to read the weights closely. When your target has two groups, the plus/minus signs are all relative to the <em>second</em> group the model lists. When it has three or more groups, read each group's column on its own. Also, the number clues were put on the same-sized ruler earlier (scaled), while yes/no category clues were not — so you can't line up all the sizes as one tidy ranking of importance. Compare like with like.</p>
+      </details>
       <div class="callout green">
-        <h3>Coefficient does not mean cause</h3>
-        <p>A coefficient describes the fitted relationship while the other transformed features are held fixed. Correlation among features, omitted variables, encoding choices, and regularisation can all change its sign or size.</p>
+        <h3>"Mattered to the model" is not the same as "caused it"</h3>
+        <p>A weight describes a pattern the model noticed, holding the other clues steady — it does not prove that clue <em>causes</em> the outcome. Clues that travel together, things you never recorded, how categories were coded, and the calming effect of that <code>C</code> setting can all shift a weight's size or even flip its sign. So read weights as interesting hints, not proof.</p>
       </div>
     </section>
 
     <section>
       <p class="eyebrow">DEEPER PRACTICE</p>
       <h2>Explore at your pace</h2>
+      <p>None of this is required — it's just here if you're curious and want to poke around. Here are a few gentle experiments and what to watch for with each. There's no single right answer; the habit to keep is always comparing back to your baseline.</p>
       <div class="tablewrap">
         <table>
           <thead><tr><th>Try</th><th>Observe</th><th>Keep honest</th></tr></thead>
@@ -315,7 +349,7 @@ else:
       <div>
         <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
         <h2>Save the evidence, not just the score.</h2>
-        <p>Record the chosen <code>C</code>, validation spread, final test result, costly errors, and one limitation of the probability estimates.</p>
+        <p>Your score is evidence, not a grade — so jot down the story around it: which <code>C</code> won, how close the top settings were, your one honest test result, where the model made costly mistakes, and one reason its confidence numbers might not be fully trustworthy.</p>
       </div>
       <button class="complete-button" type="button" data-complete="logistic-regression">Mark complete</button>
     </section>

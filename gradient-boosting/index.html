@@ -21,7 +21,8 @@
   <header class="hero wrap">
     <p class="eyebrow">Lesson 06 · Classification + regression</p>
     <h1>A team that corrects itself.</h1>
-    <p class="lede"><strong>Gradient Boosting</strong> builds small trees in sequence. Each round concentrates on what the current team still handles badly. You will tune that sequence on training folds, open the test set once, and finish with a leaderboard that belongs to your problem—not this course.</p>
+    <p class="lede">Welcome to the final lesson. This one is a friendly finale: you will meet one more model, and then you will lay out every model you have tried side by side and see which one fits <em>your</em> problem best. There is no rush and no single right answer — go at your own pace.</p>
+    <p class="lede"><strong>Gradient Boosting</strong> works like a relay team. The first player makes a rough guess, the next one studies where the guess went wrong and nudges it a little closer, the next one fixes what is still off, and so on. Each teammate is a small tree that focuses on the mistakes the team has made so far. You will tune this team on practice data, look at the real test just once, and finish with a scoreboard that belongs to your problem — not to this course.</p>
     <div class="meta-chips">
       <span class="chip">your uploaded dataset</span>
       <span class="chip">both supervised tasks</span>
@@ -31,31 +32,43 @@
 
   <main class="wrap">
     <section class="scope-banner">
-      <h3>Continue in your course notebook</h3>
-      <p>Run the six foundation cells from <a href="../start/">Start Here</a> first. This lesson expects your existing split, preprocessing factory, cross-validation helper, baseline, and results log. Do not upload again or create a new test set.</p>
+      <h3>Keep working in the same notebook</h3>
+      <p>Just like every lesson before this one, add these cells to the bottom of the notebook you have been using all course. First make sure the six setup cells from <a href="../start/">Start Here</a> have run — this lesson reuses your train/test split, your <code>make_preprocessor</code> helper, your cross-validation helper, your baseline, and your running <code>results_log</code>. There is no need to upload your data again or make a new test set.</p>
     </section>
 
     <section class="step">
       <span class="step-chip">THE IDEA</span>
       <h2>Many small corrections, added together</h2>
-      <p>A Random Forest grows many varied trees independently and averages their answers. Gradient Boosting is a relay: tree 1 starts the prediction, tree 2 learns a small correction, tree 3 corrects what remains, and the process continues.</p>
+      <p>Think back to the last lesson. A random forest grows lots of trees at the same time, each looking at the problem a little differently, and then it averages their votes — like asking a whole room for their opinion at once.</p>
+      <p>Gradient Boosting is different. It works one teammate at a time, in a line. Tree 1 makes a first rough guess. Tree 2 looks only at where tree 1 went wrong and learns a small correction. Tree 3 fixes whatever is still off. Each new tree studies the leftover mistakes and patches them, and their small fixes add up into a sharp final answer.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>A random forest is a crowd voting all at once. Gradient Boosting is a relay team where each runner studies the previous runner's mistakes and closes the gap a little more.</p>
+      </div>
+      <p>This model has two main dials you can turn. Here is what each one does in plain language.</p>
       <div class="idea-grid">
         <div class="idea-card">
           <h3>Number of rounds</h3>
-          <p><code>n_estimators</code> controls how many correction trees join the sequence. Too few can underfit; too many can waste time or overfit.</p>
+          <p>How many correction trees join the relay. A few teammates might not fix enough; a huge number can just memorise the practice data and waste time. This is the <code>n_estimators</code> dial.</p>
         </div>
         <div class="idea-card">
           <h3>Size of each correction</h3>
-          <p><code>learning_rate</code> controls how strongly each new tree changes the team. Smaller steps usually need more rounds.</p>
+          <p>How big a step each new teammate is allowed to take. Small careful steps are safer but usually need more teammates to get there. This is the <code>learning_rate</code> dial.</p>
         </div>
       </div>
-      <p>The model works for classification and regression. It does not require numeric scaling, but the shared preprocessor still fills missing values and encodes categories.</p>
+      <p>These two dials pull against each other: gentle steps (a small learning rate) usually want more rounds, while bigger steps want fewer. In Step 2 you will let cross-validation try several combinations and pick the pair that works for your data.</p>
+      <p>Gradient Boosting works for both jobs — sorting things into groups (classification) and predicting a number (regression). It does not care whether your numbers are on the same scale, so we skip that step, but your shared preprocessor still quietly fills in missing values and turns text categories into numbers behind the scenes.</p>
     </section>
 
     <section class="step">
       <span class="step-chip">STEP 1 OF 6</span>
-      <h2>Build a pipeline for your task</h2>
-      <p>The task switch chooses the correct estimator. The rest of the workflow stays identical.</p>
+      <h2>Set up the model for your task</h2>
+      <p>This cell first does a quick safety check that your setup cells ran, then builds a <em class="term" title="a set of steps — data cleaning, then the model — bundled so they always run together in the right order">pipeline</em>: the cleaning steps and the model wrapped together so they always run in the right order. It automatically picks the right version of Gradient Boosting for your task — the sorting-into-groups version or the predicting-a-number version.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>A pipeline is like a coffee machine: you pour in raw beans (your data), and grinding, brewing, and pouring all happen in one go — you never have to remember the order.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> Confirms your setup cells ran, then builds the Gradient Boosting model paired with your data-cleaning steps.</p>
       <div class="codecard">
         <div class="codecard-head"><span>CELL 1 · MODEL PIPELINE</span><button class="copy" type="button">Copy</button></div>
         <pre><code># Check that the shared foundation is available.
@@ -94,15 +107,21 @@ gradient_pipeline = Pipeline([
 print("Pipeline ready for:", TASK)</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>The printed task should match the project card at the top of your notebook. If it does not, fix the project definition rather than changing the model code.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A short line like <code>Pipeline ready for: classification</code> (or <code>regression</code>). That should match the task you chose in your setup cells. If a red error appears instead saying to run the Start Here cells, that is just the safety check being helpful — click <em>Runtime → Run all</em> and try again. If the printed task is not the one you meant, fix it back in your setup cell rather than here.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">STEP 2 OF 6</span>
-      <h2>Choose the dials with training-only cross-validation</h2>
-      <p>This search compares combinations across folds made only from <code>X_train</code>. The held-out test rows remain closed. Start with this modest grid; a large dataset may take several minutes.</p>
+      <h2>Let the model try dial settings on practice data</h2>
+      <p>Now we let the computer try several combinations of the two dials and see which works best — but only using <em class="term" title="repeatedly holding out a slice of the training data as a mini practice-exam, so the model is judged on rows it did not learn from">cross-validation</em> on the practice data. Your real test rows stay sealed in an envelope, untouched, so the final grade later is honest.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Cross-validation is like taking several small practice quizzes using rows the model has not seen yet, then averaging the scores. It tells you how the settings tend to do — without ever peeking at the real exam.</p>
+      </div>
+      <p>Each combination of "number of rounds" and "size of each correction" is one <em class="term" title="a setting you choose before training, rather than something the model learns from the data">hyperparameter</em> choice. Start with the modest set of options below; if your dataset is large this can take a few minutes, which is completely normal — let it run.</p>
+      <p class="does"><strong>What this does:</strong> Quietly tries several dial settings on practice data and keeps the combination that scored best.</p>
       <div class="codecard">
         <div class="codecard-head"><span>CELL 2 · CROSS-VALIDATED SEARCH</span><button class="copy" type="button">Copy</button></div>
         <pre><code>from sklearn.model_selection import GridSearchCV
@@ -133,19 +152,28 @@ else:
     print(f"Best mean CV MAE: {-gradient_search.best_score_:.3f}")</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Write down which pair won. A larger number of rounds is not automatically better, and a higher learning rate is not automatically faster learning in the useful sense.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>The winning dial settings printed out (which number of rounds, which correction size, which tree depth), plus the average practice-quiz score for that winner. If your project is a sorting-into-groups task you will see a balanced-accuracy score (higher is better); if it is a predict-a-number task you will see a line labelled <em class="term" title="mean absolute error — the average size of the model's misses, in the same units as what you're predicting; lower is better">MAE</em>. Jot the winning pair down. Do not assume "more rounds" or "bigger steps" is automatically better — the whole point of this search is to let your data decide. Your own numbers will look different from anyone else's, and that is fine.</p>
+      </div>
+      <div class="plain">
+        <span>In plain words</span>
+        <p><strong>MAE</strong> stands for "mean absolute error." It is simply the average size of the model's misses, measured in the same units as the thing you are predicting. If you are predicting a score out of 100 and the MAE is about 8, the model is off by roughly 8 points on a typical row. Smaller is better.</p>
       </div>
       <div class="callout green">
-        <h3>If this search is too slow</h3>
-        <p>Use <code>[50, 100]</code> for the rounds, <code>[0.05, 0.1]</code> for the rate, and <code>[2]</code> for depth. Compute limits are part of model selection; reducing the search is better than abandoning honest validation.</p>
+        <h3>If this search feels too slow</h3>
+        <p>No problem — you can hand-edit the lists in the cell to try fewer options: <code>[50, 100]</code> for the rounds, <code>[0.05, 0.1]</code> for the correction size, and <code>[2]</code> for depth. Trimming the search to fit your time is a normal, sensible choice. The one thing to keep is the honest practice-then-test approach — never skip validation just to go faster.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">STEP 3 OF 6</span>
-      <h2>Open the test set once</h2>
-      <p>The search has finished making choices. Its refitted winner can now sit the same held-out exam as your baseline and previous models.</p>
+      <h2>Open the sealed test — just once</h2>
+      <p>All the choosing is done. Now the winning model sits the exact same held-out exam that your <em class="term" title="a simple always-guess-the-obvious-answer model that every real model has to beat to prove it learned anything">baseline</em> and your earlier models took. We open that envelope only once so the score stays trustworthy.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>The test rows are like exam questions the model has never seen. Grading it on those is the only fair way to tell whether it really learned something or just memorised the practice sheet.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> Asks the winning model to predict the sealed test rows and shows how well those predictions match the real answers.</p>
       <div class="codecard">
         <div class="codecard-head"><span>CELL 3 · FINAL TEST</span><button class="copy" type="button">Copy</button></div>
         <pre><code>best_gradient = gradient_search.best_estimator_
@@ -159,23 +187,24 @@ evaluate_predictions(
 )</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Compare with the baseline using the metric your problem needs. If Gradient Boosting loses, that is a result—not a broken lesson.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A score for Gradient Boosting on your test rows. On the example study-habits data, a classification run lands around 70% accuracy — comfortably above the roughly 64% baseline that just guesses the most common answer. Your own data will give a different number, and that is expected. Compare it to your baseline using the measure that matters for your problem. If Gradient Boosting does not win, that is still a real, useful result — not a broken lesson.</p>
       </div>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
         <ol>
-          <li>How large is the improvement over the baseline?</li>
-          <li>Which class or numeric range still performs poorly?</li>
-          <li>Would that error be acceptable in the real decision described by your project card?</li>
+          <li>How much better is this than your baseline — a lot, a little, or not at all?</li>
+          <li>Which group, or which range of numbers, does it still get wrong most often?</li>
+          <li>Would that kind of mistake be acceptable in the real decision you wrote down at the start?</li>
         </ol>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">STEP 4 OF 6</span>
-      <h2>Read the search instead of guessing</h2>
-      <p>The cross-validation table shows how the dials interacted before the test was opened. Sort it by the training-fold score and inspect the strongest and weakest combinations.</p>
+      <h2>See how each dial setting did</h2>
+      <p>Before you opened the test, the search quietly quizzed every dial combination on practice data. This cell lays those results out in a table, best at the top, so you can see the pattern instead of guessing.</p>
+      <p class="does"><strong>What this does:</strong> Shows a tidy table of every dial combination the search tried and how each one scored on the practice quizzes.</p>
       <div class="codecard">
         <div class="codecard-head"><span>CELL 4 · CV RESULTS</span><button class="copy" type="button">Copy</button></div>
         <pre><code>cv_results = pd.DataFrame(gradient_search.cv_results_)
@@ -207,15 +236,20 @@ else:
 display(cv_summary.head(10))</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Look beyond the first row. If several settings perform almost identically, prefer the smaller or faster model rather than pretending a tiny difference is certain.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A table of up to ten dial combinations sorted from best to worst, each with its average practice score, how much that score wobbled between quizzes, and roughly how long it took to train. Look past just the top row: if several settings score almost the same, it is wiser to pick the smaller or faster one than to treat a tiny difference as if it were meaningful.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">STEP 5 OF 6</span>
-      <h2>Measure which original columns matter</h2>
-      <p>Permutation importance shuffles one original feature at a time and measures how much the final score deteriorates. Because it wraps the whole pipeline, categorical features stay grouped under their original column names.</p>
+      <h2>See which columns the model leans on</h2>
+      <p>Which of your columns actually helped? This cell finds out with a clever trick called <em class="term" title="scrambling one column's values to break its link to the answer, then seeing how much the score drops">permutation importance</em>: it scrambles one column at a time and watches how much the score falls. If scrambling a column barely changes the score, the model was not really using it. If the score collapses, that column was doing a lot of work.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Imagine covering up one column with correction tape and asking the model to guess again. The columns that make its answers fall apart when hidden are the ones it truly relies on.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> Scrambles each column in turn, measures how much the score drops, and draws a bar chart ranking your columns from most to least useful.</p>
       <div class="codecard">
         <div class="codecard-head"><span>CELL 5 · PERMUTATION IMPORTANCE</span><button class="copy" type="button">Copy</button></div>
         <pre><code>from sklearn.inspection import permutation_importance
@@ -250,16 +284,25 @@ plt.title("Gradient Boosting permutation importance")
 plt.tight_layout()
 plt.show()</code></pre>
       </div>
+      <div class="checkpoint">
+        <span>WHAT YOU'LL SEE</span>
+        <p>A table and a bar chart of your columns, longest bars on top. The little error whiskers on each bar show how much the result wobbled across repeated shuffles. On the example study data, a column like previous score or attendance tends to matter most — but your own columns will rank differently, and there is no "correct" ranking.</p>
+      </div>
       <div class="callout danger">
-        <h3>Importance is not causation</h3>
-        <p>A feature can be useful because it is a proxy, correlated with another feature, or produced by the same process as the target. Correlated columns may also share importance. Treat this as a description of the fitted model, not a law about the world.</p>
+        <h3>Important does not mean it causes the outcome</h3>
+        <p>A column can look important just because it travels alongside the real cause, or because it quietly leaks a hint about the answer. When two columns say similar things, they may also split the credit between them. So read this chart as "what this particular model leaned on," not as a law about how the world works.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">STEP 6 OF 6</span>
-      <h2>Finish with your own course leaderboard</h2>
-      <p>The results log contains only models you actually ran on the same split. Sort it using a metric that matches your task, then add practical considerations before choosing a model.</p>
+      <h2>Your own scoreboard for the whole course</h2>
+      <p>This is the moment the course has been building toward. Your <code>results_log</code> has been quietly collecting a row for every model you tried in this notebook — the baseline and each lesson — all graded on the very same sealed test. This cell lays them out as one scoreboard so you can finally compare them fairly.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Because every model sat the exact same exam on the exact same rows, this is a fair comparison. And the "winner" is not a universal ranking of algorithms — it is whichever model fits <em>your</em> data and cares most about the mistake that would cost you most.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> Gathers every model you have run into one table and sorts it, best first, by the measure that fits your task.</p>
       <div class="codecard">
         <div class="codecard-head"><span>CELL 6 · PERSONAL LEADERBOARD</span><button class="copy" type="button">Copy</button></div>
         <pre><code>leaderboard = pd.DataFrame(results_log)
@@ -274,10 +317,11 @@ else:
 display(leaderboard.reset_index(drop=True))</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>The table should contain your baseline and every compatible lesson you completed. It should not contain a course-wide score or a model trained on somebody else's data.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>One row per model you actually ran — your baseline plus every lesson you finished — sorted best to worst. It only holds your models on your data; there is no course-wide score to compare against and nothing trained on someone else's dataset. Your score is evidence about your problem, not a grade, so treat the top row as a candidate to examine rather than an automatic winner.</p>
       </div>
 
+      <p>Before you crown a winner, it helps to ask a few honest questions. The highest score is not always the best choice — here is why the answer can change once you look past the number.</p>
       <div class="tablewrap">
         <table>
           <thead><tr><th>Question</th><th>Why it can change the winner</th></tr></thead>
@@ -293,9 +337,10 @@ display(leaderboard.reset_index(drop=True))</code></pre>
     </section>
 
     <section class="step">
-      <span class="step-chip">OPTIONAL DEEP DIVE</span>
-      <h2>Estimated probabilities for classification</h2>
-      <p>For a classification project, inspect the model's estimated class probabilities. These numbers can rank confidence, but they are not guaranteed to be calibrated and should never be described as certainty.</p>
+      <span class="step-chip">OPTIONAL · ONLY IF YOU LIKE</span>
+      <h2>A peek at the model's "how sure" numbers</h2>
+      <p>This one is optional — skip it with a clear conscience if you are ready to wrap up. If your project is a classification (sorting-into-groups) task, the model can also tell you how strongly it leans toward each group for a given row. These are handy for ranking rows by how sure the model seems, but they are estimates, not guarantees, so never read them as certainty.</p>
+      <p class="does"><strong>What this does:</strong> For a classification project, shows the first ten test rows next to the true answer, the model's guess, and how strongly it leaned toward that guess.</p>
       <div class="codecard">
         <div class="codecard-head"><span>OPTIONAL CELL · PROBABILITY PREVIEW</span><button class="copy" type="button">Copy</button></div>
         <pre><code>if TASK != "classification":
@@ -314,31 +359,36 @@ else:
     print("Probability column order:", list(class_names))
     display(probability_preview)</code></pre>
       </div>
-      <details>
-        <summary>Why “estimated probability” instead of “confidence”?</summary>
-        <p>A model can output 0.90 and still be correct much less than 90% of the time. Calibration must be checked separately on validation data. Probability describes the model's fitted scale, not how trustworthy the dataset or world is.</p>
+      <div class="checkpoint">
+        <span>WHAT YOU'LL SEE</span>
+        <p>If your task is regression, a short note that this preview is for classification only — nothing to worry about. If it is classification, a small table of ten rows showing the truth, the model's guess, and its strongest "how sure" number for each. Your own rows will differ, of course.</p>
+      </div>
+      <details class="deep">
+        <summary>Going deeper (optional): why we say "estimated" and not "confident"</summary>
+        <p>A model can print 0.90 for a row and still turn out right far less than 90% of the time. Whether those numbers can be trusted at face value is a separate question — you would have to check it, on its own, using validation data. So the number describes the model's internal scale, not how trustworthy the data or the real world actually is. When in doubt, treat it as a ranking hint, not a promise.</p>
       </details>
     </section>
 
     <section class="step">
       <span class="step-chip">COURSE RECAP</span>
-      <h2>The reusable workflow was the real model</h2>
+      <h2>The real lesson was the routine, not any one model</h2>
+      <p>Here is the honest secret of the whole course: the individual models matter less than the steady routine you now know by heart. If you can follow these seven steps, you can pick up almost any new model and use it safely.</p>
       <ol>
-        <li>Define one row, the target, available features, and the costly mistake.</li>
-        <li>Choose a random, time, or group split that resembles deployment.</li>
-        <li>Learn preprocessing from training data inside a pipeline.</li>
-        <li>Build a dummy baseline before using a sophisticated estimator.</li>
-        <li>Choose dials with cross-validation—not the final test set.</li>
-        <li>Open the test once and inspect errors, not only the headline metric.</li>
-        <li>Prefer the model whose trade-offs fit the actual decision.</li>
+        <li>Decide what one row means, what you are predicting, which columns you get to use, and which mistake would hurt most.</li>
+        <li>Split the data in a way that mirrors how it will really be used — by chance, by time, or by group.</li>
+        <li>Learn all cleaning steps from the practice data only, kept inside a pipeline so nothing leaks.</li>
+        <li>Build a plain baseline first, so every fancy model has something honest to beat.</li>
+        <li>Tune the dials with cross-validation on practice data — never on the final test.</li>
+        <li>Open the test just once, and look at where it goes wrong, not only the headline score.</li>
+        <li>Pick the model whose trade-offs actually fit the decision you have to make.</li>
       </ol>
       <div class="reflection">
         <span>FINAL PROJECT NOTE</span>
         <ol>
-          <li>Which model would you choose today, and why?</li>
-          <li>What evidence would make you reverse that choice?</li>
-          <li>What new data should be collected next?</li>
-          <li>Who could be harmed by a wrong prediction?</li>
+          <li>Which model would you pick today, and what is your reason?</li>
+          <li>What would you need to see to change your mind?</li>
+          <li>What new data would be worth collecting next?</li>
+          <li>Who could be hurt if a prediction is wrong, and how would you catch it?</li>
         </ol>
       </div>
     </section>
@@ -346,8 +396,8 @@ else:
     <section class="completion-card">
       <div>
         <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
-        <h2>Save the notebook and your final project note.</h2>
-        <p>Your leaderboard is a snapshot of one dataset and one split—not a universal ranking of algorithms.</p>
+        <h2>You did it — save your notebook and your final note.</h2>
+        <p>Your scoreboard is a snapshot of one dataset and one split, not a universal ranking of models. That is exactly why it is yours. Well done getting all the way through.</p>
       </div>
       <button class="complete-button" type="button" data-complete="gradient-boosting">Mark complete</button>
     </section>

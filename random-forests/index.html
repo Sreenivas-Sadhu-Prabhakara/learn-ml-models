@@ -20,8 +20,8 @@
 
   <header class="hero wrap">
     <p class="eyebrow">Lesson 05 · Classification + Regression</p>
-    <h1>Average many varied trees for a steadier model</h1>
-    <p class="lede">A random forest fits many trees to different samples and feature subsets, then combines their predictions. You will tune the forest without opening the test set, evaluate once, and measure how much it relies on each <strong>original input column</strong>.</p>
+    <h1>Ask a whole crowd of trees, then let them vote</h1>
+    <p class="lede">In the last lesson you grew one decision tree. A <em class="term" title="a large group of decision trees whose predictions are combined into one answer">random forest</em> grows hundreds of slightly different trees and combines their answers. When one tree makes a mistake, the others usually cancel it out — so the crowd tends to be steadier than any single tree. This page is warm and self-paced; take each cell one at a time.</p>
     <div class="meta-chips">
       <span class="chip">your uploaded dataset</span>
       <span class="chip">classification + regression</span>
@@ -32,31 +32,41 @@
   <main class="wrap">
     <section class="start-banner">
       <div>
-        <h2>Continue in your foundation notebook</h2>
-        <p>Use the same target, features, split, metric, and baseline from <a href="../start/">Your problem, your data</a>. Keep those held-out test rows unchanged so comparisons remain meaningful.</p>
+        <h2>Keep working in the same notebook</h2>
+        <p>You will add these cells right below the ones from earlier lessons — same notebook, same setup. You keep using the same target, features, split, metric, and baseline from <a href="../start/">Your problem, your data</a>. The set-aside test rows stay untouched, so every model you try is judged the same fair way.</p>
       </div>
       <a class="button" href="../start/">Review foundation</a>
     </section>
 
     <section>
       <p class="eyebrow">THE IDEA</p>
-      <h2>Many deliberately different trees</h2>
-      <p>Each tree sees a bootstrap sample of the training rows and considers only a subset of features at each split. Those differences reduce the chance that every tree repeats the same error. Classification combines class estimates; regression averages numeric predictions.</p>
-      <p>More trees usually make the average more stable, while depth, leaf size, and the number of candidate features control how complex and similar the individual trees become.</p>
+      <h2>The wisdom of a crowd</h2>
+      <p>Imagine you have a hard question and you ask hundreds of people instead of just one. Each person is a little different and might get it slightly wrong, but their individual mistakes point in different directions. When you take the group's overall answer, those errors tend to cancel out. A random forest works the same way, using trees instead of people.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>A single tree can be opinionated and jumpy. A forest asks many trees and goes with the crowd — usually a calmer, more reliable answer.</p>
+      </div>
+      <p>To make sure the trees actually disagree in useful ways, each one is shown a slightly different slice of your data and only allowed to look at some of the columns at a time. That built-in variety is the whole trick. For a yes/no question the trees take a vote; for predicting a number, their answers are averaged.</p>
+      <p>You do not have to memorize the knobs, but here is the gist: more trees usually make the crowd steadier, while settings for depth and leaf size control how bold or cautious each individual tree is allowed to be.</p>
       <div class="callout green">
-        <h3>No numeric scaling required</h3>
-        <p>Like a single decision tree, a forest works through ordered thresholds. The shared preprocessor still fills missing values and encodes categories, but leaves numeric units unchanged.</p>
+        <h3>No need to rescale your numbers</h3>
+        <p>Like a single tree, a forest just asks yes/no threshold questions ("is this value above 5?"), so the size of your units never matters. The shared <em class="term" title="the shared setup step that cleans your data the same way every time — filling gaps and turning words into numbers">preprocessor</em> still quietly fills in missing values and turns text categories into numbers, but it leaves your numeric columns as they are.</p>
       </div>
       <div class="callout">
-        <h3>Power does not remove the need for a baseline</h3>
-        <p>A more complex model is worthwhile only if its validation behaviour, held-out performance, operational cost, and error pattern suit the real problem.</p>
+        <h3>A powerful model still has to beat your baseline</h3>
+        <p>Your <em class="term" title="the simple always-guess-the-obvious-answer score that any real model must beat to be worth using">baseline</em> is the simple guess from the foundation page (for the example students, always guessing "pass" scores about 64%). A fancier model is only worth it if it clearly beats that number and fits what your real project actually needs.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 1 OF 6</span>
-      <h2>Build a forest for your task</h2>
-      <p>The foundation task selects a classifier or regressor. Preprocessing remains inside the pipeline, so each training fold learns its transformations without seeing its validation fold.</p>
+      <h2>Set up your forest</h2>
+      <p>This cell reads the TASK you chose on the foundation page and automatically picks the right kind of forest — one for yes/no questions, one for predicting a number. It also wraps the cleanup step and the forest together into a single <em class="term" title="a bundle that runs the data-cleaning step and the model together, in order, so nothing can be skipped or mixed up">pipeline</em>.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>A pipeline is like a set of connected pipes: your data flows through the cleaning step first and into the model second, always in that order, so the two stay in sync and nothing leaks between them.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> builds a random forest that matches your task and bundles it with your data-cleaning step, then prints your task name and how many rows are for training versus the held-back test.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 1 · MODEL SETUP</span>
@@ -111,15 +121,21 @@ print("Training rows:", len(X_train))
 print("Held-out test rows:", len(X_test))</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>If this cell reports missing foundation objects, run the complete foundation first. Do not create a fresh split for this lesson.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>Three short lines: your task, your number of training rows, and your number of test rows. This is just a quick safety check that the earlier setup cells ran. If it complains that something is missing, click Runtime -> Run all and try again — nothing is broken, the notebook just needs its earlier cells run first.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 2 OF 6</span>
-      <h2>Tune on training folds only</h2>
-      <p>This random search samples a manageable set of combinations. Your foundation supplies cross-validation that respects the chosen random, time, or group structure. The test rows remain closed.</p>
+      <h2>Let the forest tune itself — using training data only</h2>
+      <p>A forest has a few settings you can adjust (how many trees, how deep, and so on). Instead of guessing, this cell tries a handful of sensible combinations and keeps the one that performs best. These adjustable settings are called <em class="term" title="a setting you choose before training, like the number of trees or how deep each one grows — as opposed to something the model learns on its own">hyperparameters</em>.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Think of it like tuning a radio: the cell nudges the dials, listens to how well each setting does, and settles on the clearest one — all without ever peeking at your final test rows.</p>
+      </div>
+      <p>It judges each combination using <em class="term" title="a fair testing method: the training data is split into several parts, and the model is tested on each part in turn so no single lucky split decides the winner">cross-validation</em>, the same fair method from your foundation page, which respects whether your data is random, time-based, or grouped. Your test rows stay sealed.</p>
+      <p class="does"><strong>What this does:</strong> quietly tries several forest settings, keeps the best one, and shows you a table of what it tried ranked from best to worst, plus the winning settings.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 2 · TRAINING-ONLY SEARCH</span>
@@ -161,22 +177,27 @@ print("Chosen settings:", forest_search.best_params_)
 print("Validation metric:", PRIMARY_SCORING)</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Compare validation means with their fold-to-fold spread. The first-ranked row is not meaningfully superior when several candidates sit within that variation.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A table with one row per setting it tried, sorted best-first, and a line showing the winning settings. On the example students this lands in roughly the mid-70s; your own data will land somewhere else, and that is completely fine.</p>
       </div>
+      <details class="deep">
+        <summary>Going deeper (optional): when the "winner" is really a tie</summary>
+        <p>Notice the last column of each row is a spread — a "give or take" range. If several top rows overlap within that give-or-take, they are basically tied, and the exact number-one row is not truly better than its close neighbours. In that case the difference is likely just luck of the split, so don't read too much into which row landed first.</p>
+      </details>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
         <ol>
-          <li>Did the chosen forest favour deeper trees or larger leaves?</li>
-          <li>How different are training and validation performance for the most flexible candidates?</li>
+          <li>Did the winning forest prefer deeper trees, or gentler ones with bigger leaves?</li>
+          <li>For the boldest settings, how far apart are the training score and the validation score? A big gap is a hint the model is memorizing.</li>
         </ol>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 3 OF 6</span>
-      <h2>Evaluate the locked forest once</h2>
-      <p>The search has selected and refitted one pipeline using all training rows. Now open the test set for the final model comparison.</p>
+      <h2>Give the finished forest its one real test</h2>
+      <p>The tuning is done and the best forest has been re-trained on all your training rows. Now — and only now — we open the sealed test rows to see how it does on data it has genuinely never seen. This is the honest exam, and you take it once.</p>
+      <p class="does"><strong>What this does:</strong> asks the finished forest to predict on the held-back test rows, scores those predictions, adds the result to your shared comparison log, and prints how many trees the forest ended up with.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 3 · FINAL EVALUATION</span>
@@ -194,19 +215,25 @@ fitted_forest = best_forest.named_steps["model"]
 print("Trees in fitted forest:", fitted_forest.n_estimators)</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Compare the forest with the baseline and earlier models. A win on one metric can coexist with worse performance on the mistake your project considers most costly.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>Your forest's score on the test rows, plus a line counting its trees. On the example students the forest usually lands around 76% — comfortably above the ~64% baseline, and typically a touch steadier than the single tree from the last lesson. Your own data will give a different number, and there is no "correct" score here; the point is whether it beats your baseline. Also glance at where it makes mistakes, not just the headline number: a model can win on the overall score yet be worse at the one mistake that matters most to your real project.</p>
       </div>
       <div class="callout danger">
-        <h3>Freeze the performance claim here</h3>
-        <p>Any feature removal or setting change inspired by the test results starts a new development round and needs a fresh final test set.</p>
+        <h3>This score is now locked in</h3>
+        <p>Once you have looked at the test result, resist the urge to go back and tweak settings or drop a column to chase a higher number. Doing that quietly turns the test into practice data, and the score stops being honest. If you do decide to change things, you would need a brand-new, untouched set of test rows to judge the result fairly.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 4 OF 6</span>
-      <h2>Measure reliance on original columns</h2>
-      <p>Permutation importance shuffles one input column at a time and measures the performance drop. Because it receives the complete pipeline and the original <code>X_test</code> table, one result corresponds to each column in <code>FEATURES</code>—not to each one-hot encoded column.</p>
+      <h2>Which clues did the forest lean on most?</h2>
+      <p>A nice thing about a forest is that you can ask which of your columns it relied on. The trick, called <em class="term" title="a way to measure how much a column mattered: scramble that column's values and see how much the score falls">feature importance</em> by shuffling, is beautifully simple: scramble one column so it becomes useless noise, then see how much the score drops. If the score falls a lot, the forest was leaning on that clue. If nothing much happens, that clue barely mattered.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Imagine covering up one column on a form and seeing how much worse your guesses get. Cover the truly useful column and you struggle; cover a useless one and you barely notice.</p>
+      </div>
+      <p>Because this runs on the whole pipeline and your original table, you get exactly one clear result per column you started with — even columns that were text categories stay grouped as one clue, instead of being split into confusing pieces.</p>
+      <p class="does"><strong>What this does:</strong> scrambles each of your columns in turn to measure how much the forest relied on it, then shows a ranked table and a bar chart of the most-relied-on clues.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 4 · PERMUTATION IMPORTANCE</span>
@@ -243,27 +270,32 @@ plt.tight_layout()
 plt.show()</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>A large positive drop means the fitted pipeline relied on that column for these held-out rows. Near-zero or negative values can occur through noise, weak features, or shared information between correlated columns.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A ranked list and a bar chart of your columns. Longer bars are the clues the forest leaned on most for these test rows. Bars near zero (or even slightly below) mean that clue barely helped — that can happen with weak columns, plain noise, or two columns that carry the same information and share the credit. On the example students, columns like previous score and attendance tend to rise to the top, but your own data will tell its own story.</p>
       </div>
       <div class="callout danger">
-        <h3>Reliance is association, not causation</h3>
-        <p>Shuffling asks how this model’s score changes when a column’s information is broken. It does not show that changing the real-world feature will change the outcome. Correlated columns can share or hide importance, and leaked features can appear highly important.</p>
+        <h3>"Leaned on" is not the same as "caused"</h3>
+        <p>This chart tells you which clues <em>this model</em> found useful — nothing more. It does <strong>not</strong> prove that changing that thing in real life would change the outcome. Treat a tall bar as a question to investigate, not a conclusion.</p>
       </div>
+      <details class="deep">
+        <summary>Going deeper (optional): two ways a bar can mislead you</summary>
+        <p>Two related columns can trade importance between them: if both carry the same information, the forest may lean on one and leave the other looking unimportant, even though either would do. And a column that accidentally gives away the answer (called <em class="term" title="when a column secretly contains the answer or future information the model shouldn't have at prediction time">leakage</em>) can look important for the wrong reason — it's not helping you predict, it's quietly handing over the answer. Both are reasons to read a tall bar as a starting question, not a finding.</p>
+      </details>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
         <ol>
-          <li>Does the most relied-on column exist at the moment a real prediction is made?</li>
-          <li>Which correlated columns might be sharing predictive information?</li>
-          <li>What domain review is needed before anyone acts on this chart?</li>
+          <li>Is the top clue actually available at the moment you would make a real prediction, or does it sneak in information from later?</li>
+          <li>Are any of your columns closely related, so they might be splitting the credit between them?</li>
+          <li>Who with real-world knowledge of your subject should sanity-check this chart before anyone acts on it?</li>
         </ol>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 5 OF 6</span>
-      <h2>Inspect probabilities only for classification</h2>
-      <p>A classifier averages class estimates across its trees. These outputs can support threshold decisions, but they are still estimates and are not guaranteed to match real-world frequencies. Regression forests do not produce class probabilities.</p>
+      <h2>See how confident the forest is (yes/no tasks only)</h2>
+      <p>For a yes/no task, the forest can tell you not just its answer but how sure it is — for example, "about 80% of my trees voted yes." That confidence comes from counting the votes across all the trees. It is a helpful hint, but treat it as the model's opinion, not a guaranteed real-world chance. If your task is predicting a number, there is no such thing as a vote share, so this cell simply says so and moves on — nothing to do.</p>
+      <p class="does"><strong>What this does:</strong> for a yes/no task, shows a small table of the first few test rows with the actual answer, the predicted answer, and the forest's confidence in each option. For a number-prediction task, it just prints a short note that this step does not apply.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 5 · CONDITIONAL PROBABILITIES</span>
@@ -288,15 +320,16 @@ else:
     )</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>For classification, look for confident mistakes and uncertain correct predictions. For regression, skip probability language and inspect numeric errors instead.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>For a yes/no task, a short table of example rows with the true answer, the forest's guess, and its confidence. The interesting rows are the surprises: a very confident wrong guess, or a correct guess the forest was unsure about. For a number-prediction task, you will just see a one-line note that this step does not apply — that is expected, not an error.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 6 OF 6</span>
-      <h2>Compare complexity and evidence</h2>
-      <p>A forest is harder to explain row by row than a small decision tree. Use the shared results log alongside training cost, stability, and the consequences of errors.</p>
+      <h2>Write down what you learned</h2>
+      <p>A forest is more accurate than a single tree, but harder to explain one row at a time — you cannot point to a single simple rule. This last cell gathers everything worth remembering into one tidy record you can save: your winning settings, the columns the forest leaned on, and its final score. When you decide which model to keep, weigh that score against how easy it is to explain and how bad different mistakes would be.</p>
+      <p class="does"><strong>What this does:</strong> shows your running comparison of every model so far, then prints a compact summary card for this forest — its settings, its most-relied-on columns, and its final test result.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 6 · PROJECT RECORD</span>
@@ -318,22 +351,23 @@ project_record = {
 display(pd.Series(project_record, name="value"))</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Choose a model only after translating its metrics into the project’s real mistake costs. “Highest score” is not a complete decision rule.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A comparison table with a row for every model you have tried, followed by a small summary card for this forest. There is no single "right" winner here — the best choice depends on what the mistakes cost in your real project, not just which row has the highest number.</p>
       </div>
       <div class="reflection">
         <span>LESSON NOTES</span>
         <ol>
-          <li>Did the forest improve on a smaller model enough to justify its complexity?</li>
-          <li>Which subgroup, time period, or error type still needs inspection?</li>
-          <li>What would make performance drift when new rows arrive?</li>
+          <li>Did the forest improve on your simpler models by enough to be worth being harder to explain?</li>
+          <li>Which group of rows, time period, or type of mistake still deserves a closer look?</li>
+          <li>What might make the score slip as new data arrives down the road?</li>
         </ol>
       </div>
     </section>
 
     <section>
       <p class="eyebrow">DEEPER PRACTICE</p>
-      <h2>Continue without contaminating the test</h2>
+      <h2>Want to keep exploring? Here's how, safely</h2>
+      <p>None of this is required — it is just for when you are curious to poke further. The one golden rule stays the same: keep your test rows sealed while you experiment. This table pairs a thing to try with what it teaches and the data rule to keep it honest.</p>
       <div class="tablewrap">
         <table>
           <thead><tr><th>Try next</th><th>Learn</th><th>Data rule</th></tr></thead>
@@ -349,8 +383,8 @@ display(pd.Series(project_record, name="value"))</code></pre>
     <section class="completion-card">
       <div>
         <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
-        <h2>Save the model card you wish you had later.</h2>
-        <p>Record the split logic, chosen settings, validation spread, final result, costly errors, important columns, and the association-not-causation warning.</p>
+        <h2>Save the notes your future self will thank you for.</h2>
+        <p>Jot down how you split the data, the settings you kept, the give-or-take spread you saw, the final score, which mistakes hurt most, which columns the forest leaned on, and the reminder that "leaned on" is not the same as "caused." When it feels complete, mark this lesson done and move on whenever you are ready.</p>
       </div>
       <button class="complete-button" type="button" data-complete="random-forests">Mark complete</button>
     </section>

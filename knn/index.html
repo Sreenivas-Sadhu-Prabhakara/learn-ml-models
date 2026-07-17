@@ -21,7 +21,7 @@
   <header class="hero wrap">
     <p class="eyebrow">Classification + regression · your dataset</p>
     <h1>Let nearby examples make the prediction.</h1>
-    <p class="lede"><strong>K-Nearest Neighbours</strong> asks which training rows are most similar to a new row. Categories vote; numbers are averaged. You will scale distances safely, choose K using training-only cross-validation, and open the test set once.</p>
+    <p class="lede">This lesson helps you make a prediction the most human way there is: to judge a new case, you look at the handful of past cases most like it and go with them. <strong>K-Nearest Neighbours</strong> does exactly that. When the answer is a category, the similar cases vote; when the answer is a number, you average them. You will put your features on a fair footing, let the training data suggest a good setting, and check the real test only at the very end.</p>
     <div class="meta-chips">
       <span class="chip">both supervised tasks</span>
       <span class="chip">scaling matters</span>
@@ -31,35 +31,40 @@
 
   <main class="wrap">
     <section class="scope-banner">
-      <h3>Continue in your foundation notebook</h3>
-      <p>This lesson starts after <a href="../start/">Start with Your Problem</a>. Keep that Colab notebook open and add these cells beneath the foundation cells. Do not upload, split, or preprocess the data again.</p>
+      <h3>Stay in the same notebook you already started</h3>
+      <p>This lesson picks up right where <a href="../start/">Start with Your Problem</a> left off. Keep that same Colab notebook open and add the cells below underneath the ones you already ran. There is nothing to upload, split, or clean again — the Start cells already did all of that, and this lesson simply borrows their work.</p>
     </section>
 
     <section class="step">
       <span class="step-chip">IDEA 1</span>
-      <h2>One neighbourhood, two kinds of answer</h2>
-      <p>Imagine placing every row on a map whose directions are its feature values. KNN locates a new row, measures its distance from the training rows, and consults the nearest <em>K</em>.</p>
+      <h2>Ask the people most like you</h2>
+      <p>Say you want to guess whether a new student passed. The simplest honest thing you can do is find the students most similar to them — similar hours studied, similar attendance, similar past marks — and see how those students did. That is the whole idea. We call those similar past students the <em class="term" title="The training rows most similar to the new case — its closest matches.">neighbours</em>, and KNN reads the answer straight off them.</p>
       <div class="idea-grid">
         <div class="idea-card">
-          <h3>Classification</h3>
-          <p>The neighbours vote for their class labels. The label with the strongest vote becomes the prediction.</p>
+          <h3>When the answer is a category</h3>
+          <p>The neighbours vote. If most of the students most like this one passed, the guess is "passed". The most common answer among the neighbours wins.</p>
         </div>
         <div class="idea-card">
-          <h3>Regression</h3>
-          <p>The neighbours contribute their numeric targets. Their average becomes the prediction.</p>
+          <h3>When the answer is a number</h3>
+          <p>The neighbours are averaged. To guess a new student's final score, take the scores of the most similar students and average them.</p>
         </div>
       </div>
-      <p>KNN does not learn a compact formula. Its memory is the training data itself, so prediction gets slower as the dataset grows.</p>
+      <p>Notice there is no clever formula to learn here. KNN simply keeps the training data and looks things up when asked, a bit like flipping back through old records. That is refreshingly simple, though it does mean predictions slow down as the pile of records grows.</p>
       <div class="callout">
-        <h3>“Near” depends on units</h3>
-        <p>If one numeric feature ranges from 0 to 1 and another from 0 to 1,000,000, the larger scale can dominate the distance. This lesson standardises numeric features inside the pipeline. The scaler learns from each training fold only.</p>
+        <h3>"Most similar" only makes sense if the columns are on a fair footing</h3>
+        <p>To decide who is "similar", KNN measures distance across your feature columns. But imagine one column is <em>hours studied</em> (roughly 0 to 10) and another is <em>total minutes on the study app</em> (which could run into the thousands). The big column would drown out the small one entirely, just because its numbers happen to be larger — not because it matters more.</p>
+        <div class="plain">
+          <span>In plain words</span>
+          <p><em class="term" title="Putting each numeric column onto the same scale so no single column dominates the distance just because its numbers are bigger.">Scaling</em> means rewriting each numeric column onto the same scale first, so every column gets a fair say. This lesson does that for you inside the pipeline, and — this is the careful part — it learns the scaling from the training rows only, never from the rows it will be tested on.</p>
+        </div>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 1 OF 5</span>
-      <h2>Confirm that the foundation is still alive</h2>
-      <p>This check accepts either task. If Colab restarted and a name is missing, choose <strong>Runtime → Run all</strong> before continuing.</p>
+      <h2>A quick safety check before we begin</h2>
+      <p>Colab sometimes forgets everything if it has been idle or restarted. This first cell is just a friendly nudge that confirms the six Start cells are still in memory — it works the same whether you are predicting a category or a number. If it complains, no harm done: click <strong>Runtime → Run all</strong> to re-run the whole notebook, then come back and try again.</p>
+      <p class="does"><strong>What this does:</strong> checks that the names the Start cells created are still available, and prints your task and data sizes so you know it is safe to continue.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 1 · READINESS CHECK</span>
@@ -88,14 +93,19 @@ print("Testing shape: ", X_test.shape)
 print("The test set stays closed while K is selected.")</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>You should see your task and your own train/test shapes. If those shapes are surprising, return to the split cell instead of adapting the model to compensate.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A short printout naming your task (classification or regression) and the number of rows in your training and test sets — for the example students that is a few hundred rows, but your own data will differ. If nothing prints and you instead see a red error asking for the Start cells, that is the safety check doing its job: run the notebook top to bottom and return. If the shapes look wrong or surprising, go back to the split cell rather than working around it here.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">DECISION</span>
-      <h2>What does K control?</h2>
+      <h2>How many neighbours should you ask?</h2>
+      <p>The <em class="term" title="The number of nearest neighbours the model consults for each prediction. The 'K' in K-Nearest Neighbours.">K</em> in K-Nearest Neighbours is simply <em>how many</em> of the most similar past cases you consult. Ask just one neighbour and you copy whatever that single closest case did. Ask twenty-one and you go with the mood of a small crowd. Neither extreme is automatically right, so it helps to picture what each end feels like.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>A small K listens closely to the one or two nearest cases, so it reacts to every quirk. A large K averages over a bigger group, so it is calmer but can smooth away a genuine local pattern. There is no single right K — you will let the training data suggest one in a moment.</p>
+      </div>
       <div class="tablewrap">
         <table>
           <thead>
@@ -119,17 +129,18 @@ print("The test set stays closed while K is selected.")</code></pre>
           </tbody>
         </table>
       </div>
-      <p>There is no universally correct K. Your training folds can compare candidates without revealing the final exam.</p>
-      <details>
-        <summary>Deep dive: why distance can struggle in many dimensions</summary>
-        <p>As the number of encoded features grows, rows tend to look similarly far apart. This is often called the curse of dimensionality. IDs, very high-cardinality categories, and hundreds of weak columns can make a nearest-neighbour model both slow and unhelpful. Better feature judgment usually matters more than a wider K search.</p>
+      <p>So rather than guess, you will try several values of K using only the training data and keep whichever performs best. The real test stays sealed the whole time.</p>
+      <details class="deep">
+        <summary>Going deeper (optional): why distance gets confused with too many columns</summary>
+        <p>When you have a great many feature columns, a strange thing happens: almost every row starts to look about equally far from every other row, so "nearest" stops meaning much. This is often called the curse of dimensionality. ID-like columns, categories with hundreds of possible values, and piles of weak columns can make a nearest-neighbour model both slow and unhelpful. In practice, choosing a handful of columns that genuinely matter helps far more than searching over a wider range of K.</p>
       </details>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 2 OF 5</span>
-      <h2>Build a scaled KNN pipeline</h2>
-      <p>The pipeline handles missing values and categories using your foundation, then scales numeric inputs before measuring distances. Keeping every transformation inside the pipeline prevents validation rows from teaching the scaler.</p>
+      <h2>Assemble the model on an assembly line</h2>
+      <p>Think of a <em class="term" title="A single object that chains the data-preparation steps and the model together, so they always run in the same order and only ever learn from training rows.">pipeline</em> as a small assembly line. Your data goes in one end, gets its missing values filled and its categories tidied up (using the tools the Start cells built), then gets scaled onto a fair footing, and only then reaches the KNN model at the far end. Bundling every step this way is what keeps the scaling honest: the steps only ever learn from training rows, so the rows we test on later cannot secretly influence anything.</p>
+      <p class="does"><strong>What this does:</strong> picks the classifier or the regressor to match your task, then wires it onto the assembly line right after the preparation steps.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 2 · MODEL PIPELINE</span>
@@ -154,15 +165,20 @@ knn_pipeline = Pipeline([
 knn_pipeline</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>The displayed pipeline should contain a <code>prepare</code> step followed by the task-appropriate KNN model. Do not call <code>fit</code> yet; the next cell fits it only inside training folds.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A tidy diagram of the assembly line: a <code>prepare</code> step, then the KNN model that fits your task. Nothing has been trained yet, and that is on purpose — the next cell is the one that does the actual fitting, and only on training rows.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 3 OF 5</span>
-      <h2>Choose K with training-only cross-validation</h2>
-      <p>Each candidate gets several practice exams made from <code>X_train</code>. The candidate list automatically shrinks for small datasets so K never exceeds the number of rows available inside a training fold.</p>
+      <h2>Let the training data suggest a good K</h2>
+      <p>Here is where you find your K without ever peeking at the test set. The trick is called <em class="term" title="Split the training rows into a few parts; repeatedly train on most parts and check on the held-out part. This estimates how a setting performs before you ever touch the real test.">cross-validation</em>.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Cross-validation means: take only your training rows, hide a slice of them, train on the rest, and see how well each K guesses the hidden slice. Rotate which slice is hidden and repeat. It is like giving each candidate K a few practice exams before the real one. You keep the K that does best across the practice exams, and only THEN do you sit the real test. The list of K values below even shrinks itself for small datasets, so you never ask for more neighbours than there are rows to offer.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> quietly runs those practice exams for several candidate K values on the training rows, then prints a small table and names the K that scored best.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 3 · CROSS-VALIDATION SEARCH</span>
@@ -226,12 +242,12 @@ display(cv_summary.sort_values("k").reset_index(drop=True))
 print("Selected K:", knn_search.best_params_["model__n_neighbors"])</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>You should see one row per candidate K and one selected value. Classification rewards higher balanced accuracy; regression rewards lower MAE. Similar fold scores across several K values mean the precise winner may not be stable.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>One row per candidate K, plus the single K that was chosen. For a category, the table shows <em class="term" title="Accuracy that treats each class fairly, even when one class is much more common than another — so a lazy 'always guess the common answer' model cannot look good.">balanced accuracy</em>, and higher is better. For a number, it shows <em class="term" title="Mean absolute error: on average, how far off the predictions are, in the same units as what you are predicting. Smaller is better.">MAE</em>, and lower is better. Do not worry if several K values score about the same — that just means the exact winner is a bit of a coin toss, which is useful to know. Your own numbers will differ from any example.</p>
       </div>
       <div class="callout green">
-        <h3>The test set is still closed</h3>
-        <p><code>GridSearchCV</code> used only <code>X_train</code> and <code>y_train</code>. <code>CV_FIT_PARAMS</code> also preserves group boundaries when your split mode uses groups. The search refitted the selected pipeline on all training rows, ready for one final test.</p>
+        <h3>Good news: the real test is still sealed</h3>
+        <p>All of that practice used only your training rows — the test set was never opened. Where your split respects groups (say, keeping all rows for one person together), that boundary was honoured too. At the end, the search quietly re-trained the winning setup on all your training rows, so it is primed and ready for a single, honest test.</p>
       </div>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
@@ -245,8 +261,9 @@ print("Selected K:", knn_search.best_params_["model__n_neighbors"])</code></pre>
 
     <section class="step">
       <span class="step-chip">CELL 4 OF 5</span>
-      <h2>Open the test set once</h2>
-      <p>The model and K are now fixed. Make one prediction array and send it to the same evaluation helper that recorded your baseline.</p>
+      <h2>Now, and only now, open the test set</h2>
+      <p>Your model and your K are settled. This is the moment you have been protecting: you make predictions on the test rows once and hand them to the same scoring helper that earlier recorded your <em class="term" title="A deliberately simple 'do the obvious thing' prediction — like always guessing the most common class — that any real model should beat to be worth using.">baseline</em>. The baseline is your sanity check: if KNN cannot beat a lazy always-guess-the-common-answer model, it is not earning its keep.</p>
+      <p class="does"><strong>What this does:</strong> predicts on the held-out test rows once and records how KNN did, right alongside the baseline for comparison.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 4 · FINAL TEST</span>
@@ -263,15 +280,16 @@ knn_test_result = evaluate_predictions(
 )</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Your results log should now include the baseline and KNN. Ask whether the improvement is useful for your decision—not whether it matches somebody else’s score. For classification, also compare the error types in the report and confusion matrix.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>Your results log now lists both the baseline and KNN side by side. On the example students, KNN lands around 76% accuracy against a baseline near 64% — or, if you are predicting a number like the final score, an <em class="term" title="R-squared: how much of the ups and downs in the real values your model explains, from 0 (no better than guessing the average) toward 1 (perfect). Higher is better.">R-squared</em> around 0.53. Treat those as ballpark only; your own data will land somewhere different. The question that matters is not whether you match someone else's number — it is whether this lift is enough to change what you would actually do. For a category, glance at the report and confusion matrix too, to see which kinds of mistakes KNN tends to make.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 5 OF 5</span>
-      <h2>Review the same test predictions</h2>
-      <p>A summary metric hides where the model fails. This cell reuses <code>knn_predictions</code>; it does not refit, retune, or make another pass of model selection.</p>
+      <h2>Look at where it actually went wrong</h2>
+      <p>A single score tells you how often the model is right, but not <em>where</em> it stumbles — and that is usually the more useful thing to know. This last cell reuses the predictions you already made; it does not train anything new or go hunting for a better setting. It just holds the mistakes up to the light.</p>
+      <p class="does"><strong>What this does:</strong> lines up each test row's real answer against KNN's guess and surfaces the biggest misses so you can inspect them.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 5 · ERROR REVIEW</span>
@@ -330,12 +348,12 @@ else:
     plt.show()</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Classification: identify the most common direction of error and inspect several rows. Regression: look for curves, funnels, clusters, and extreme residuals rather than expecting a perfect cloud.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>If you are predicting a category, a small count of mistakes and a breakdown of which answers got confused for which — look for the most common direction of error and read a few of those rows. If you are predicting a number, a list of the biggest misses plus a scatter plot of the leftover errors (the <em class="term" title="Residual: the real value minus the predicted value — simply how far off each guess was, and in which direction.">residuals</em>). Do not expect a flawless picture; you are hunting for tell-tale shapes like a curve, a widening funnel, or a cluster of rows the model handles badly. Your own data will differ.</p>
       </div>
       <div class="callout danger">
-        <h3>Error review is diagnosis, not permission to tune on the test</h3>
-        <p>If this review inspires new features or settings, return to training-only cross-validation. Because you have now studied the test set, repeated iteration would gradually turn it into a validation set. For a serious final claim, reserve or collect a fresh holdout.</p>
+        <h3>Looking is fine; tuning to the test is not</h3>
+        <p>This review is for understanding your model, not for improving it against the test. If what you see here sparks an idea for a new feature or a different setting, that is great — but take it back to training-only cross-validation to try it out. Every time you tweak things to score better on this test set, it quietly stops being an honest test. For any claim that really matters, set aside or gather a fresh batch of data you have never looked at.</p>
       </div>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
@@ -350,17 +368,17 @@ else:
 
     <section class="step">
       <span class="step-chip">RECAP</span>
-      <h2>What you can now explain</h2>
+      <h2>What you can now say in your own words</h2>
       <ol>
-        <li>KNN predicts from nearby training rows: a vote for classification, an average for regression.</li>
-        <li>Distance-based models need comparable numeric scales.</li>
-        <li>A pipeline keeps imputation, encoding, and scaling inside each training fold.</li>
-        <li>K is selected with cross-validation on training data, never by chasing test performance.</li>
-        <li>A metric starts the investigation; error rows reveal whether the model is useful.</li>
+        <li>KNN makes a prediction by looking at the most similar past cases: they vote for a category, or get averaged for a number.</li>
+        <li>Because it works by distance, the feature columns have to be put on a fair footing first, or the big-numbered ones take over.</li>
+        <li>Keeping preparation and the model together on one assembly line stops the test rows from sneaking into the learning.</li>
+        <li>You chose K with cross-validation on the training data, never by chasing the test score.</li>
+        <li>A single number opens the investigation; reading the actual mistakes tells you whether the model is truly useful.</li>
       </ol>
-      <details>
-        <summary>Optional experiment for a fresh validation design</summary>
-        <p>On a future dataset or a newly reserved holdout, compare uniform voting with distance-weighted voting by adding <code>"model__weights": ["uniform", "distance"]</code> to the training-only parameter grid. Explain why this is a new modelling question before running it, and keep the final holdout closed.</p>
+      <details class="deep">
+        <summary>Going deeper (optional): a fair way to try distance-weighted voting later</summary>
+        <p>By default every neighbour gets an equal say. You could instead let closer neighbours count for more. On a future dataset or a freshly set-aside batch of data, compare the two by adding <code>"model__weights": ["uniform", "distance"]</code> to the training-only search. Remind yourself that this is a genuinely new question to test — so decide it with cross-validation, and keep your final set-aside data closed until the very end.</p>
       </details>
     </section>
 
@@ -368,7 +386,7 @@ else:
       <div>
         <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
         <h2>Save the evidence, not just the score.</h2>
-        <p>Record the selected K, cross-validation stability, test comparison with the baseline, important error pattern, and one limitation of distance on your features.</p>
+        <p>Jot down the K you landed on, how steady the practice scores were, how KNN compared with the baseline on the real test, the most telling mistake pattern you noticed, and one place where judging by distance might be shaky on your particular columns.</p>
       </div>
       <button class="complete-button" type="button" data-complete="knn">Mark complete</button>
     </section>

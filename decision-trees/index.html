@@ -20,11 +20,11 @@
 
   <header class="hero wrap">
     <p class="eyebrow">Lesson 04 · Classification + Regression</p>
-    <h1>Learn a sequence of questions—and know when to stop</h1>
-    <p class="lede">A decision tree repeatedly splits rows with simple rules. That makes a small tree readable, but an unrestricted tree can memorise training details. You will control that growth with <strong>training-only cross-validation</strong>.</p>
+    <h1>Teach the computer to play 20 Questions</h1>
+    <p class="lede">A decision tree makes predictions by asking a series of simple yes-or-no questions, just like the guessing game. In this lesson you'll build one, watch it choose its own questions, and learn the one thing you have to keep an eye on so it stays honest. Go at your own pace — there's nothing to memorise.</p>
     <div class="meta-chips">
-      <span class="chip">your uploaded dataset</span>
-      <span class="chip">no numeric scaling</span>
+      <span class="chip">works on your own data</span>
+      <span class="chip">no scaling needed</span>
       <span class="chip">about 30 minutes</span>
     </div>
   </header>
@@ -32,31 +32,36 @@
   <main class="wrap">
     <section class="start-banner">
       <div>
-        <h2>Continue in your foundation notebook</h2>
-        <p>This lesson uses the target, features, split, preprocessor, metric, and baseline you created in <a href="../start/">Your problem, your data</a>. Add these cells to that notebook.</p>
+        <h2>Keep working in the same notebook</h2>
+        <p>Like every lesson, this one adds cells beneath the ones you already have. It reuses everything you set up in <a href="../start/">Your problem, your data</a> — your target, your features, your train/test split, and your baseline. Just paste the cells below underneath what's already there.</p>
       </div>
-      <a class="button" href="../start/">Review foundation</a>
+      <a class="button" href="../start/">Review the setup</a>
     </section>
 
     <section>
       <p class="eyebrow">THE IDEA</p>
-      <h2>Every branch asks one narrow question</h2>
-      <p>A split might ask whether a numeric feature is below a threshold or whether an encoded category is present. The algorithm chooses a question that makes the resulting groups more useful for predicting the target, then repeats inside each group.</p>
-      <p>For classification, leaves contain class distributions and produce class predictions. For regression, leaves predict a numeric value, usually the average target among training rows that reached that leaf.</p>
+      <h2>It's a flowchart the computer writes itself</h2>
+      <p>Think of the game 20 Questions. You're trying to guess something, so you ask one narrow question at a time — "Is it bigger than a breadbox?" — and each answer sends you down a different path until you're confident. A decision tree works exactly like that. It asks a question ("Did the student attend more than 80% of classes?"), splits the rows into "yes" and "no", and then asks another question inside each group, and another, until it reaches a confident guess.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>A decision tree is an automatic flowchart of yes-or-no questions. The clever part is that the computer figures out <em>which</em> questions to ask, and in what order, all by itself — you don't write a single rule.</p>
+      </div>
+      <p>The end of each path is called a <em class="term" title="The end point of a path through the tree, where it stops asking questions and makes its guess.">leaf</em>. When you're predicting a yes/no answer (like whether a student passed), the leaf votes for the most common outcome among the training rows that ended up there. When you're predicting a number (like a final score), the leaf guesses the average of those rows. Same flowchart idea, either way.</p>
       <div class="callout green">
-        <h3>Trees do not need scaled numbers</h3>
-        <p>A threshold such as “feature ≤ value” keeps the same ordering if units are rescaled. This lesson still uses the shared preprocessor for missing values and categorical encoding, but it leaves numeric features in their original units.</p>
+        <h3>Trees don't care about the size of your numbers</h3>
+        <p>Remember how the neighbours model needed every clue rescaled first? A tree doesn't. A question like "is attendance below 80%?" gives the same answer whether attendance is written as a percent, a fraction, or a count — the ordering never changes. So there's nothing to <em class="term" title="Rescaling clues so they're on a comparable footing. Trees skip this because a yes/no question means the same thing in any units.">scale</em> here, which is one less thing to worry about. (The shared setup still tidies up missing values and text categories for you — that part still matters.)</p>
       </div>
       <div class="callout">
-        <h3>Readable does not automatically mean trustworthy</h3>
-        <p>A short branch can describe the fitted model clearly. It does not prove that the relationship is causal, fair, stable, or valid outside the training population.</p>
+        <h3>Easy to read isn't the same as trustworthy</h3>
+        <p>A small tree is lovely because you can read it like a flowchart and follow its logic. But being readable doesn't prove the model is right, fair, or that it'll hold up on new data. A clear explanation of a shaky rule is still a shaky rule — so we'll keep checking it honestly.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 1 OF 5</span>
-      <h2>Build the right kind of tree</h2>
-      <p>The task configured in the foundation chooses a classifier or regressor. Both travel through the same preprocessing pipeline.</p>
+      <h2>Set up the tree</h2>
+      <p>This first cell gets everything ready. It looks at whether your project is a yes/no question or a number-guessing one, and quietly picks the matching kind of tree — you don't have to choose. It also runs a quick safety check first. If it complains about missing setup, that's just a friendly reminder that the foundation cells haven't run yet: click <strong>Runtime → Run all</strong> and try again. Nothing is broken.</p>
+      <p class="does"><strong>What this does:</strong> Checks that your setup cells ran, builds the right kind of tree for your task, and prints a tiny summary so you know it's ready.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 1 · MODEL SETUP</span>
@@ -109,15 +114,21 @@ print("Training rows:", len(X_train))
 print("Held-out test rows:", len(X_test))</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Confirm that the printed task matches your target. The same algorithm name does not make classification and regression interchangeable.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A few short lines: your task (something like "classification" or "regression"), how many training rows you have, and how many rows are set aside for the final test. On the example study-habits data that's a few hundred rows. Your own data will show different numbers — just glance at the task to be sure it matches what you're trying to predict.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 2 OF 5</span>
-      <h2>Control growth with cross-validation</h2>
-      <p><code>max_depth</code> limits how many questions a path can ask. <code>min_samples_leaf</code> prevents tiny leaves. The fractional option below means every leaf must contain at least that share of the training fold.</p>
+      <h2>Let the tree find its own best size</h2>
+      <p>Here's the one thing to watch with trees. A tree left to grow freely will keep asking questions until it has a tiny, hyper-specific path for almost every training row. That feels impressive, but it's really just <em class="term" title="Memorising the training rows like flashcards instead of learning the general pattern — so it stumbles on new data.">memorising</em> — like a student who memorises the answer key instead of learning the subject, and then freezes on a slightly different exam.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>The problem has a name: <em class="term" title="When a model learns the training rows too closely — including their quirks and noise — and then does worse on data it hasn't seen.">overfitting</em>. The fix is simple: don't let the tree grow too deep. A shorter tree is forced to learn real patterns instead of memorising individual rows.</p>
+      </div>
+      <p>So how deep is the right depth? Rather than guess, the notebook tries several sizes and lets your data decide. It uses <em class="term" title="Practising on most of the training data and checking on the rest, several times over, so the choice is fair — the real test set is never touched.">cross-validation</em> — practising on part of your training data and checking on the part it held back, over and over — so the winning size is chosen fairly and your real test set stays sealed.</p>
+      <p class="does"><strong>What this does:</strong> Tries trees of several depths and sizes, uses the practise-and-check method to find the one that works best on your data, and prints the winner.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 2 · TRAINING-ONLY SEARCH</span>
@@ -153,15 +164,20 @@ print("Chosen settings:", tree_search.best_params_)
 print("Validation metric:", PRIMARY_SCORING)</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Your winning settings may differ from another learner’s. Check whether several rows are effectively tied once validation variation is considered.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A short table of the tree sizes it tried, ranked best to worst, and a line naming the settings it picked. On the example study-habits data it usually lands on a modestly-sized tree, not the deepest one — which is exactly the point. Your own data will pick different settings, and that's fine. If the top few rows are nearly tied, the ranking is just a little unsure; that's normal.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 3 OF 5</span>
-      <h2>See overfitting inside the training process</h2>
-      <p>A flexible tree often scores extremely well on the folds it fits while falling behind on their validation rows. This train–validation gap is evidence of memorisation pressure; it is not something to diagnose by repeatedly checking the test set.</p>
+      <h2>Catch memorising in the act</h2>
+      <p>This cell shows you overfitting with your own eyes. For each tree size, it compares two scores: how well the tree did on the rows it <em>practised</em> on, and how well it did on the rows it was <em>checked</em> on. A tree that has memorised will ace its practice rows but slip on the check rows — and the gap between those two numbers is the tell-tale sign.</p>
+      <div class="plain">
+        <span>In plain words</span>
+        <p>Big gap between practice and check scores = the tree is memorising rather than learning. A small gap is reassuring. This is why we let the notebook pick a sensible size instead of growing the tree as deep as it can go.</p>
+      </div>
+      <p class="does"><strong>What this does:</strong> Lines up each tree size with the gap between its practice score and its check score, so the memorisers stand out at the top.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 3 · TRAIN–VALIDATION GAP</span>
@@ -188,22 +204,27 @@ print(
 )</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>For regression, the primary score is negative MAE, so larger is still better and the gap remains interpretable. A large gap signals instability; a small gap does not prove the model is useful.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A table with the widest practice-versus-check gaps at the top — usually the deepest, most unrestricted trees. Then a single line showing the gap for the size the notebook actually chose, which should be much smaller. A big gap warns you a tree is unstable; a small gap is comforting, though on its own it doesn't prove the model is <em>useful</em> — for that we still compare to your baseline. Your numbers will differ from any example.</p>
       </div>
+      <details class="deep">
+        <summary>Going deeper (optional): why the number-guessing scores look negative</summary>
+        <p>If your project predicts a number, the score in these tables is written as a negative value (it's the average miss, flipped to a minus). Don't let that throw you — the rule is still "bigger is better", so a score closer to zero is a smaller miss. The practice-minus-check gap reads exactly the same way: a wide gap still means memorising.</p>
+      </details>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
         <ol>
-          <li>Which settings produced the widest train–validation gaps?</li>
-          <li>Would you prefer a slightly weaker but much smaller tree? What would that buy you?</li>
+          <li>Which tree sizes showed the widest practice-versus-check gaps?</li>
+          <li>Would you accept a slightly weaker but much smaller tree? What might that buy you?</li>
         </ol>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 4 OF 5</span>
-      <h2>Evaluate the locked tree once</h2>
-      <p>Cross-validation has finished model selection. Now use the held-out rows for one final estimate of performance on unseen data.</p>
+      <h2>Give the tree its one and only exam</h2>
+      <p>The practise-and-check step already picked the best tree size. Now — for the first and only time — we hand the tree the test rows it has never seen and see how it does. Think of it as the final exam after all the studying. You get one honest look, and that's the number you trust.</p>
+      <p class="does"><strong>What this does:</strong> Uses the winning tree to make predictions on the untouched test rows, scores them, and reports how deep the tree ended up and how many leaves it grew.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 4 · FINAL EVALUATION</span>
@@ -222,19 +243,20 @@ print("Fitted depth:", fitted_tree.get_depth())
 print("Number of leaves:", fitted_tree.get_n_leaves())</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Compare with the baseline using your real success criterion. Also inspect class-specific errors for classification or the size and direction of residuals for regression.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>Your tree's score on the test rows, plus its final depth and number of leaves. On the example study-habits data a tree lands around 71% correct — comfortably above the roughly 64% <em class="term" title="The simple always-guess-the-common-answer score from your setup. It's the bar every real model should clear.">baseline</em> you built earlier, though usually a touch below the other models in this course. Your own number will be different; there's no single right score. The honest question is always the same: did it beat your baseline?</p>
       </div>
       <div class="callout danger">
-        <h3>The test set is not a second tuning set</h3>
-        <p>Do not choose a different depth because this result disappoints you. That would make the reported test performance optimistic.</p>
+        <h3>Don't peek and re-tune</h3>
+        <p>If this score disappoints you, resist the urge to go back and try a different depth to squeeze out a nicer number. The moment you tune based on the test result, that result stops being honest — it starts flattering the model. Your test score is <em>evidence</em>, not a grade to chase.</p>
       </div>
     </section>
 
     <section class="step">
       <span class="step-chip">CELL 5 OF 5</span>
-      <h2>Plot a readable slice of the fitted tree</h2>
-      <p>The labels below come from the fitted preprocessor, so encoded categories and numeric features line up with the actual columns seen by the tree. The drawing stops after a few levels even if the fitted model continues.</p>
+      <h2>Draw the flowchart and read it</h2>
+      <p>This is the fun payoff. Because a tree is just a flowchart, we can actually draw it. This cell shows the top few levels — the very first questions the model asks — so you can follow its reasoning like a game of 20 Questions. (The real tree may go deeper; we only draw the top so it stays readable.)</p>
+      <p class="does"><strong>What this does:</strong> Draws a picture of the first few questions your tree asks, with the real column names on each branch.</p>
       <div class="codecard">
         <div class="codecard-head">
           <span>CELL 5 · TREE DIAGRAM</span>
@@ -266,38 +288,39 @@ plt.title("First three levels of the fitted decision tree")
 plt.show()</code></pre>
       </div>
       <div class="checkpoint">
-        <span>CHECKPOINT</span>
-        <p>Trace one row through the visible questions. A one-hot condition usually asks whether a category is absent or present. An imputed numeric threshold may not represent a natural real-world cutoff.</p>
+        <span>WHAT YOU'LL SEE</span>
+        <p>A boxes-and-branches diagram. The box at the top is the very first question the tree found most useful; follow "yes" one way and "no" the other, and each box below asks a narrower question. Try tracing one row through it. A question built from a text category usually reads as "is this category present or not?", and a number cutoff won't always land on a tidy real-world value. Your picture will look different from any example — that's your model's own logic.</p>
       </div>
       <div class="reflection">
         <span>PAUSE &amp; WRITE</span>
         <ol>
-          <li>Does the first split make domain sense, or could it reveal leakage?</li>
-          <li>Which important behaviour is hidden below the displayed levels?</li>
-          <li>Would a stakeholder understand the transformed feature labels without your explanation?</li>
+          <li>Is the very first question reasonable for your subject — or does it hint that a clue is secretly giving away the answer?</li>
+          <li>What important behaviour might be hiding below the levels shown here?</li>
+          <li>Could someone unfamiliar with your data follow these box labels without your help?</li>
         </ol>
       </div>
     </section>
 
     <section>
       <p class="eyebrow">DEEPER PRACTICE</p>
-      <h2>Make the lesson yours</h2>
+      <h2>Try a few gentle experiments</h2>
+      <p>Only if you're curious — none of this is required. Each row is a small tweak you can try, the question it helps you answer, and the one rule to keep it honest. Take them at your own pace.</p>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>Experiment</th><th>Question to answer</th><th>Boundary</th></tr></thead>
+          <thead><tr><th>Try this</th><th>What it tells you</th><th>Keep it honest</th></tr></thead>
           <tbody>
-            <tr><td>Use fewer features</td><td>Can a simpler tree keep similar CV performance?</td><td>Do not select by test score</td></tr>
-            <tr><td>Increase leaf size</td><td>Do rules become more stable and readable?</td><td>Compare training folds</td></tr>
-            <tr><td>Repeat CV with a new seed</td><td>Do the chosen rules change?</td><td>Keep the test set closed</td></tr>
+            <tr><td>Use fewer clues</td><td>Can a simpler tree do about as well?</td><td>Judge by the practise-and-check score, never the test</td></tr>
+            <tr><td>Require bigger leaves</td><td>Do the rules get steadier and easier to read?</td><td>Compare on the practice folds</td></tr>
+            <tr><td>Re-run with a different seed</td><td>Do the chosen questions stay the same?</td><td>Leave the test set sealed</td></tr>
           </tbody>
         </table>
       </div>
       <div class="reflection">
         <span>LESSON NOTES</span>
         <ol>
-          <li>What did the tree learn that you expected?</li>
-          <li>What rule surprised you, and how will you investigate it?</li>
-          <li>Where is overfitting most visible in your evidence?</li>
+          <li>What did the tree learn that matched your expectations?</li>
+          <li>What rule surprised you — and how will you look into it?</li>
+          <li>Where in your evidence is overfitting easiest to spot?</li>
         </ol>
       </div>
     </section>
@@ -305,8 +328,8 @@ plt.show()</code></pre>
     <section class="completion-card">
       <div>
         <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
-        <h2>Save your tree’s limits with its result.</h2>
-        <p>Record the chosen depth and leaf size, validation variation, final test result, and one rule that needs domain review.</p>
+        <h2>Jot down what your tree learned.</h2>
+        <p>Before you move on, note the size the notebook chose, the final test score next to your baseline, and one question from the flowchart you'd like to double-check. That's your evidence — no grade attached.</p>
       </div>
       <button class="complete-button" type="button" data-complete="decision-trees">Mark complete</button>
     </section>
