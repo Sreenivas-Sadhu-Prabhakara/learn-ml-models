@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learn ML Models</title>
+<meta name="description" content="One real dataset, one model at a time. Hands-on machine learning lessons in plain language, built for friends learning together in Google Colab.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F5F7; --card:#FFFFFF; --ink:#182A3A; --muted:#52657A;
+  --green:#0E7C52; --green-soft:#E3F1EA; --saffron:#C77C11; --saffron-text:#9A5F0A; --saffron-soft:#F8EEDD;
+  --rule:#D9E2EA;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:17px; line-height:1.65;
+}
+a{color:var(--green)}
+a:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+.topbar{border-bottom:1px solid var(--rule);background:var(--card)}
+.topbar-inner{max-width:880px;margin:0 auto;padding:14px 20px}
+.wordmark{
+  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;
+  letter-spacing:.14em;text-decoration:none;color:var(--ink);
+}
+.wordmark span{color:var(--green)}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px}
+
+.hero{padding:64px 0 44px}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;
+  letter-spacing:.16em;color:var(--saffron-text);text-transform:uppercase;
+}
+h1{
+  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+  font-size:clamp(36px,7vw,58px);line-height:1.1;margin:10px 0 18px;letter-spacing:-.01em;
+}
+.lede{font-size:19px;color:var(--muted);max-width:56ch}
+.lede strong{color:var(--ink)}
+
+.shelf{padding:16px 0 72px}
+h2{
+  font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;
+  letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin:26px 0 16px;
+}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:680px){.cards{grid-template-columns:1fr}}
+.lesson{
+  background:var(--card);border:1px solid var(--rule);border-radius:14px;
+  padding:24px 24px 20px;display:flex;flex-direction:column;gap:10px;
+  text-decoration:none;color:var(--ink);transition:transform .12s ease, box-shadow .12s ease;
+}
+a.lesson:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(24,42,58,.08)}
+.lesson-num{
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;
+  letter-spacing:.14em;color:var(--saffron-text);
+}
+.lesson h3{font-family:"IBM Plex Serif",Georgia,serif;font-size:24px;font-weight:600;line-height:1.2}
+.lesson p{font-size:15.5px;color:var(--muted)}
+.lesson-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:8px}
+.tag{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;
+  border:1px solid var(--rule);border-radius:999px;padding:4px 12px;color:var(--muted);
+}
+.tag-live{background:var(--green-soft);border-color:var(--green);color:var(--green);font-weight:600}
+.lesson.soon{border-style:dashed;background:transparent}
+.lesson.soon h3{color:var(--muted)}
+
+footer{border-top:1px solid var(--rule);padding:26px 0 48px;color:var(--muted);font-size:14.5px}
+.foot-inner{max-width:880px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-inner">
+    <a class="wordmark" href="./">LEARN<span>·</span>ML<span>·</span>MODELS</a>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <p class="eyebrow">A hands-on course for friends</p>
+  <h1>One real dataset.<br>One model at a time.</h1>
+  <p class="lede">Machine learning explained the way a friend would — <strong>plain language, real Indian stock-market data, and code you copy-paste into Google Colab.</strong> No installs, no maths degree, about 30 minutes per lesson.</p>
+</header>
+
+<main class="shelf wrap">
+  <h2>Lessons</h2>
+  <div class="cards">
+    <a class="lesson" href="knn/">
+      <span class="lesson-num">LESSON 01 · CLASSIFICATION</span>
+      <h3>K-Nearest Neighbours</h3>
+      <p>Teach a computer to tell BULK deals from BLOCK deals on the NSE by letting each deal's five nearest neighbours vote. Learn the full ML recipe: split 75/25, scale, train, and judge honestly.</p>
+      <div class="lesson-meta">
+        <span class="tag tag-live">READY</span>
+        <span class="tag">~30 min</span>
+        <span class="tag">119k real deals</span>
+      </div>
+    </a>
+    <div class="lesson soon">
+      <span class="lesson-num">LESSON 02 · REGRESSION</span>
+      <h3>Linear Regression</h3>
+      <p>Predict a number instead of a category — draw the best straight line through the data.</p>
+      <div class="lesson-meta"><span class="tag">COMING SOON</span></div>
+    </div>
+    <div class="lesson soon">
+      <span class="lesson-num">LESSON 03 · CLASSIFICATION</span>
+      <h3>Decision Trees</h3>
+      <p>A model that plays 20 Questions with your data — and shows you every question it asked.</p>
+      <div class="lesson-meta"><span class="tag">COMING SOON</span></div>
+    </div>
+    <div class="lesson soon">
+      <span class="lesson-num">LESSON 04 · CLUSTERING</span>
+      <h3>K-Means</h3>
+      <p>No labels, no answers — let the model discover natural groups in the deals on its own.</p>
+      <div class="lesson-meta"><span class="tag">COMING SOON</span></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <span>Built for learning together, on real NSE &amp; BSE bulk &amp; block deals data.</span>
+    <a href="https://github.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models">Source on GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>
