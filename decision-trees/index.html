@@ -1,666 +1,328 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Decision Trees, step by step — Learn ML Models</title>
-<meta name="description" content="Lesson 04: train a decision tree in Google Colab on real Indian bulk &amp; block deals, draw its entire brain with plot_tree, and catch it memorising. Plain language, copyable code.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --paper:#F2F5F7; --card:#FFFFFF; --ink:#182A3A; --muted:#52657A;
-  --terminal:#0E1B26; --terminal-ink:#D9E6F2; --comment:#7E97AB;
-  --green:#0E7C52; --green-soft:#E3F1EA; --saffron:#C77C11; --saffron-text:#9A5F0A; --saffron-soft:#F8EEDD;
-  --rule:#D9E2EA; --receipt:#FBFDFE;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:72px}
-@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
-body{
-  background:var(--paper); color:var(--ink);
-  font-family:"IBM Plex Sans",system-ui,sans-serif;
-  font-size:17px; line-height:1.65;
-}
-a{color:var(--green)}
-a:focus-visible,button:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
-
-.topbar{
-  border-bottom:1px solid var(--rule); background:var(--card);
-  position:sticky; top:0; z-index:10;
-}
-.topbar-inner{
-  max-width:840px;margin:0 auto;padding:14px 20px;
-  display:flex;justify-content:space-between;align-items:baseline;gap:12px;
-}
-.wordmark{
-  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;
-  letter-spacing:.14em;text-decoration:none;color:var(--ink);
-}
-.wordmark span{color:var(--green)}
-.lesson-tag{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
-
-.wrap{max-width:840px;margin:0 auto;padding:0 20px}
-
-/* ---------- hero ---------- */
-.hero{padding:56px 0 40px}
-.eyebrow{
-  font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;
-  letter-spacing:.16em;color:var(--saffron-text);text-transform:uppercase;
-}
-h1{
-  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
-  font-size:clamp(34px,6vw,52px);line-height:1.12;margin:10px 0 16px;
-  letter-spacing:-.01em;
-}
-.lede{font-size:19px;color:var(--muted);max-width:60ch}
-.lede strong{color:var(--ink)}
-.meta-chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 26px}
-.chip{
-  font-family:"IBM Plex Mono",monospace;font-size:13px;
-  background:var(--card);border:1px solid var(--rule);border-radius:999px;
-  padding:6px 14px;color:var(--muted);
-}
-.cta-row{display:flex;flex-wrap:wrap;gap:12px}
-.btn{
-  display:inline-block;text-decoration:none;font-weight:600;font-size:16px;
-  padding:12px 22px;border-radius:8px;transition:transform .12s ease;
-}
-.btn:hover{transform:translateY(-1px)}
-.btn-primary{background:var(--green);color:#fff}
-.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--rule)}
-
-/* ---------- sections ---------- */
-section{padding:36px 0}
-h2{
-  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
-  font-size:clamp(24px,4vw,32px);line-height:1.2;margin-bottom:14px;
-}
-h3{font-size:19px;font-weight:600;margin:26px 0 8px}
-p{margin:12px 0;max-width:68ch}
-ul,ol{margin:12px 0 12px 24px;max-width:66ch}
-li{margin:6px 0}
-.divider{border:none;border-top:1px solid var(--rule);margin:12px 0}
-
-/* ---------- idea figure ---------- */
-.figure-card{
-  background:var(--card);border:1px solid var(--rule);border-radius:12px;
-  padding:26px 22px 18px;margin:20px 0;
-}
-.figure-card svg{width:100%;height:auto;display:block}
-.figcap{
-  font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);
-  text-align:center;margin-top:12px;
-}
-
-/* ---------- definition cards ---------- */
-.def-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
-@media (max-width:640px){.def-grid{grid-template-columns:1fr}}
-.def{border-radius:12px;padding:18px 20px;border:1px solid var(--rule)}
-.def h4{font-family:"IBM Plex Mono",monospace;font-size:14px;letter-spacing:.12em;margin-bottom:8px}
-.def p{font-size:15.5px;margin:0}
-.def-bulk{background:var(--saffron-soft)} .def-bulk h4{color:var(--saffron)}
-.def-block{background:var(--green-soft)} .def-block h4{color:var(--green)}
-
-/* ---------- steps ---------- */
-.step{
-  background:var(--card);border:1px solid var(--rule);border-radius:14px;
-  padding:28px 26px;margin:26px 0;
-}
-@media (max-width:640px){.step{padding:22px 16px}}
-.step-chip{
-  display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:600;
-  font-size:12.5px;letter-spacing:.14em;color:#fff;background:var(--ink);
-  border-radius:6px;padding:4px 10px;margin-bottom:10px;
-}
-.step h3{font-family:"IBM Plex Serif",Georgia,serif;font-size:23px;font-weight:600;margin:0 0 8px}
-.step p{font-size:16.5px}
-
-/* ---------- code cards ---------- */
-.codecard{
-  background:var(--terminal);border-radius:10px;margin:18px 0 0;
-  position:relative;overflow:hidden;
-}
-.codecard-head{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:8px 14px;border-bottom:1px solid rgba(217,230,242,.12);
-}
-.codecard-title{
-  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;
-  color:var(--comment);
-}
-.copy{
-  font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;
-  color:var(--terminal-ink);background:rgba(217,230,242,.1);
-  border:1px solid rgba(217,230,242,.25);border-radius:6px;
-  padding:5px 12px;cursor:pointer;transition:background .12s ease;
-}
-.copy:hover{background:rgba(217,230,242,.22)}
-.copy.done{color:#8CE0B0;border-color:#8CE0B0}
-.codecard pre{
-  padding:16px 18px;overflow-x:auto;
-}
-.codecard code{
-  font-family:"IBM Plex Mono",monospace;font-size:14px;line-height:1.6;
-  color:var(--terminal-ink);white-space:pre;
-}
-
-/* ---------- receipts (expected output) ---------- */
-.receipt{
-  background:var(--receipt);border:1.5px dashed var(--rule);border-top:none;
-  border-radius:0 0 10px 10px;padding:14px 18px 16px;margin-bottom:6px;
-}
-.receipt-label{
-  font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;
-  letter-spacing:.16em;color:var(--green);margin-bottom:8px;
-}
-.receipt pre{
-  font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:1.55;
-  color:var(--ink);overflow-x:auto;white-space:pre;
-}
-.receipt .note{font-size:14px;color:var(--muted);margin:8px 0 0}
-
-/* ---------- tables ---------- */
-.tablewrap{overflow-x:auto;margin:16px 0}
-table{border-collapse:collapse;font-size:15px;min-width:420px}
-th,td{border:1px solid var(--rule);padding:9px 14px;text-align:left;background:var(--card)}
-th{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.06em;background:var(--paper)}
-td strong{font-weight:600}
-
-/* ---------- callouts ---------- */
-.callout{
-  border-left:4px solid var(--saffron);background:var(--saffron-soft);
-  border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0;font-size:16px;
-}
-.callout-green{border-left-color:var(--green);background:var(--green-soft)}
-.callout p{margin:6px 0;font-size:16px}
-
-footer{
-  border-top:1px solid var(--rule);margin-top:40px;padding:28px 0 48px;
-  color:var(--muted);font-size:14.5px;
-}
-footer a{color:var(--muted)}
-.foot-inner{max-width:840px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Decision trees with your data · Learn ML Models</title>
+  <meta name="description" content="A self-paced, bring-your-own-data lesson on decision trees for classification and regression, cross-validation, visualisation, and overfitting.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Serif:wght@500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/course.css">
 </head>
 <body>
-
-<nav class="topbar">
-  <div class="topbar-inner">
-    <a class="wordmark" href="../">LEARN<span>·</span>ML<span>·</span>MODELS</a>
-    <span class="lesson-tag">LESSON 04 / TREES</span>
-  </div>
-</nav>
-
-<header class="hero wrap">
-  <p class="eyebrow">Lesson 04 · Classification</p>
-  <h1>Decision trees: the model that shows its working</h1>
-  <p class="lede">In Lesson 01, KNN gave you good answers but could never explain them. Today's model is the opposite personality: a <strong>decision tree</strong> plays 20 Questions with the same 1,19,156 real bulk &amp; block deals — and then <strong>shows you every question it asked</strong>, in one picture you can read like a flowchart.</p>
-  <div class="meta-chips">
-    <span class="chip">⏱ about 25 minutes</span>
-    <span class="chip">🌳 a model whose mind you can read</span>
-    <span class="chip">📊 same NSE &amp; BSE deals as Lesson 01</span>
-  </div>
-  <div class="cta-row">
-    <a class="btn btn-primary" href="#start">Start the lesson ↓</a>
-  </div>
-</header>
-
-<main class="wrap">
-
-<section id="idea">
-  <h2>The whole idea, in one picture</h2>
-  <p>Think of the party game <strong>20 Questions</strong>: one person thinks of something, and you narrow it down with yes/no questions — "Is it living?", "Is it bigger than a fridge?" A good player doesn't ask random questions; each question is chosen to <strong>split the possibilities as cleanly as possible</strong>.</p>
-  <p>A decision tree is a machine that <em>learns</em> which yes/no questions to ask about your data, and in what order. Training means: try every possible question ("is the price above ₹X?") on the training deals, keep the one that best separates BULK from BLOCK, then repeat inside each half. To classify a new deal, just walk it down the questions until it lands in a verdict box (a <strong>leaf</strong>).</p>
-
-  <div class="figure-card">
-    <svg viewBox="0 0 760 330" role="img" aria-label="A small decision tree: the root asks whether price is at most ₹319.30. The yes side asks whether value is at most ₹9.79 crore, leading to a mostly-BULK verdict or one more question. The no side asks whether price is at most ₹954.80, leading to one more question or a mostly-BLOCK verdict.">
-      <!-- connectors -->
-      <g stroke="#D9E2EA" stroke-width="2" fill="none">
-        <path d="M380 78 L190 138"/>
-        <path d="M380 78 L570 138"/>
-        <path d="M190 182 L95 242"/>
-        <path d="M190 182 L285 242"/>
-        <path d="M570 182 L475 242"/>
-        <path d="M570 182 L665 242"/>
-      </g>
-      <!-- YES/NO labels -->
-      <g font-family="IBM Plex Mono, monospace" font-size="12" fill="#52657A">
-        <text x="262" y="100" text-anchor="middle">YES</text>
-        <text x="498" y="100" text-anchor="middle">NO</text>
-        <text x="122" y="216" text-anchor="middle">YES</text>
-        <text x="258" y="216" text-anchor="middle">NO</text>
-        <text x="502" y="216" text-anchor="middle">YES</text>
-        <text x="638" y="216" text-anchor="middle">NO</text>
-      </g>
-      <!-- root -->
-      <rect x="270" y="34" width="220" height="44" rx="8" fill="#0E1B26"/>
-      <text x="380" y="61" font-family="IBM Plex Mono, monospace" font-size="14" fill="#D9E6F2" text-anchor="middle">price ≤ ₹319.30 ?</text>
-      <!-- level 2 -->
-      <rect x="75" y="140" width="230" height="42" rx="8" fill="#FFFFFF" stroke="#D9E2EA" stroke-width="2"/>
-      <text x="190" y="166" font-family="IBM Plex Mono, monospace" font-size="13.5" fill="#182A3A" text-anchor="middle">value ≤ ₹9.79 crore ?</text>
-      <rect x="455" y="140" width="230" height="42" rx="8" fill="#FFFFFF" stroke="#D9E2EA" stroke-width="2"/>
-      <text x="570" y="166" font-family="IBM Plex Mono, monospace" font-size="13.5" fill="#182A3A" text-anchor="middle">price ≤ ₹954.80 ?</text>
-      <!-- leaves -->
-      <rect x="25" y="244" width="140" height="40" rx="8" fill="#F8EEDD" stroke="#C77C11" stroke-width="2"/>
-      <text x="95" y="269" font-family="IBM Plex Mono, monospace" font-size="13" fill="#9A5F0A" text-anchor="middle">mostly BULK</text>
-      <rect x="215" y="244" width="140" height="40" rx="8" fill="#FFFFFF" stroke="#D9E2EA" stroke-width="2"/>
-      <text x="285" y="264" font-family="IBM Plex Mono, monospace" font-size="12" fill="#52657A" text-anchor="middle">one more</text>
-      <text x="285" y="278" font-family="IBM Plex Mono, monospace" font-size="12" fill="#52657A" text-anchor="middle">question…</text>
-      <rect x="405" y="244" width="140" height="40" rx="8" fill="#FFFFFF" stroke="#D9E2EA" stroke-width="2"/>
-      <text x="475" y="264" font-family="IBM Plex Mono, monospace" font-size="12" fill="#52657A" text-anchor="middle">one more</text>
-      <text x="475" y="278" font-family="IBM Plex Mono, monospace" font-size="12" fill="#52657A" text-anchor="middle">question…</text>
-      <rect x="595" y="244" width="140" height="40" rx="8" fill="#E3F1EA" stroke="#0E7C52" stroke-width="2"/>
-      <text x="665" y="269" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0E7C52" text-anchor="middle">mostly BLOCK</text>
-    </svg>
-    <p class="figcap">Not an invented example: these are the actual first two rounds of questions the tree you'll train in Step 5 chooses to ask. The two verdict boxes summarise where those regions end up — in the full tree, each of them asks one more question before deciding, just like the middle two.</p>
-  </div>
-  <p>Notice what that root question already tells you: cheap-per-share deals lean BULK, pricier ones lean BLOCK. No human suggested that — the tree measured it. That transparency is the superpower of today's model.</p>
-</section>
-
-<section id="mission">
-  <h2>Same mission as Lesson 01, new brain</h2>
-  <p>We're again predicting whether a large trade was published as a <strong>BULK</strong> or a <strong>BLOCK</strong> deal, using only three numbers: quantity, price per share, and total value in crore. Quick reminder:</p>
-  <div class="def-grid">
-    <div class="def def-bulk">
-      <h4>BULK DEAL</h4>
-      <p>More than 0.5% of a company's shares traded over a normal trading day. Big, but spread out.</p>
+  <nav class="topbar" aria-label="Course navigation">
+    <div class="topbar-inner">
+      <a class="wordmark" href="../">LEARN<span>·</span>ML<span>·</span>MODELS</a>
+      <span class="lesson-tag">LESSON 04 / DECISION TREES</span>
     </div>
-    <div class="def def-block">
-      <h4>BLOCK DEAL</h4>
-      <p>One giant, pre-negotiated trade in a special window. These tend to be much bigger in value.</p>
+  </nav>
+
+  <header class="hero wrap">
+    <p class="eyebrow">Lesson 04 · Classification + Regression</p>
+    <h1>Learn a sequence of questions—and know when to stop</h1>
+    <p class="lede">A decision tree repeatedly splits rows with simple rules. That makes a small tree readable, but an unrestricted tree can memorise training details. You will control that growth with <strong>training-only cross-validation</strong>.</p>
+    <div class="meta-chips">
+      <span class="chip">your uploaded dataset</span>
+      <span class="chip">no numeric scaling</span>
+      <span class="chip">about 30 minutes</span>
     </div>
-  </div>
-  <p>Because we keep the data preparation <strong>identical</strong> to Lesson 01 — same balancing, same 75/25 split, same <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">random_state=42</code> — today's score is directly comparable with KNN's <strong>79.8%</strong>. May the best model win.</p>
-</section>
+  </header>
 
-<section id="start">
-  <h2>Before you start: open Google Colab</h2>
-  <p>You know the drill from Lesson 01 — Colab is a free website from Google that runs Python in your browser, nothing to install:</p>
-  <ol>
-    <li>Go to <a href="https://colab.research.google.com">colab.research.google.com</a> and sign in with any Google account.</li>
-    <li>Click <strong>+ New notebook</strong>.</li>
-    <li>Paste each step below into its own cell (the <strong>Copy</strong> button does it in one click), press <strong>▶</strong> or <strong>Shift + Enter</strong> to run, then click <strong>+ Code</strong> for the next cell — and check your output against the <strong>"what you should see"</strong> slip.</li>
-  </ol>
-  <div class="callout callout-green">
-    <p><strong>Two things worth knowing before you start:</strong></p>
-    <ul style="margin:8px 0 4px 22px">
-      <li>The first cell takes a few extra seconds while Colab connects to a computer in the cloud. Not broken, just warming up.</li>
-      <li>Cells build on earlier cells, so <strong>run them in order</strong>. If you ever see an error like <em>NameError: name 'deals' is not defined</em>, or Colab says the runtime disconnected, just click <strong>Runtime → Run all</strong> in the menu — everything comes back in under a minute.</li>
-    </ul>
-  </div>
-</section>
+  <main class="wrap">
+    <section class="start-banner">
+      <div>
+        <h2>Continue in your foundation notebook</h2>
+        <p>This lesson uses the target, features, split, preprocessor, metric, and baseline you created in <a href="../start/">Your problem, your data</a>. Add these cells to that notebook.</p>
+      </div>
+      <a class="button" href="../start/">Review foundation</a>
+    </section>
 
-<!-- ================= STEP 1 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 1 OF 9</span>
-  <h3>Load the toolbox</h3>
-  <p>Almost the same toolbox as Lesson 01, with two swaps: the model is now <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">DecisionTreeClassifier</code>, and we bring in <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">plot_tree</code> — the tool that draws the model's entire brain. One thing is <em>missing</em>, deliberately. See if you can spot it; we'll talk about it after Step 4.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 1 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 1: Load our toolbox
-import pandas as pd                                     # works with tables of data (like Excel)
-from sklearn.model_selection import train_test_split    # splits data into train / test
-from sklearn.tree import DecisionTreeClassifier, plot_tree   # the tree model + a tool to draw it
-from sklearn.metrics import (accuracy_score, classification_report,
-                             ConfusionMatrixDisplay)    # report cards for the model
-import matplotlib.pyplot as plt                         # draws charts
+    <section>
+      <p class="eyebrow">THE IDEA</p>
+      <h2>Every branch asks one narrow question</h2>
+      <p>A split might ask whether a numeric feature is below a threshold or whether an encoded category is present. The algorithm chooses a question that makes the resulting groups more useful for predicting the target, then repeats inside each group.</p>
+      <p>For classification, leaves contain class distributions and produce class predictions. For regression, leaves predict a numeric value, usually the average target among training rows that reached that leaf.</p>
+      <div class="callout green">
+        <h3>Trees do not need scaled numbers</h3>
+        <p>A threshold such as “feature ≤ value” keeps the same ordering if units are rescaled. This lesson still uses the shared preprocessor for missing values and categorical encoding, but it leaves numeric features in their original units.</p>
+      </div>
+      <div class="callout">
+        <h3>Readable does not automatically mean trustworthy</h3>
+        <p>A short branch can describe the fitted model clearly. It does not prove that the relationship is causal, fair, stable, or valid outside the training population.</p>
+      </div>
+    </section>
 
-print("Toolbox ready!")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Toolbox ready!</pre>
-  </div>
-</div>
+    <section class="step">
+      <span class="step-chip">CELL 1 OF 5</span>
+      <h2>Build the right kind of tree</h2>
+      <p>The task configured in the foundation chooses a classifier or regressor. Both travel through the same preprocessing pipeline.</p>
+      <div class="codecard">
+        <div class="codecard-head">
+          <span>CELL 1 · MODEL SETUP</span>
+          <button class="copy" type="button" aria-label="Copy decision tree setup code">Copy</button>
+        </div>
+        <pre><code>import matplotlib.pyplot as plt
+import pandas as pd
 
-<!-- ================= STEP 2 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 2 OF 9</span>
-  <h3>Load the dataset</h3>
-  <p>Same dataset as Lesson 01: every published bulk &amp; block deal on the Indian exchanges from 2020 to today, straight from GitHub into a table called <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">deals</code>.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 2 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 2: Load the dataset (same one as Lesson 01)
-url = "https://raw.githubusercontent.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models/main/data/india_bulk_block_deals.csv"
-deals = pd.read_csv(url)
-
-print("Number of deals:", len(deals))
-deals.head()   # shows the first 5 rows</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Number of deals: 119156</pre>
-    <p class="note">…followed by a table showing the first 5 deals. The columns that matter today: <strong>deal_type</strong> (BULK or BLOCK — the answer we'll predict), <strong>quantity</strong>, <strong>price_inr</strong> and <strong>trade_value_crore</strong> (the three clues).</p>
-  </div>
-</div>
-
-<!-- ================= STEP 3 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 3 OF 9</span>
-  <h3>Balance the contest, exactly like Lesson 01</h3>
-  <p>Remember the trap: about 92% of deals are BULK, so a lazy model shouting "BULK!" scores 92% while learning nothing. Same fix as before — keep all 8,938 BLOCK deals and randomly pick 8,938 BULK deals to match, so blind guessing scores only 50%.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 3 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 3: Balance the dataset — equal number of BULK and BLOCK deals
-block_deals = deals[deals["deal_type"] == "BLOCK"]
-bulk_deals  = deals[deals["deal_type"] == "BULK"].sample(n=len(block_deals), random_state=42)
-
-data = pd.concat([block_deals, bulk_deals])
-data["deal_type"].value_counts()</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>deal_type
-BLOCK    8938
-BULK     8938
-Name: count, dtype: int64</pre>
-    <p class="note"><code style="font-family:'IBM Plex Mono',monospace;font-size:13.5px">random_state=42</code> means "pick randomly, but the <em>same</em> random deals every time" — it's also why your numbers will match this page (and Lesson 01) exactly.</p>
-  </div>
-</div>
-
-<!-- ================= STEP 4 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 4 OF 9</span>
-  <h3>Choose the clues, then split 75/25</h3>
-  <p>Same three clues (<strong>X</strong>), same answer column (<strong>y</strong>), and the same honesty rule: 75% of deals for studying, 25% locked away as the final exam the model never sees while learning.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 4 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 4: Choose the clues, then split 75% training / 25% testing
-features = ["quantity", "price_inr", "trade_value_crore"]
-
-X = data[features]       # the clues
-y = data["deal_type"]    # the answer
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y,
-    train_size=0.75,     # 75% training, 25% testing
-    random_state=42,     # same split for everyone
-    stratify=y,          # keep the 50/50 mix in both halves
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.tree import (
+    DecisionTreeClassifier,
+    DecisionTreeRegressor,
+    plot_tree,
 )
 
-print("Deals for training:", len(X_train))
-print("Deals for testing: ", len(X_test))</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Deals for training: 13407
-Deals for testing:  4469</pre>
-    <p class="note">Identical numbers to Lesson 01 — same 13,407 study deals, same 4,469 exam deals. A fair rematch.</p>
-  </div>
-</div>
+required_foundation = [
+    "TASK", "RANDOM_STATE", "FEATURES", "X_train", "X_test",
+    "y_train", "y_test", "make_preprocessor", "make_cv",
+    "CV_FIT_PARAMS", "PRIMARY_SCORING", "evaluate_predictions",
+    "results_log",
+]
+missing_foundation = [
+    name for name in required_foundation if name not in globals()
+]
+if missing_foundation:
+    raise NameError(
+        "Run every Foundation cell first. Missing: "
+        + ", ".join(missing_foundation)
+    )
 
-<section id="noscaler">
-  <h2>The step we're deliberately skipping</h2>
-  <p>Spotted what's missing from the toolbox? <strong>There's no StandardScaler.</strong> Remember Step 7 of the KNN lesson — the one that put quantity, price and value "on the same scale", and was worth eight percentage points of accuracy (79.8% with it, 71.8% without)?</p>
-  <p><strong>Trees simply don't need it.</strong> KNN measures <em>distance</em>, so a column full of giant numbers (quantity in crores of shares) bullies the calculation. But a tree only asks yes/no questions like <em>"is the value above ₹120 crore?"</em> — and that's the same question in any units. Rescale the column, and the threshold rescales with it; every deal still answers the same way, so the tree makes the exact same decisions. Sorting people by height works identically whether you measure in feet or centimetres.</p>
-  <div class="callout callout-green">
-    <p><strong>Rule of thumb worth keeping:</strong> models that measure <em>distance</em> (like KNN) need scaling. Models that ask <em>threshold questions</em> (trees, and the forests built from them) don't care. Knowing <em>why</em> a prep step exists tells you when you can skip it.</p>
-  </div>
-</section>
+if TASK == "classification":
+    tree_estimator = DecisionTreeClassifier(
+        random_state=RANDOM_STATE
+    )
+elif TASK == "regression":
+    tree_estimator = DecisionTreeRegressor(
+        random_state=RANDOM_STATE
+    )
+else:
+    raise ValueError("TASK must be 'classification' or 'regression'.")
 
-<!-- ================= STEP 5 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 5 OF 9</span>
-  <h3>Train a small tree and take the exam</h3>
-  <p><code style="font-family:'IBM Plex Mono',monospace;font-size:15px">max_depth=3</code> means the tree may ask at most <strong>3 questions</strong> before it must give a verdict on a deal. Keep that dial in mind — it becomes the whole story in Steps 7 and 8. Training and testing happen in one go, on the raw, unscaled numbers.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 5 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 5: Train a small decision tree (3 questions deep) and take the exam
-tree = DecisionTreeClassifier(max_depth=3, random_state=42)
-tree.fit(X_train, y_train)          # raw numbers — no scaler, trees don't need one
+tree_pipeline = Pipeline([
+    ("prepare", make_preprocessor(scale_numeric=False)),
+    ("model", tree_estimator),
+])
 
-predictions = tree.predict(X_test)
-accuracy = accuracy_score(y_test, predictions)
-print(f"Accuracy: {accuracy:.1%}")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Accuracy: 78.7%</pre>
-  </div>
-  <div class="callout callout-green">
-    <p><strong>Pause on that.</strong> A coin flip scores ~50%. Lesson 01's KNN scored 79.8% — but to do it, KNN needed the scaling step and had to memorise all 13,407 training deals, comparing every new deal against every one of them. This tree gets within about one point of that by asking <strong>at most three yes/no questions</strong> — questions you're about to read with your own eyes.</p>
-  </div>
-</div>
+print("Task:", TASK)
+print("Training rows:", len(X_train))
+print("Held-out test rows:", len(X_test))</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>Confirm that the printed task matches your target. The same algorithm name does not make classification and regression interchangeable.</p>
+      </div>
+    </section>
 
-<!-- ================= STEP 6 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 6 OF 9</span>
-  <h3>The headline act: draw the model's entire brain</h3>
-  <p>With KNN, "why did it say BLOCK?" had no real answer — "because 5 similar deals said so" is not an explanation you can put in a report. A decision tree is different. One command draws <strong>every question it learned</strong>:</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 6 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 6: Draw the tree — the model's entire brain in one picture
-plt.figure(figsize=(17, 8))
-plot_tree(tree,
-          feature_names=features,          # label the questions with our column names
-          class_names=["BLOCK", "BULK"],   # label the verdicts
-          filled=True,                     # colour boxes by which answer is winning
-          fontsize=10)
-plt.show()
+    <section class="step">
+      <span class="step-chip">CELL 2 OF 5</span>
+      <h2>Control growth with cross-validation</h2>
+      <p><code>max_depth</code> limits how many questions a path can ask. <code>min_samples_leaf</code> prevents tiny leaves. The fractional option below means every leaf must contain at least that share of the training fold.</p>
+      <div class="codecard">
+        <div class="codecard-head">
+          <span>CELL 2 · TRAINING-ONLY SEARCH</span>
+          <button class="copy" type="button" aria-label="Copy decision tree search code">Copy</button>
+        </div>
+        <pre><code>tree_search = GridSearchCV(
+    estimator=tree_pipeline,
+    param_grid={
+        "model__max_depth": [2, 3, 5, 8, None],
+        "model__min_samples_leaf": [1, 5, 0.02],
+    },
+    scoring=PRIMARY_SCORING,
+    cv=make_cv(),
+    n_jobs=-1,
+    refit=True,
+    return_train_score=True,
+)
 
-# Peek inside: what is the very first question the tree asks?
-root_question = features[tree.tree_.feature[0]]
-root_threshold = tree.tree_.threshold[0]
-print(f"Root question: is {root_question} &lt;= {root_threshold:.3f}?")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Root question: is price_inr &lt;= 319.300?</pre>
-    <p class="note">…and above it, the tree itself: a pyramid of question boxes, three questions deep, ending in coloured verdict boxes (orange leaning BLOCK, blue leaning BULK in Colab's default colouring). Each box shows the question, how many training deals reached it (<strong>samples</strong>), and the BLOCK/BULK headcount (<strong>value</strong>).</p>
-  </div>
+tree_search.fit(X_train, y_train, **CV_FIT_PARAMS)
+best_tree = tree_search.best_estimator_
 
-  <h3 style="font-size:18px;margin-top:26px">Read one path with your own eyes</h3>
-  <p>Let's walk a real deal down your tree — say <strong>7,00,000 shares at ₹550 each, worth ₹38.5 crore</strong>. Follow along in the picture (left branch always means YES):</p>
-  <ol>
-    <li><strong>Root:</strong> "is price_inr ≤ 319.3?" Our price is ₹550 → <strong>NO</strong>, go right. (6,709 of the 13,407 training deals took this branch — 5,156 BLOCK vs 1,553 BULK, so the odds already lean BLOCK.)</li>
-    <li><strong>Question 2:</strong> "is price_inr ≤ 954.8?" ₹550 → <strong>YES</strong>, go left. (3,327 deals here: 2,139 BLOCK vs 1,188 BULK.)</li>
-    <li><strong>Question 3:</strong> "is trade_value_crore ≤ 9.986?" ₹38.5 crore → <strong>NO</strong>, go right.</li>
-    <li><strong>Leaf:</strong> 2,561 training deals landed here — 1,778 BLOCK vs 783 BULK. Majority verdict: <strong>BLOCK</strong>, and about 69% of the deals in this leaf really were BLOCK.</li>
-  </ol>
-  <p>In plain words, the tree taught itself: <em>"a deal priced above ₹319 but below ₹955 per share, worth more than about ₹10 crore, is probably a block deal."</em> That's a rule a human can read, question, and challenge — try doing that with KNN's 13,407 memorised neighbours.</p>
-  <div class="callout">
-    <p><strong>One more thing to notice:</strong> in all three rounds of questions, the tree never once asked about <strong>quantity</strong>. It tried quantity questions during training and found price and value questions split the deals more cleanly. Nobody told it that — it measured it.</p>
-  </div>
-</div>
+tree_cv_table = pd.DataFrame(tree_search.cv_results_)[[
+    "param_model__max_depth",
+    "param_model__min_samples_leaf",
+    "mean_train_score",
+    "mean_test_score",
+    "std_test_score",
+    "rank_test_score",
+]].sort_values("rank_test_score")
 
-<!-- ================= STEP 7 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 7 OF 9</span>
-  <h3>Set the tree free — and catch it memorising</h3>
-  <p>If 3 questions score 78.7%, why not let the tree ask as many questions as it wants? <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">max_depth=None</code> removes the limit. This time we'll grade it on <strong>both</strong> papers: the deals it studied (train) and the deals it never saw (test).</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 7 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 7: Remove the depth limit and compare train vs test scores
-deep_tree = DecisionTreeClassifier(max_depth=None, random_state=42)   # no limit!
-deep_tree.fit(X_train, y_train)
+display(tree_cv_table.head(15))
+print("Chosen settings:", tree_search.best_params_)
+print("Validation metric:", PRIMARY_SCORING)</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>Your winning settings may differ from another learner’s. Check whether several rows are effectively tied once validation variation is considered.</p>
+      </div>
+    </section>
 
-train_accuracy = accuracy_score(y_train, deep_tree.predict(X_train))
-test_accuracy  = accuracy_score(y_test,  deep_tree.predict(X_test))
+    <section class="step">
+      <span class="step-chip">CELL 3 OF 5</span>
+      <h2>See overfitting inside the training process</h2>
+      <p>A flexible tree often scores extremely well on the folds it fits while falling behind on their validation rows. This train–validation gap is evidence of memorisation pressure; it is not something to diagnose by repeatedly checking the test set.</p>
+      <div class="codecard">
+        <div class="codecard-head">
+          <span>CELL 3 · TRAIN–VALIDATION GAP</span>
+          <button class="copy" type="button" aria-label="Copy overfitting analysis code">Copy</button>
+        </div>
+        <pre><code>overfit_view = tree_cv_table.copy()
+overfit_view["train_minus_validation"] = (
+    overfit_view["mean_train_score"]
+    - overfit_view["mean_test_score"]
+)
 
-print(f"Score on deals it studied (train): {train_accuracy:.1%}")
-print(f"Score on deals it never saw (test): {test_accuracy:.1%}")
-print("Questions deep:", deep_tree.get_depth())
-print("Leaf verdicts :", deep_tree.get_n_leaves())</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Score on deals it studied (train): 99.6%
-Score on deals it never saw (test): 83.0%
-Questions deep: 40
-Leaf verdicts : 2069</pre>
-  </div>
-  <div class="callout">
-    <p><strong>99.6% is the suspicious number here, not the impressive one.</strong> Left unsupervised, the tree grew 40 questions deep with 2,069 separate verdict boxes — roughly one private rule for every 6 training deals. It hasn't found 2,069 insights about Indian markets; it has <strong>memorised the study material</strong>. On deals it never saw, the score is 83.0% — a 16.6-point reality gap. That gap between train and test is the classic fingerprint of <strong>overfitting</strong>: memorising instead of learning.</p>
-    <p><strong>Honest footnote:</strong> 83.0% on the test set is still the best score we've seen — textbooks would promise the test score <em>falls</em> as a model overfits, and here it didn't. Why? Remember from Lesson 01 that this dataset contains near-twin rows (the buy side and sell side of the same trade), so memorising one twin genuinely helps with the other — the same quirk that flattered K = 1. On most real datasets, that crutch doesn't exist. The reliable warning sign to watch is the <strong>gap</strong>, and Step 8 shows it growing.</p>
-  </div>
-</div>
+display(
+    overfit_view.sort_values(
+        "train_minus_validation", ascending=False
+    ).head(12)
+)
 
-<!-- ================= STEP 8 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 8 OF 9</span>
-  <h3>The depth dial: watch memorising happen in slow motion</h3>
-  <p>Just like Lesson 01 swept the K dial, let's sweep <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">max_depth</code> from 1 to 20 and plot the train score and test score side by side.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 8 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 8: Try different depths and watch train vs test drift apart
-depths = [1, 2, 3, 4, 5, 6, 8, 10, 15, 20]
-train_scores, test_scores = [], []
+best_cv_row = overfit_view.loc[
+    overfit_view["rank_test_score"] == 1
+].iloc[0]
+print(
+    "Chosen model train–validation gap:",
+    best_cv_row["train_minus_validation"],
+)</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>For regression, the primary score is negative MAE, so larger is still better and the gap remains interpretable. A large gap signals instability; a small gap does not prove the model is useful.</p>
+      </div>
+      <div class="reflection">
+        <span>PAUSE &amp; WRITE</span>
+        <ol>
+          <li>Which settings produced the widest train–validation gaps?</li>
+          <li>Would you prefer a slightly weaker but much smaller tree? What would that buy you?</li>
+        </ol>
+      </div>
+    </section>
 
-for d in depths:
-    model = DecisionTreeClassifier(max_depth=d, random_state=42)
-    model.fit(X_train, y_train)
-    tr = accuracy_score(y_train, model.predict(X_train))
-    te = accuracy_score(y_test,  model.predict(X_test))
-    train_scores.append(tr)
-    test_scores.append(te)
-    print(f"depth = {d:&gt;2}  -&gt;  train {tr:.1%}   test {te:.1%}")
+    <section class="step">
+      <span class="step-chip">CELL 4 OF 5</span>
+      <h2>Evaluate the locked tree once</h2>
+      <p>Cross-validation has finished model selection. Now use the held-out rows for one final estimate of performance on unseen data.</p>
+      <div class="codecard">
+        <div class="codecard-head">
+          <span>CELL 4 · FINAL EVALUATION</span>
+          <button class="copy" type="button" aria-label="Copy final evaluation code">Copy</button>
+        </div>
+        <pre><code>tree_predictions = best_tree.predict(X_test)
 
-plt.plot(depths, train_scores, marker="o", label="train (deals it studied)")
-plt.plot(depths, test_scores,  marker="o", label="test (deals it never saw)")
-plt.xlabel("max_depth (how many questions the tree may ask)")
-plt.ylabel("Accuracy")
-plt.title("Memorising vs learning")
-plt.legend()
-plt.grid(True, alpha=0.3)
+tree_result = evaluate_predictions(
+    "Decision tree",
+    y_test,
+    tree_predictions,
+)
+
+fitted_tree = best_tree.named_steps["model"]
+print("Fitted depth:", fitted_tree.get_depth())
+print("Number of leaves:", fitted_tree.get_n_leaves())</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>Compare with the baseline using your real success criterion. Also inspect class-specific errors for classification or the size and direction of residuals for regression.</p>
+      </div>
+      <div class="callout danger">
+        <h3>The test set is not a second tuning set</h3>
+        <p>Do not choose a different depth because this result disappoints you. That would make the reported test performance optimistic.</p>
+      </div>
+    </section>
+
+    <section class="step">
+      <span class="step-chip">CELL 5 OF 5</span>
+      <h2>Plot a readable slice of the fitted tree</h2>
+      <p>The labels below come from the fitted preprocessor, so encoded categories and numeric features line up with the actual columns seen by the tree. The drawing stops after a few levels even if the fitted model continues.</p>
+      <div class="codecard">
+        <div class="codecard-head">
+          <span>CELL 5 · TREE DIAGRAM</span>
+          <button class="copy" type="button" aria-label="Copy decision tree plot code">Copy</button>
+        </div>
+        <pre><code>transformed_feature_names = (
+    best_tree.named_steps["prepare"].get_feature_names_out().tolist()
+)
+fitted_tree = best_tree.named_steps["model"]
+
+plot_options = {}
+if TASK == "classification":
+    plot_options["class_names"] = [
+        str(label) for label in fitted_tree.classes_
+    ]
+
+plt.figure(figsize=(18, 8))
+plot_tree(
+    fitted_tree,
+    feature_names=transformed_feature_names,
+    max_depth=2,
+    filled=True,
+    rounded=True,
+    impurity=False,
+    fontsize=8,
+    **plot_options,
+)
+plt.title("First three levels of the fitted decision tree")
 plt.show()</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>depth =  1  -&gt;  train 76.9%   test 76.6%
-depth =  2  -&gt;  train 77.7%   test 77.4%
-depth =  3  -&gt;  train 79.3%   test 78.7%
-depth =  4  -&gt;  train 80.5%   test 79.6%
-depth =  5  -&gt;  train 80.6%   test 79.9%
-depth =  6  -&gt;  train 81.3%   test 79.9%
-depth =  8  -&gt;  train 82.6%   test 79.5%
-depth = 10  -&gt;  train 84.9%   test 79.9%
-depth = 15  -&gt;  train 89.9%   test 81.4%
-depth = 20  -&gt;  train 94.7%   test 82.0%</pre>
-    <p class="note">…plus a chart with two lines: train climbing steadily towards 95%, test crawling along around 77–82% underneath.</p>
-  </div>
-  <div class="callout">
-    <p><strong>How to read it:</strong> up to depth 5 or so, both lines rise together — the tree is finding real, general patterns. Beyond that, the train line keeps soaring while the test line crawls: everything in the widening gap is memorisation, not knowledge. And savour the very first row — a tree allowed <em>one single question</em> ("is price_inr ≤ 319.3?") already scores 76.6%, versus 50% for a coin flip. Most of the signal in this problem fits in one question.</p>
-    <p><strong>One honest confession</strong> (same as Lesson 01): to keep this lesson short, we compared depths using the test set. In a real project that's cheating — you'd pick the depth using a separate slice of the <em>training</em> data (a <em>validation set</em>), and touch the test set exactly once, at the very end.</p>
-  </div>
-</div>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>Trace one row through the visible questions. A one-hot condition usually asks whether a category is absent or present. An imputed numeric threshold may not represent a natural real-world cutoff.</p>
+      </div>
+      <div class="reflection">
+        <span>PAUSE &amp; WRITE</span>
+        <ol>
+          <li>Does the first split make domain sense, or could it reveal leakage?</li>
+          <li>Which important behaviour is hidden below the displayed levels?</li>
+          <li>Would a stakeholder understand the transformed feature labels without your explanation?</li>
+        </ol>
+      </div>
+    </section>
 
-<!-- ================= STEP 9 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 9 OF 9</span>
-  <h3>Judge the model properly</h3>
-  <p>Back to our honest little depth-3 tree from Step 5 — the same report cards as Lesson 01, so the two models can be compared face to face.</p>
+    <section>
+      <p class="eyebrow">DEEPER PRACTICE</p>
+      <h2>Make the lesson yours</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Experiment</th><th>Question to answer</th><th>Boundary</th></tr></thead>
+          <tbody>
+            <tr><td>Use fewer features</td><td>Can a simpler tree keep similar CV performance?</td><td>Do not select by test score</td></tr>
+            <tr><td>Increase leaf size</td><td>Do rules become more stable and readable?</td><td>Compare training folds</td></tr>
+            <tr><td>Repeat CV with a new seed</td><td>Do the chosen rules change?</td><td>Keep the test set closed</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="reflection">
+        <span>LESSON NOTES</span>
+        <ol>
+          <li>What did the tree learn that you expected?</li>
+          <li>What rule surprised you, and how will you investigate it?</li>
+          <li>Where is overfitting most visible in your evidence?</li>
+        </ol>
+      </div>
+    </section>
 
-  <h3 style="font-size:18px;margin-top:22px">9a · The confusion matrix</h3>
-  <p>The 2×2 scoreboard: rows are the <strong>truth</strong>, columns are the model's <strong>guess</strong>. Big numbers on the diagonal = good.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 9 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 9a: The confusion matrix — where is our depth-3 tree right, where does it slip?
-ConfusionMatrixDisplay.from_predictions(y_test, predictions, cmap="Greens")
-plt.show()</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>                 model said      model said
-                   BLOCK            BULK
-truly BLOCK        1979  ✓           256
-truly BULK          697             1537  ✓</pre>
-    <p class="note">Colab draws this as a green-shaded chart. Reading it: of 2,235 real BLOCK deals, the tree caught 1,979 and missed only 256. Of 2,234 real BULK deals, it got 1,537 right but wrongly flagged 697 as BLOCK.</p>
-  </div>
+    <section class="completion-card">
+      <div>
+        <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
+        <h2>Save your tree’s limits with its result.</h2>
+        <p>Record the chosen depth and leaf size, validation variation, final test result, and one rule that needs domain review.</p>
+      </div>
+      <button class="complete-button" type="button" data-complete="decision-trees">Mark complete</button>
+    </section>
 
-  <h3 style="font-size:18px;margin-top:26px">9b · The full report card</h3>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 10 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 9b: The full report card
-print(classification_report(y_test, predictions))</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>              precision    recall  f1-score   support
+    <nav class="lesson-nav" aria-label="Previous and next lessons">
+      <a href="../logistic-regression/">← Logistic regression</a>
+      <a href="../random-forests/">Random forests →</a>
+    </nav>
+  </main>
 
-       BLOCK       0.74      0.89      0.81      2235
-        BULK       0.86      0.69      0.76      2234
-
-    accuracy                           0.79      4469
-   macro avg       0.80      0.79      0.78      4469
-weighted avg       0.80      0.79      0.78      4469</pre>
-  </div>
-  <p>In plain words (same two ideas as Lesson 01): <strong>recall</strong> asks "of all the real BLOCK deals, how many did it catch?" — 89%, this tree misses very little. <strong>Precision</strong> asks "when it <em>says</em> BLOCK, how often is it right?" — 74%, so about 1 in 4 of its BLOCK calls is a false alarm. This tree is the <strong>eager inspector</strong>: it would rather raise a false alarm than let a block deal slip past.</p>
-
-  <h3 style="font-size:18px;margin-top:26px">9c · Face to face with Lesson 01</h3>
-  <div class="tablewrap">
-    <table>
-      <tr><th>Strategy</th><th>Test accuracy</th><th>Worth remembering</th></tr>
-      <tr><td>Coin flip</td><td>~50%</td><td>The floor. Anything near this learned nothing.</td></tr>
-      <tr><td><strong>Decision tree (3 questions)</strong></td><td><strong>78.7%</strong></td><td>Every decision fully explainable — you just read its brain.</td></tr>
-      <tr><td>Lesson 01 KNN (K = 5, scaled)</td><td>79.8%</td><td>Slightly higher score; zero explanation, needed scaling.</td></tr>
-    </table>
-  </div>
-  <p>One point of accuracy, traded for total transparency. In a bank or a courtroom — anywhere someone can demand <em>"why did the model say that?"</em> — that trade is often a bargain. The two models also fail differently: KNN caught 84% of block deals, this tree catches 89% but raises more false alarms. Which one is "better" depends on which mistake costs you more.</p>
-</div>
-
-<section id="judging">
-  <h2>How to judge any model — the cheat sheet, revisited</h2>
-  <p>Same four questions as Lesson 01 — they never change. Today's answers:</p>
-  <div class="tablewrap">
-    <table>
-      <tr><th>Question</th><th>Tool</th><th>Today's answer</th></tr>
-      <tr><td><strong>1. Better than dumb luck?</strong></td><td>Compare with a baseline</td><td>78.7% vs the 50% coin flip — and even a one-question tree beats it at 76.6%.</td></tr>
-      <tr><td><strong>2. Where does it fail?</strong></td><td>Confusion matrix</td><td>Its favourite mistake: crying "BLOCK!" at 697 ordinary bulk deals.</td></tr>
-      <tr><td><strong>3. Can I trust a "yes"? Does it miss?</strong></td><td>Precision &amp; recall</td><td>Recall 89% (misses little), precision 74% (1 in 4 BLOCK calls is a false alarm).</td></tr>
-      <tr><td><strong>4. Was the exam fair?</strong></td><td>Train vs test</td><td>The new lesson: the deep tree's 99.6% <em>train</em> score looked perfect and meant nothing — the test set said 83.0%.</td></tr>
-    </table>
-  </div>
-  <p>Rough accuracy guide for a balanced 50/50 problem: <strong>~50%</strong> = learned nothing · <strong>60–75%</strong> = learned something · <strong>75–90%</strong> = solid · <strong>95%+</strong> = be suspicious. Step 7 showed you exactly <em>what</em> to suspect: a score measured on questions the model had already memorised. <strong>Too perfect = suspicious</strong> is now something you've seen with your own eyes, not just a slogan.</p>
-</section>
-
-<section id="recap">
-  <h2>What you just learned</h2>
-  <ol>
-    <li><strong>A decision tree plays 20 Questions</strong> — it learns which yes/no questions split the data cleanest, and asks them in order.</li>
-    <li><strong>No scaling needed</strong> — "is the value above ₹120 crore?" is the same question in any units. Distance models (KNN) care; threshold models (trees) don't.</li>
-    <li><strong>It shows its working</strong> — <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">plot_tree</code> drew every rule, and you walked a real deal from root to leaf: <em>price above ₹319, under ₹955, value over ~₹10 crore → probably BLOCK</em>.</li>
-    <li><strong>Left free, it memorises</strong> — 40 questions deep, 2,069 private rules, 99.6% on the study material vs 83.0% on new deals. The train–test gap is the fingerprint of overfitting.</li>
-    <li><strong>Depth is the honesty dial</strong> — shallow = simple and general, deep = memorising. You watched the two lines drift apart.</li>
-  </ol>
-  <p>So we have a model that's wonderfully transparent but, given freedom, memorises like a parrot. Here's a thought to sit with until next time: if one over-eager tree is unreliable, what if you grew <strong>hundreds of slightly different trees and made them vote</strong>? That idea is called a random forest — and it's Lesson 05.</p>
-
-  <h3>Homework (optional, fun)</h3>
-  <ul>
-    <li><strong>Push the sweep to the bitter end:</strong> in Step 8, change the list to <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">depths = [1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40]</code> and re-run the cell. You'll see <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">depth = 30 -&gt; train 99.0% test 83.2%</code> and <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">depth = 40 -&gt; train 99.6% test 83.0%</code> — the train line maxes out while the gap stretches to almost 17 points, and the chart makes the whole story unmissable.</li>
-    <li><strong>Meet the one-question model:</strong> in Step 5, change <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">max_depth=3</code> to <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">max_depth=1</code> and re-run Steps 5 and 6. Accuracy: 76.6% from a single question — and the Step 6 picture shrinks to one question box and two verdicts. Then try <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">max_depth=4</code>: 79.6%, and the picture doubles to 16 verdict boxes. Watch how fast "readable" slips away as the tree grows — that's the transparency-vs-depth trade-off in action.</li>
-  </ul>
-</section>
-
-</main>
-
-<footer>
-  <div class="foot-inner">
-    <span>Data: NSE &amp; BSE bulk &amp; block deals, 2020 → today · 1,19,156 rows</span>
-    <span><a href="../">← All lessons</a> · <a href="https://github.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models">Source on GitHub</a></span>
-  </div>
-</footer>
-
-<script>
-document.querySelectorAll('.codecard').forEach(function (card) {
-  var btn = card.querySelector('.copy');
-  btn.addEventListener('click', function () {
-    var text = card.querySelector('code').innerText;
-    function done() {
-      btn.textContent = 'Copied ✓'; btn.classList.add('done');
-      setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done, function () { fallback(); done(); });
-    } else { fallback(); done(); }
-    function fallback() {
-      var ta = document.createElement('textarea');
-      ta.value = text; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy'); ta.remove();
-    }
-  });
-});
-</script>
+  <footer>
+    <div class="foot-inner">
+      <span>Bring your own tabular data. Keep your test set honest.</span>
+      <a href="../">All lessons</a>
+    </div>
+  </footer>
+  <script src="../assets/course.js"></script>
 </body>
 </html>

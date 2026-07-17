@@ -1,713 +1,390 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KNN, step by step — Learn ML Models</title>
-<meta name="description" content="Train your first machine learning model in Google Colab: K-Nearest Neighbours, using a dataset of 119,156 real Indian stock market deals. Plain language, copyable code.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --paper:#F2F5F7; --card:#FFFFFF; --ink:#182A3A; --muted:#52657A;
-  --terminal:#0E1B26; --terminal-ink:#D9E6F2; --comment:#7E97AB;
-  --green:#0E7C52; --green-soft:#E3F1EA; --saffron:#C77C11; --saffron-text:#9A5F0A; --saffron-soft:#F8EEDD;
-  --rule:#D9E2EA; --receipt:#FBFDFE;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:72px}
-@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
-body{
-  background:var(--paper); color:var(--ink);
-  font-family:"IBM Plex Sans",system-ui,sans-serif;
-  font-size:17px; line-height:1.65;
-}
-a{color:var(--green)}
-a:focus-visible,button:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
-
-.topbar{
-  border-bottom:1px solid var(--rule); background:var(--card);
-  position:sticky; top:0; z-index:10;
-}
-.topbar-inner{
-  max-width:840px;margin:0 auto;padding:14px 20px;
-  display:flex;justify-content:space-between;align-items:baseline;gap:12px;
-}
-.wordmark{
-  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;
-  letter-spacing:.14em;text-decoration:none;color:var(--ink);
-}
-.wordmark span{color:var(--green)}
-.lesson-tag{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
-
-.wrap{max-width:840px;margin:0 auto;padding:0 20px}
-
-/* ---------- hero ---------- */
-.hero{padding:56px 0 40px}
-.eyebrow{
-  font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;
-  letter-spacing:.16em;color:var(--saffron-text);text-transform:uppercase;
-}
-h1{
-  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
-  font-size:clamp(34px,6vw,52px);line-height:1.12;margin:10px 0 16px;
-  letter-spacing:-.01em;
-}
-.lede{font-size:19px;color:var(--muted);max-width:60ch}
-.lede strong{color:var(--ink)}
-.meta-chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 26px}
-.chip{
-  font-family:"IBM Plex Mono",monospace;font-size:13px;
-  background:var(--card);border:1px solid var(--rule);border-radius:999px;
-  padding:6px 14px;color:var(--muted);
-}
-.cta-row{display:flex;flex-wrap:wrap;gap:12px}
-.btn{
-  display:inline-block;text-decoration:none;font-weight:600;font-size:16px;
-  padding:12px 22px;border-radius:8px;transition:transform .12s ease;
-}
-.btn:hover{transform:translateY(-1px)}
-.btn-primary{background:var(--green);color:#fff}
-.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--rule)}
-
-/* ---------- sections ---------- */
-section{padding:36px 0}
-h2{
-  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
-  font-size:clamp(24px,4vw,32px);line-height:1.2;margin-bottom:14px;
-}
-h3{font-size:19px;font-weight:600;margin:26px 0 8px}
-p{margin:12px 0;max-width:68ch}
-ul,ol{margin:12px 0 12px 24px;max-width:66ch}
-li{margin:6px 0}
-.divider{border:none;border-top:1px solid var(--rule);margin:12px 0}
-
-/* ---------- idea figure ---------- */
-.figure-card{
-  background:var(--card);border:1px solid var(--rule);border-radius:12px;
-  padding:26px 22px 18px;margin:20px 0;
-}
-.figure-card svg{width:100%;height:auto;display:block}
-.figcap{
-  font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);
-  text-align:center;margin-top:12px;
-}
-
-/* ---------- definition cards ---------- */
-.def-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
-@media (max-width:640px){.def-grid{grid-template-columns:1fr}}
-.def{border-radius:12px;padding:18px 20px;border:1px solid var(--rule)}
-.def h4{font-family:"IBM Plex Mono",monospace;font-size:14px;letter-spacing:.12em;margin-bottom:8px}
-.def p{font-size:15.5px;margin:0}
-.def-bulk{background:var(--saffron-soft)} .def-bulk h4{color:var(--saffron)}
-.def-block{background:var(--green-soft)} .def-block h4{color:var(--green)}
-
-/* ---------- steps ---------- */
-.step{
-  background:var(--card);border:1px solid var(--rule);border-radius:14px;
-  padding:28px 26px;margin:26px 0;
-}
-@media (max-width:640px){.step{padding:22px 16px}}
-.step-chip{
-  display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:600;
-  font-size:12.5px;letter-spacing:.14em;color:#fff;background:var(--ink);
-  border-radius:6px;padding:4px 10px;margin-bottom:10px;
-}
-.step h3{font-family:"IBM Plex Serif",Georgia,serif;font-size:23px;font-weight:600;margin:0 0 8px}
-.step p{font-size:16.5px}
-
-/* ---------- code cards ---------- */
-.codecard{
-  background:var(--terminal);border-radius:10px;margin:18px 0 0;
-  position:relative;overflow:hidden;
-}
-.codecard-head{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:8px 14px;border-bottom:1px solid rgba(217,230,242,.12);
-}
-.codecard-title{
-  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;
-  color:var(--comment);
-}
-.copy{
-  font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;
-  color:var(--terminal-ink);background:rgba(217,230,242,.1);
-  border:1px solid rgba(217,230,242,.25);border-radius:6px;
-  padding:5px 12px;cursor:pointer;transition:background .12s ease;
-}
-.copy:hover{background:rgba(217,230,242,.22)}
-.copy.done{color:#8CE0B0;border-color:#8CE0B0}
-.codecard pre{
-  padding:16px 18px;overflow-x:auto;
-}
-.codecard code{
-  font-family:"IBM Plex Mono",monospace;font-size:14px;line-height:1.6;
-  color:var(--terminal-ink);white-space:pre;
-}
-
-/* ---------- receipts (expected output) ---------- */
-.receipt{
-  background:var(--receipt);border:1.5px dashed var(--rule);border-top:none;
-  border-radius:0 0 10px 10px;padding:14px 18px 16px;margin-bottom:6px;
-}
-.receipt-label{
-  font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;
-  letter-spacing:.16em;color:var(--green);margin-bottom:8px;
-}
-.receipt pre{
-  font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:1.55;
-  color:var(--ink);overflow-x:auto;white-space:pre;
-}
-.receipt .note{font-size:14px;color:var(--muted);margin:8px 0 0}
-
-/* ---------- tables ---------- */
-.tablewrap{overflow-x:auto;margin:16px 0}
-table{border-collapse:collapse;font-size:15px;min-width:420px}
-th,td{border:1px solid var(--rule);padding:9px 14px;text-align:left;background:var(--card)}
-th{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.06em;background:var(--paper)}
-td strong{font-weight:600}
-
-/* ---------- callouts ---------- */
-.callout{
-  border-left:4px solid var(--saffron);background:var(--saffron-soft);
-  border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0;font-size:16px;
-}
-.callout-green{border-left-color:var(--green);background:var(--green-soft)}
-.callout p{margin:6px 0;font-size:16px}
-
-footer{
-  border-top:1px solid var(--rule);margin-top:40px;padding:28px 0 48px;
-  color:var(--muted);font-size:14.5px;
-}
-footer a{color:var(--muted)}
-.foot-inner{max-width:840px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>K-Nearest Neighbours · Learn ML Models</title>
+  <meta name="description" content="Use K-Nearest Neighbours on your own classification or regression dataset in Google Colab, with fold-safe scaling, cross-validation, and honest error review.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Serif:wght@500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/course.css">
 </head>
 <body>
-
-<nav class="topbar">
-  <div class="topbar-inner">
-    <a class="wordmark" href="../">LEARN<span>·</span>ML<span>·</span>MODELS</a>
-    <span class="lesson-tag">LESSON 01 / KNN</span>
-  </div>
-</nav>
-
-<header class="hero wrap">
-  <p class="eyebrow">Lesson 01 · Classification</p>
-  <h1>Teach a computer to spot a block deal</h1>
-  <p class="lede">Your first machine learning model, built live in Google Colab with <strong>K-Nearest Neighbours</strong> — using a dataset of 1,19,156 real bulk &amp; block deals from the Indian stock market. No maths degree, no setup, nothing to install.</p>
-  <div class="meta-chips">
-    <span class="chip">⏱ about 30 minutes</span>
-    <span class="chip">🧠 zero coding experience needed</span>
-    <span class="chip">📊 real NSE &amp; BSE data, 2020 → today</span>
-  </div>
-  <div class="cta-row">
-    <a class="btn btn-primary" href="#start">Start the lesson ↓</a>
-  </div>
-</header>
-
-<main class="wrap">
-
-<section id="idea">
-  <h2>The whole idea, in one picture</h2>
-  <p>Imagine you move to a new city and want to know whether a house is in a posh area or a normal area. The obvious trick: <strong>look at the five nearest houses and go with the majority.</strong></p>
-  <p>That is the entire algorithm. To classify something new, KNN finds the <strong>K most similar examples</strong> it has already seen, lets them <strong>vote</strong>, and the majority wins. "Similar" just means close in numbers — two deals with almost the same quantity, price and value are neighbours.</p>
-
-  <div class="figure-card">
-    <svg viewBox="0 0 760 340" role="img" aria-label="Scatter plot showing a mystery deal surrounded by its five nearest neighbours: three block deals and two bulk deals, so the vote says block.">
-      <!-- axes -->
-      <line x1="70" y1="290" x2="710" y2="290" stroke="#D9E2EA" stroke-width="2"/>
-      <line x1="70" y1="290" x2="70" y2="30" stroke="#D9E2EA" stroke-width="2"/>
-      <text x="390" y="322" font-family="IBM Plex Mono, monospace" font-size="13" fill="#52657A" text-anchor="middle">deal value (₹ crore) →</text>
-      <text x="38" y="160" font-family="IBM Plex Mono, monospace" font-size="13" fill="#52657A" text-anchor="middle" transform="rotate(-90 38 160)">quantity →</text>
-      <!-- BULK cluster (saffron, lower-left) -->
-      <g fill="#C77C11">
-        <circle cx="130" cy="250" r="8"/><circle cx="175" cy="222" r="8"/>
-        <circle cx="150" cy="188" r="8"/><circle cx="215" cy="252" r="8"/>
-        <circle cx="235" cy="205" r="8"/><circle cx="190" cy="160" r="8"/>
-        <circle cx="262" cy="238" r="8"/><circle cx="292" cy="192" r="8"/>
-        <circle cx="330" cy="228" r="8"/><circle cx="360" cy="185" r="8"/>
-      </g>
-      <!-- BLOCK cluster (green, upper-right) -->
-      <g fill="#0E7C52">
-        <circle cx="470" cy="120" r="8"/><circle cx="512" cy="88" r="8"/>
-        <circle cx="548" cy="132" r="8"/><circle cx="585" cy="70" r="8"/>
-        <circle cx="612" cy="118" r="8"/><circle cx="648" cy="86" r="8"/>
-        <circle cx="672" cy="140" r="8"/><circle cx="635" cy="180" r="8"/>
-        <circle cx="560" cy="182" r="8"/><circle cx="690" cy="60" r="8"/>
-      </g>
-      <!-- neighbour circle -->
-      <circle cx="452" cy="168" r="86" fill="none" stroke="#182A3A" stroke-width="2" stroke-dasharray="7 6"/>
-      <!-- 5 nearest: 3 green, 2 saffron -->
-      <circle cx="470" cy="120" r="8" fill="#0E7C52" stroke="#182A3A" stroke-width="2.5"/>
-      <circle cx="512" cy="196" r="8" fill="#0E7C52" stroke="#182A3A" stroke-width="2.5"/>
-      <circle cx="500" cy="230" r="8" fill="#0E7C52" stroke="#182A3A" stroke-width="2.5"/>
-      <circle cx="398" cy="212" r="8" fill="#C77C11" stroke="#182A3A" stroke-width="2.5"/>
-      <circle cx="408" cy="130" r="8" fill="#C77C11" stroke="#182A3A" stroke-width="2.5"/>
-      <!-- mystery point -->
-      <circle cx="452" cy="168" r="13" fill="#182A3A"/>
-      <text x="452" y="173" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="600" fill="#FFFFFF" text-anchor="middle">?</text>
-      <!-- legend -->
-      <g font-family="IBM Plex Mono, monospace" font-size="13">
-        <circle cx="92" cy="52" r="7" fill="#C77C11"/><text x="106" y="57" fill="#182A3A">BULK deal</text>
-        <circle cx="92" cy="80" r="7" fill="#0E7C52"/><text x="106" y="85" fill="#182A3A">BLOCK deal</text>
-      </g>
-    </svg>
-    <p class="figcap">The mystery deal's 5 nearest neighbours: 3 BLOCK, 2 BULK. The vote says BLOCK — 3 to 2.</p>
-  </div>
-</section>
-
-<section id="mission">
-  <h2>What you're going to predict</h2>
-  <p>Every day, unusually large share trades on the Indian exchanges (almost all NSE, a handful from BSE) are published in two categories. Your model will look at just three numbers — <strong>how many shares, at what price, worth how many crores</strong> — and guess the category.</p>
-  <div class="def-grid">
-    <div class="def def-bulk">
-      <h4>BULK DEAL</h4>
-      <p>Someone buys or sells more than 0.5% of a company's shares over a normal trading day. Big, but spread across the day's trading.</p>
+  <nav class="topbar" aria-label="Course navigation">
+    <div class="topbar-inner">
+      <a class="wordmark" href="../">LEARN<span>·</span>ML<span>·</span>MODELS</a>
+      <span class="lesson-tag">LESSON 01 / KNN</span>
     </div>
-    <div class="def def-block">
-      <h4>BLOCK DEAL</h4>
-      <p>One single, giant, pre-negotiated trade — crores of rupees in one shot — executed in a special trading window. These tend to be much bigger in value.</p>
+  </nav>
+
+  <header class="hero wrap">
+    <p class="eyebrow">Classification + regression · your dataset</p>
+    <h1>Let nearby examples make the prediction.</h1>
+    <p class="lede"><strong>K-Nearest Neighbours</strong> asks which training rows are most similar to a new row. Categories vote; numbers are averaged. You will scale distances safely, choose K using training-only cross-validation, and open the test set once.</p>
+    <div class="meta-chips">
+      <span class="chip">both supervised tasks</span>
+      <span class="chip">scaling matters</span>
+      <span class="chip">~30 minutes</span>
     </div>
-  </div>
-  <p>"Block deals tend to be bigger" is the pattern we <em>hope</em> the model discovers on its own. We never tell it that rule — it has to learn it from the ~13,400 training deals we'll carve out in Step 6.</p>
-</section>
+  </header>
 
-<section id="start">
-  <h2>Before you start: open Google Colab</h2>
-  <p>Colab is a free website from Google that runs Python in your browser. Nothing to install.</p>
-  <ol>
-    <li>Go to <a href="https://colab.research.google.com">colab.research.google.com</a> and sign in with any Google account.</li>
-    <li>Click <strong>+ New notebook</strong>.</li>
-    <li>You'll see an empty box called a <em>cell</em>. Paste code into it, then press the <strong>▶ button</strong> (or <strong>Shift + Enter</strong>) to run it. Click <strong>+ Code</strong> to add the next cell.</li>
-  </ol>
-  <p>Now copy each step below into its own cell (the <strong>Copy</strong> button on each block does it in one click), run it, and check that your output matches the <strong>"what you should see"</strong> slip under each block.</p>
-  <div class="callout callout-green">
-    <p><strong>Two things worth knowing before you start:</strong></p>
-    <ul style="margin:8px 0 4px 22px">
-      <li>The first cell takes a few extra seconds while Colab connects to a computer in the cloud. Not broken, just warming up.</li>
-      <li>Cells build on earlier cells, so <strong>run them in order</strong>. If you ever see an error like <em>NameError: name 'deals' is not defined</em>, or Colab says the runtime disconnected, just click <strong>Runtime → Run all</strong> in the menu — everything comes back in under a minute.</li>
-    </ul>
-  </div>
-</section>
+  <main class="wrap">
+    <section class="scope-banner">
+      <h3>Continue in your foundation notebook</h3>
+      <p>This lesson starts after <a href="../start/">Start with Your Problem</a>. Keep that Colab notebook open and add these cells beneath the foundation cells. Do not upload, split, or preprocess the data again.</p>
+    </section>
 
-<!-- ================= STEP 1 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 1 OF 12</span>
-  <h3>Load the toolbox</h3>
-  <p>Python has free, ready-made tools for machine learning. We just ask for them by name — think of it as taking instruments out of the cupboard before cooking.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 1 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 1: Load our toolbox
-import pandas as pd                                     # works with tables of data (like Excel)
-from sklearn.model_selection import train_test_split    # splits data into train / test
-from sklearn.preprocessing import StandardScaler        # puts all numbers on the same scale
-from sklearn.neighbors import KNeighborsClassifier      # the KNN model itself
-from sklearn.metrics import (accuracy_score, classification_report,
-                             ConfusionMatrixDisplay)    # report cards for the model
-import matplotlib.pyplot as plt                         # draws charts
+    <section class="step">
+      <span class="step-chip">IDEA 1</span>
+      <h2>One neighbourhood, two kinds of answer</h2>
+      <p>Imagine placing every row on a map whose directions are its feature values. KNN locates a new row, measures its distance from the training rows, and consults the nearest <em>K</em>.</p>
+      <div class="idea-grid">
+        <div class="idea-card">
+          <h3>Classification</h3>
+          <p>The neighbours vote for their class labels. The label with the strongest vote becomes the prediction.</p>
+        </div>
+        <div class="idea-card">
+          <h3>Regression</h3>
+          <p>The neighbours contribute their numeric targets. Their average becomes the prediction.</p>
+        </div>
+      </div>
+      <p>KNN does not learn a compact formula. Its memory is the training data itself, so prediction gets slower as the dataset grows.</p>
+      <div class="callout">
+        <h3>“Near” depends on units</h3>
+        <p>If one numeric feature ranges from 0 to 1 and another from 0 to 1,000,000, the larger scale can dominate the distance. This lesson standardises numeric features inside the pipeline. The scaler learns from each training fold only.</p>
+      </div>
+    </section>
 
-print("Toolbox ready!")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Toolbox ready!</pre>
-  </div>
-</div>
+    <section class="step">
+      <span class="step-chip">CELL 1 OF 5</span>
+      <h2>Confirm that the foundation is still alive</h2>
+      <p>This check accepts either task. If Colab restarted and a name is missing, choose <strong>Runtime → Run all</strong> before continuing.</p>
+      <div class="codecard">
+        <div class="codecard-head">
+          <span>CELL 1 · READINESS CHECK</span>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <pre><code>required_names = [
+    "TASK", "RANDOM_STATE",
+    "X_train", "X_test", "y_train", "y_test",
+    "make_preprocessor", "make_cv", "CV_FIT_PARAMS",
+    "PRIMARY_SCORING", "evaluate_predictions", "results_log",
+]
+missing_names = [name for name in required_names if name not in globals()]
 
-<!-- ================= STEP 2 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 2 OF 12</span>
-  <h3>Load the dataset</h3>
-  <p>The deals data lives on GitHub. One line downloads it straight into a table called <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">deals</code> — no file uploads needed.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 2 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 2: Load the dataset (real bulk &amp; block deals, 2020 to today)
-url = "https://raw.githubusercontent.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models/main/data/india_bulk_block_deals.csv"
-deals = pd.read_csv(url)
+if missing_names:
+    raise RuntimeError(
+        "Run the foundation cells first. Missing: "
+        + ", ".join(missing_names)
+    )
 
-print("Number of deals:", len(deals))
-deals.head()   # shows the first 5 rows</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Number of deals: 119156</pre>
-    <p class="note">…followed by a table showing the first 5 deals. Each <strong>row</strong> is one real deal. The columns that matter to us: <strong>deal_type</strong> (BULK or BLOCK — the thing we'll predict), <strong>quantity</strong> (shares traded), <strong>price_inr</strong> (price per share in ₹) and <strong>trade_value_crore</strong> (total value in ₹ crore).</p>
-  </div>
-</div>
+if TASK not in {"classification", "regression"}:
+    raise ValueError("KNN needs TASK to be classification or regression.")
 
-<!-- ================= STEP 3 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 3 OF 12</span>
-  <h3>Get to know the data</h3>
-  <p>Rule #1 of machine learning: <strong>look at your data before modelling it.</strong> Let's count how many deals of each type we have.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 3 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 3: How many deals of each type do we have?
-deals["deal_type"].value_counts()</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>deal_type
-BULK     110218
-BLOCK      8938
-Name: count, dtype: int64</pre>
-  </div>
-  <div class="callout">
-    <p><strong>Problem spotted!</strong> About 92% of deals are BULK. A lazy model that just shouts "BULK!" every time would be right 92% of the time — sounds impressive, learns nothing. This trap is called an <strong>imbalanced dataset</strong>, and it's one of the most common mistakes in real ML projects.</p>
-  </div>
-</div>
+print("Task:", TASK)
+print("Training shape:", X_train.shape)
+print("Testing shape: ", X_test.shape)
+print("The test set stays closed while K is selected.")</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>You should see your task and your own train/test shapes. If those shapes are surprising, return to the split cell instead of adapting the model to compensate.</p>
+      </div>
+    </section>
 
-<!-- ================= STEP 4 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 4 OF 12</span>
-  <h3>Make it a fair 50/50 contest</h3>
-  <p>The simplest fix: keep <strong>all</strong> 8,938 BLOCK deals, and randomly pick an <strong>equal number</strong> of BULK deals. Now blind guessing only scores 50% — the model has to genuinely learn something to beat that.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 4 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 4: Balance the dataset — equal number of BULK and BLOCK deals
-block_deals = deals[deals["deal_type"] == "BLOCK"]
-bulk_deals  = deals[deals["deal_type"] == "BULK"].sample(n=len(block_deals), random_state=42)
+    <section class="step">
+      <span class="step-chip">DECISION</span>
+      <h2>What does K control?</h2>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Choice</th>
+              <th>Likely behaviour</th>
+              <th>Question to ask</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Small K</td>
+              <td>Flexible and sensitive to individual rows</td>
+              <td>Is the model following noise or unusual duplicates?</td>
+            </tr>
+            <tr>
+              <td>Large K</td>
+              <td>Smoother and pulled toward the common answer</td>
+              <td>Is a real local pattern being averaged away?</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>There is no universally correct K. Your training folds can compare candidates without revealing the final exam.</p>
+      <details>
+        <summary>Deep dive: why distance can struggle in many dimensions</summary>
+        <p>As the number of encoded features grows, rows tend to look similarly far apart. This is often called the curse of dimensionality. IDs, very high-cardinality categories, and hundreds of weak columns can make a nearest-neighbour model both slow and unhelpful. Better feature judgment usually matters more than a wider K search.</p>
+      </details>
+    </section>
 
-data = pd.concat([block_deals, bulk_deals])
-data["deal_type"].value_counts()</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>deal_type
-BLOCK    8938
-BULK     8938
-Name: count, dtype: int64</pre>
-    <p class="note"><strong>What's random_state=42?</strong> It means "pick randomly, but pick the <em>same</em> random deals every time" — so everyone in the room gets identical results. The number 42 is a programmer in-joke; any fixed number works.</p>
-  </div>
-</div>
-
-<!-- ================= STEP 5 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 5 OF 12</span>
-  <h3>Choose the clues (X) and the answer (y)</h3>
-  <p>In ML language: <strong>features (X)</strong> are the clues the model may look at, and the <strong>label (y)</strong> is the answer we want it to guess. Ours: three numbers in, one word out.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 5 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 5: Choose the clues (features) and the answer (label)
-features = ["quantity", "price_inr", "trade_value_crore"]
-
-X = data[features]       # the clues
-y = data["deal_type"]    # the answer
-
-X.head()</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>       quantity  price_inr  trade_value_crore
-148  45983509.0      400.0          1839.3404
-150  18437500.0      400.0           737.5000
-151  18437500.0      400.0           737.5000
-152  18437500.0      400.0           737.5000
-158   5829005.0      400.0           233.1602</pre>
-    <p class="note">Just the three clue columns now. Colab shows this as a nicely formatted table — the numbers are what matter. The strange row numbers (148, 150…) are the deals' original positions in the big table — perfectly normal.</p>
-  </div>
-</div>
-
-<!-- ================= STEP 6 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 6 OF 12</span>
-  <h3>Split the data: 75% training, 25% testing</h3>
-  <p>This is the <strong>most important honesty rule</strong> in all of machine learning:</p>
-  <ul>
-    <li><strong>75% training set</strong> — the model studies these deals, answers included.</li>
-    <li><strong>25% test set</strong> — locked away. The model never sees these while learning. This is the final exam.</li>
-  </ul>
-  <p>Testing a model on deals it already studied is like grading a student on questions they memorised the night before — the mark means nothing.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 6 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 6: Split — 75% for learning, 25% hidden away for the exam
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y,
-    train_size=0.75,     # 75% training, 25% testing
-    random_state=42,     # same split for everyone
-    stratify=y,          # keep the 50/50 mix in both halves
+    <section class="step">
+      <span class="step-chip">CELL 2 OF 5</span>
+      <h2>Build a scaled KNN pipeline</h2>
+      <p>The pipeline handles missing values and categories using your foundation, then scales numeric inputs before measuring distances. Keeping every transformation inside the pipeline prevents validation rows from teaching the scaler.</p>
+      <div class="codecard">
+        <div class="codecard-head">
+          <span>CELL 2 · MODEL PIPELINE</span>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <pre><code>from sklearn.model_selection import GridSearchCV
+from sklearn.neighbors import (
+    KNeighborsClassifier,
+    KNeighborsRegressor,
 )
 
-print("Deals for training:", len(X_train))
-print("Deals for testing: ", len(X_test))</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Deals for training: 13407
-Deals for testing:  4469</pre>
-  </div>
-</div>
+if TASK == "classification":
+    knn_estimator = KNeighborsClassifier()
+else:
+    knn_estimator = KNeighborsRegressor()
 
-<!-- ================= STEP 7 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 7 OF 12</span>
-  <h3>Put all clues on the same scale</h3>
-  <p>KNN works by measuring <strong>distance</strong> between deals. But look at the first row you just saw in Step 5: <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">quantity</code> is 4,59,83,509, the price is ₹400, and the value is ₹1,839 crore — three numbers on wildly different scales. Without fixing this, the giant quantity numbers <strong>bully</strong> the distance calculation and the other clues barely count.</p>
-  <p><code style="font-family:'IBM Plex Mono',monospace;font-size:15px">StandardScaler</code> converts every column so they all speak at the same volume. One subtle detail: we <em>learn</em> the scaling from the training data only (<strong>fit_transform</strong>), then <em>apply</em> it to the test data (<strong>transform</strong>) — the exam paper must never influence the study notes.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 7 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 7: Scale the features so no single clue dominates
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)   # learn the scale from training data
-X_test_scaled  = scaler.transform(X_test)        # apply that same scale to test data
+knn_pipeline = Pipeline([
+    ("prepare", make_preprocessor(scale_numeric=True)),
+    ("model", knn_estimator),
+])
 
-print("All clues are now on the same scale.")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>All clues are now on the same scale.</pre>
-    <p class="note">Feels like nothing happened? Step 10 has a surprise that proves this line was worth several percentage points of accuracy.</p>
-  </div>
-</div>
+knn_pipeline</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>The displayed pipeline should contain a <code>prepare</code> step followed by the task-appropriate KNN model. Do not call <code>fit</code> yet; the next cell fits it only inside training folds.</p>
+      </div>
+    </section>
 
-<!-- ================= STEP 8 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 8 OF 12</span>
-  <h3>Train the model</h3>
-  <p><code style="font-family:'IBM Plex Mono',monospace;font-size:15px">n_neighbors=5</code> is the <strong>K</strong> in KNN: to judge a new deal, look at its 5 most similar deals and take a vote. Training is instant — KNN simply memorises the training deals.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 8 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 8: Train the KNN model (K = 5 neighbours)
-knn = KNeighborsClassifier(n_neighbors=5)
-knn.fit(X_train_scaled, y_train)
+    <section class="step">
+      <span class="step-chip">CELL 3 OF 5</span>
+      <h2>Choose K with training-only cross-validation</h2>
+      <p>Each candidate gets several practice exams made from <code>X_train</code>. The candidate list automatically shrinks for small datasets so K never exceeds the number of rows available inside a training fold.</p>
+      <div class="codecard">
+        <div class="codecard-head">
+          <span>CELL 3 · CROSS-VALIDATION SEARCH</span>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <pre><code>cv = make_cv()
 
-print("Model trained on", len(X_train), "deals.")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Model trained on 13407 deals.</pre>
-  </div>
-</div>
+# Find the smallest training fold, without touching X_test.
+if "groups" in CV_FIT_PARAMS:
+    cv_splits = cv.split(
+        X_train,
+        y_train,
+        groups=CV_FIT_PARAMS["groups"],
+    )
+else:
+    cv_splits = cv.split(X_train, y_train)
 
-<!-- ================= STEP 9 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 9 OF 12</span>
-  <h3>Exam time!</h3>
-  <p>The model now predicts the deal type for all 4,469 test deals — the 25% it has <strong>never seen</strong> — and we check its answers against the truth.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 9 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 9: Predict the hidden 25% and check the score
-predictions = knn.predict(X_test_scaled)
+fold_train_sizes = [
+    len(fold_train_index)
+    for fold_train_index, _ in cv_splits
+]
+largest_safe_k = min(31, min(fold_train_sizes))
 
-accuracy = accuracy_score(y_test, predictions)
-print(f"Accuracy: {accuracy:.1%}")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Accuracy: 79.8%</pre>
-  </div>
-  <div class="callout callout-green">
-    <p><strong>Is 79.8% good?</strong> Always compare against the dumbest possible strategy. A coin toss scores ~50% here. Our model gets <strong>4 out of 5 deals right</strong> using only three numbers per deal — it genuinely discovered that block deals tend to be bigger-value trades. Nobody told it that.</p>
-  </div>
-</div>
+candidate_k = [
+    k for k in [1, 3, 5, 7, 9, 15, 21, 31]
+    if k &lt;= largest_safe_k
+]
 
-<!-- ================= STEP 10 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 10 OF 12</span>
-  <h3>Judge the model properly</h3>
-  <p>Accuracy is one number. These tools show <strong>where</strong> the model goes right and wrong.</p>
+if not candidate_k:
+    raise ValueError("There are too few training rows to fit KNN.")
 
-  <h3 style="font-size:18px;margin-top:22px">10a · The confusion matrix</h3>
-  <p>A 2×2 scoreboard: rows are the <strong>truth</strong>, columns are the model's <strong>guess</strong>. The top-left → bottom-right diagonal is where the model was correct — you want big numbers there.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 10 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 10a: The confusion matrix — where is it right, where does it slip?
-ConfusionMatrixDisplay.from_predictions(y_test, predictions, cmap="Greens")
-plt.show()</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>                 model said      model said
-                   BLOCK            BULK
-truly BLOCK        1882  ✓           353
-truly BULK          551             1683  ✓</pre>
-    <p class="note">Colab draws this as a green-shaded chart. Reading it: of 2,235 real BLOCK deals, the model caught 1,882 and mislabelled 353. Of 2,234 real BULK deals, it caught 1,683 and mislabelled 551.</p>
-  </div>
+knn_search = GridSearchCV(
+    estimator=knn_pipeline,
+    param_grid={"model__n_neighbors": candidate_k},
+    scoring=PRIMARY_SCORING,
+    cv=cv,
+    n_jobs=-1,
+    return_train_score=True,
+    error_score="raise",
+)
+knn_search.fit(X_train, y_train, **CV_FIT_PARAMS)
 
-  <h3 style="font-size:18px;margin-top:26px">10b · The full report card</h3>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 11 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 10b: The full report card
-print(classification_report(y_test, predictions))</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>              precision    recall  f1-score   support
+raw_cv = pd.DataFrame(knn_search.cv_results_)
 
-       BLOCK       0.77      0.84      0.81      2235
-        BULK       0.83      0.75      0.79      2234
+if TASK == "classification":
+    cv_summary = pd.DataFrame({
+        "k": raw_cv["param_model__n_neighbors"].astype(int),
+        "mean_validation_balanced_accuracy": raw_cv["mean_test_score"],
+        "fold_to_fold_variation": raw_cv["std_test_score"],
+        "rank": raw_cv["rank_test_score"],
+    })
+else:
+    cv_summary = pd.DataFrame({
+        "k": raw_cv["param_model__n_neighbors"].astype(int),
+        "mean_validation_MAE": -raw_cv["mean_test_score"],
+        "fold_to_fold_variation": raw_cv["std_test_score"],
+        "rank": raw_cv["rank_test_score"],
+    })
 
-    accuracy                           0.80      4469
-   macro avg       0.80      0.80      0.80      4469
-weighted avg       0.80      0.80      0.80      4469</pre>
-  </div>
-  <div class="tablewrap">
-    <table>
-      <tr><th>Term</th><th>Plain-language meaning</th></tr>
-      <tr><td><strong>Precision</strong></td><td>When the model <em>says</em> BLOCK, how often is it actually BLOCK? (How trustworthy are its claims?)</td></tr>
-      <tr><td><strong>Recall</strong></td><td>Of all the <em>real</em> BLOCK deals, how many did the model catch? (How much does it miss?)</td></tr>
-      <tr><td><strong>F1-score</strong></td><td>One number balancing precision and recall.</td></tr>
-      <tr><td><strong>Support</strong></td><td>How many test deals of that type existed.</td></tr>
-    </table>
-  </div>
-  <p>Which one matters depends on the job: a <strong>spam filter</strong> needs high precision (never bin a real email); a <strong>cancer screening test</strong> needs high recall (never miss a real case).</p>
+display(cv_summary.sort_values("k").reset_index(drop=True))
+print("Selected K:", knn_search.best_params_["model__n_neighbors"])</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>You should see one row per candidate K and one selected value. Classification rewards higher balanced accuracy; regression rewards lower MAE. Similar fold scores across several K values mean the precise winner may not be stable.</p>
+      </div>
+      <div class="callout green">
+        <h3>The test set is still closed</h3>
+        <p><code>GridSearchCV</code> used only <code>X_train</code> and <code>y_train</code>. <code>CV_FIT_PARAMS</code> also preserves group boundaries when your split mode uses groups. The search refitted the selected pipeline on all training rows, ready for one final test.</p>
+      </div>
+      <div class="reflection">
+        <span>PAUSE &amp; WRITE</span>
+        <ol>
+          <li>Does the selected K suggest a very local rule or a broad average?</li>
+          <li>How much do validation scores vary from fold to fold?</li>
+          <li>Would a time or group-aware cross-validation scheme be more realistic for your project than the foundation helper?</li>
+        </ol>
+      </div>
+    </section>
 
-  <h3 style="font-size:18px;margin-top:26px">10c · Proof that Step 7 (scaling) mattered</h3>
-  <p>Same model, same data — but skipping the scaling step:</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 12 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 10c: Same model, but skipping the scaling step
-knn_unscaled = KNeighborsClassifier(n_neighbors=5)
-knn_unscaled.fit(X_train, y_train)                # raw numbers, no scaling
-unscaled_accuracy = accuracy_score(y_test, knn_unscaled.predict(X_test))
+    <section class="step">
+      <span class="step-chip">CELL 4 OF 5</span>
+      <h2>Open the test set once</h2>
+      <p>The model and K are now fixed. Make one prediction array and send it to the same evaluation helper that recorded your baseline.</p>
+      <div class="codecard">
+        <div class="codecard-head">
+          <span>CELL 4 · FINAL TEST</span>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <pre><code>best_knn = knn_search.best_estimator_
+knn_predictions = best_knn.predict(X_test)
 
-print(f"WITHOUT scaling: {unscaled_accuracy:.1%}")
-print(f"WITH scaling:    {accuracy:.1%}")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>WITHOUT scaling: 71.8%
-WITH scaling:    79.8%</pre>
-    <p class="note">Eight percentage points of accuracy, recovered by one line of preparation. Big lesson of practical ML: <strong>preparing the data well matters as much as the model itself.</strong></p>
-  </div>
-</div>
+knn_test_result = evaluate_predictions(
+    "KNN",
+    y_test,
+    knn_predictions,
+    show_details=(TASK == "classification"),
+)</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>Your results log should now include the baseline and KNN. Ask whether the improvement is useful for your decision—not whether it matches somebody else’s score. For classification, also compare the error types in the report and confusion matrix.</p>
+      </div>
+    </section>
 
-<!-- ================= STEP 11 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 11 OF 12</span>
-  <h3>Tune K: how many neighbours should vote?</h3>
-  <p>K is a dial we chose freely (we picked 5). Small K = jumpy decisions based on very few neighbours. Huge K = the vote averages over so many neighbours it blurs the pattern. Let's try a range.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 13 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 11: Try different values of K and plot the results
-k_values = [1, 3, 5, 7, 9, 11, 15, 21, 31, 51]
-scores = []
+    <section class="step">
+      <span class="step-chip">CELL 5 OF 5</span>
+      <h2>Review the same test predictions</h2>
+      <p>A summary metric hides where the model fails. This cell reuses <code>knn_predictions</code>; it does not refit, retune, or make another pass of model selection.</p>
+      <div class="codecard">
+        <div class="codecard-head">
+          <span>CELL 5 · ERROR REVIEW</span>
+          <button class="copy" type="button">Copy</button>
+        </div>
+        <pre><code>outcomes = pd.DataFrame(
+    {
+        "__actual__": np.asarray(y_test),
+        "__predicted__": np.asarray(knn_predictions),
+    },
+    index=X_test.index,
+)
+review = pd.concat([outcomes, X_test], axis=1)
 
-for k in k_values:
-    model = KNeighborsClassifier(n_neighbors=k)
-    model.fit(X_train_scaled, y_train)
-    score = accuracy_score(y_test, model.predict(X_test_scaled))
-    scores.append(score)
-    print(f"K = {k:&gt;2}  →  accuracy {score:.1%}")
+if TASK == "classification":
+    mistakes = review[
+        review["__actual__"] != review["__predicted__"]
+    ]
+    print(f"Mistakes: {len(mistakes):,} of {len(review):,}")
 
-plt.plot(k_values, scores, marker="o")
-plt.xlabel("K (number of neighbours who vote)")
-plt.ylabel("Accuracy on the test set")
-plt.title("Choosing K")
-plt.grid(True, alpha=0.3)
-plt.show()</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>K =  1  →  accuracy 81.2%
-K =  3  →  accuracy 78.7%
-K =  5  →  accuracy 79.8%
-K =  7  →  accuracy 79.8%
-K =  9  →  accuracy 79.4%
-K = 11  →  accuracy 79.2%
-K = 15  →  accuracy 79.0%
-K = 21  →  accuracy 79.4%
-K = 31  →  accuracy 78.7%
-K = 51  →  accuracy 78.9%</pre>
-    <p class="note">…plus a line chart of the same numbers.</p>
-  </div>
-  <div class="callout">
-    <p><strong>Careful with K = 1!</strong> It scores highest here, but with only one neighbour voting, a single odd or duplicated deal decides the answer — the model equivalent of asking exactly one person for directions. (Our data even contains near-twin rows: the buy side and sell side of the same trade, which flatters K = 1.) Odd, modest values like 5–15 are the safe standard choice; odd numbers also mean the vote can never tie.</p>
-    <p><strong>One honest confession:</strong> to keep this lesson short, we compared K values using the test set. In a real project that's cheating — you'd pick K using a separate slice of the <em>training</em> data (called a <em>validation set</em>), and touch the test set exactly once, at the very end.</p>
-  </div>
-</div>
+    if mistakes.empty:
+        print("No test mistakes. Audit for leakage before celebrating.")
+    else:
+        mistake_types = (
+            mistakes
+            .groupby(["__actual__", "__predicted__"], dropna=False)
+            .size()
+            .sort_values(ascending=False)
+            .rename("rows")
+        )
+        display(mistake_types.to_frame())
+        display(mistakes.head(10))
 
-<!-- ================= STEP 12 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 12 OF 12</span>
-  <h3>The fun part: invent a deal and ask the model</h3>
-  <p>Make up a deal and get the model's verdict. Then change the three numbers and run it again!</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 14 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 12: Describe an imaginary deal and get the model's verdict
-my_deal = pd.DataFrame({
-    "quantity":          [2_000_000],    # 20 lakh shares
-    "price_inr":         [950.0],        # ₹950 per share
-    "trade_value_crore": [190.0],        # ₹190 crore in total
-})
+else:
+    review["__residual__"] = (
+        review["__actual__"] - review["__predicted__"]
+    )
+    review["__absolute_error__"] = review["__residual__"].abs()
 
-verdict = knn.predict(scaler.transform(my_deal))[0]
-print("The model's verdict:", verdict)</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>The model's verdict: BLOCK</pre>
-    <p class="note">Now try a tiny deal — quantity <strong>100000</strong>, price <strong>50</strong>, value <strong>0.5</strong> — and watch the verdict flip to BULK.</p>
-  </div>
-</div>
+    display(
+        review
+        .sort_values("__absolute_error__", ascending=False)
+        .head(10)
+    )
 
-<section id="judging">
-  <h2>How to judge any model — the cheat sheet</h2>
-  <p>You'll reuse these four questions on every ML project you ever do:</p>
-  <div class="tablewrap">
-    <table>
-      <tr><th>Question</th><th>Tool</th><th>What to look for</th></tr>
-      <tr><td><strong>1. Better than dumb luck?</strong></td><td>Compare with a baseline</td><td>Our 79.8% vs a 50% coin flip. If a model can't clearly beat the dumbest strategy, it learned nothing.</td></tr>
-      <tr><td><strong>2. Where does it fail?</strong></td><td>Confusion matrix</td><td>Big numbers on the diagonal. Check <em>which</em> mistake it makes more — some mistakes cost more than others.</td></tr>
-      <tr><td><strong>3. Can I trust a "yes"? Does it miss?</strong></td><td>Precision &amp; recall</td><td>Precision = trustworthiness of its claims. Recall = how much it misses. Pick the one your problem cares about.</td></tr>
-      <tr><td><strong>4. Was the exam fair?</strong></td><td>Train/test split</td><td>Score must be measured on data the model never saw. We kept 25% locked away for exactly this.</td></tr>
-    </table>
-  </div>
-  <p>Rough accuracy guide for a balanced 50/50 problem like ours: <strong>~50%</strong> = learned nothing · <strong>60–75%</strong> = learned something · <strong>75–90%</strong> = solid · <strong>95%+</strong> = be suspicious — usually the answer leaked into the clues.</p>
-</section>
+    plt.figure(figsize=(7, 4))
+    plt.scatter(
+        review["__predicted__"],
+        review["__residual__"],
+        alpha=0.55,
+    )
+    plt.axhline(0, color="black", linestyle="--")
+    plt.xlabel("Predicted value")
+    plt.ylabel("Residual = actual - predicted")
+    plt.title("KNN residual check")
+    plt.show()</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>Classification: identify the most common direction of error and inspect several rows. Regression: look for curves, funnels, clusters, and extreme residuals rather than expecting a perfect cloud.</p>
+      </div>
+      <div class="callout danger">
+        <h3>Error review is diagnosis, not permission to tune on the test</h3>
+        <p>If this review inspires new features or settings, return to training-only cross-validation. Because you have now studied the test set, repeated iteration would gradually turn it into a validation set. For a serious final claim, reserve or collect a fresh holdout.</p>
+      </div>
+      <div class="reflection">
+        <span>PAUSE &amp; WRITE</span>
+        <ol>
+          <li>Which kind of error matters most in your real use case?</li>
+          <li>Do the difficult rows share a feature pattern, missingness pattern, group, or time period?</li>
+          <li>Did KNN beat the baseline by enough to change a decision?</li>
+          <li>What evidence would make you reject this model despite a good score?</li>
+        </ol>
+      </div>
+    </section>
 
-<section id="recap">
-  <h2>The recipe you just learned</h2>
-  <p>Every classification project follows this same skeleton — worth memorising:</p>
-  <ol>
-    <li><strong>Load</strong> the data and <strong>look</strong> at it (Steps 2–3)</li>
-    <li><strong>Fix problems</strong> — we balanced 92/8 down to 50/50 (Step 4)</li>
-    <li><strong>Choose</strong> clues X and answer y (Step 5)</li>
-    <li><strong>Split</strong> 75% train / 25% test — and never let them mix (Step 6)</li>
-    <li><strong>Scale</strong> the features (Step 7)</li>
-    <li><strong>Train</strong> the model (Step 8)</li>
-    <li><strong>Judge honestly</strong> — baseline, confusion matrix, precision &amp; recall (Steps 9–10)</li>
-    <li><strong>Tune</strong> the dials, like K (Step 11)</li>
-  </ol>
-  <p>Swap <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">KNeighborsClassifier</code> for any other model and steps 1–7 stay exactly the same. That's why this recipe matters more than KNN itself.</p>
+    <section class="step">
+      <span class="step-chip">RECAP</span>
+      <h2>What you can now explain</h2>
+      <ol>
+        <li>KNN predicts from nearby training rows: a vote for classification, an average for regression.</li>
+        <li>Distance-based models need comparable numeric scales.</li>
+        <li>A pipeline keeps imputation, encoding, and scaling inside each training fold.</li>
+        <li>K is selected with cross-validation on training data, never by chasing test performance.</li>
+        <li>A metric starts the investigation; error rows reveal whether the model is useful.</li>
+      </ol>
+      <details>
+        <summary>Optional experiment for a fresh validation design</summary>
+        <p>On a future dataset or a newly reserved holdout, compare uniform voting with distance-weighted voting by adding <code>"model__weights": ["uniform", "distance"]</code> to the training-only parameter grid. Explain why this is a new modelling question before running it, and keep the final holdout closed.</p>
+      </details>
+    </section>
 
-  <h3>Homework (optional, fun)</h3>
-  <ul>
-    <li><strong>Change the clues:</strong> remove <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">"trade_value_crore"</code> from the features list in Step 5 and re-run everything (Runtime → Run all). Surprise — you lose almost nothing (~79.3%). Why? Because value = quantity × price, so the model can rebuild the missing clue from the other two. Now try keeping <em>only</em> <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">"trade_value_crore"</code>: one clue alone still scores ~71.3%. Clues can overlap — more features isn't always more information.</li>
-    <li><strong>Try to predict the impossible:</strong> change Step 5 to <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">y = data["side"]</code> (BUY vs SELL) and re-run. Accuracy crashes to ~50% — a coin flip. If the clues contain no signal about the answer, no model can save you. Knowing <em>when ML won't work</em> is as valuable as knowing when it will.</li>
-  </ul>
-</section>
+    <section class="completion-card">
+      <div>
+        <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
+        <h2>Save the evidence, not just the score.</h2>
+        <p>Record the selected K, cross-validation stability, test comparison with the baseline, important error pattern, and one limitation of distance on your features.</p>
+      </div>
+      <button class="complete-button" type="button" data-complete="knn">Mark complete</button>
+    </section>
 
-</main>
+    <nav class="lesson-nav" aria-label="Previous and next lessons">
+      <a href="../start/">← Start · Foundation</a>
+      <a href="../linear-regression/">Lesson 02 · Linear Regression →</a>
+    </nav>
+  </main>
 
-<footer>
-  <div class="foot-inner">
-    <span>Data: NSE &amp; BSE bulk &amp; block deals, 2020 → today · 1,19,156 rows</span>
-    <span><a href="../">← All lessons</a> · <a href="https://github.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models">Source on GitHub</a></span>
-  </div>
-</footer>
-
-<script>
-document.querySelectorAll('.codecard').forEach(function (card) {
-  var btn = card.querySelector('.copy');
-  btn.addEventListener('click', function () {
-    var text = card.querySelector('code').innerText;
-    function done() {
-      btn.textContent = 'Copied ✓'; btn.classList.add('done');
-      setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done, function () { fallback(); done(); });
-    } else { fallback(); done(); }
-    function fallback() {
-      var ta = document.createElement('textarea');
-      ta.value = text; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy'); ta.remove();
-    }
-  });
-});
-</script>
+  <footer>
+    <div class="foot-inner">
+      <span>Bring your own tabular data. Keep your test set honest.</span>
+      <a href="../">All lessons</a>
+    </div>
+  </footer>
+  <script src="../assets/course.js"></script>
 </body>
 </html>

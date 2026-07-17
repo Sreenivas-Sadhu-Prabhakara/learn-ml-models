@@ -1,46 +1,63 @@
 # Learn ML Models
 
-Hands-on machine learning lessons for friends learning together — plain language, real Indian stock-market data, and copyable code you paste into your own Google Colab notebook, one cell at a time.
+A self-paced, bring-your-own-data machine-learning course for tabular CSV and
+Excel datasets. Learners define their own prediction problem, upload their own
+file in Google Colab, choose a realistic split, build a baseline, and then add
+one model at a time to the same notebook.
 
 **Course site:** https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/
 
-## Lessons
+## Learning path
 
-| # | Model | Status | Guide |
-|---|-------|--------|-------|
-| 01 | K-Nearest Neighbours | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/knn/) |
-| 02 | Linear Regression (two practical examples, feature engineering, Ridge L2, Lasso L1) | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/linear-regression/) |
-| 03 | Logistic Regression | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/logistic-regression/) |
-| 04 | Decision Trees | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/decision-trees/) |
-| 05 | Random Forests | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/random-forests/) |
-| 06 | Gradient Boosting (+ course leaderboard finale) | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/gradient-boosting/) |
-| 07 | K-Means | 🔜 Coming soon | — |
+| # | Lesson | Supported tasks |
+|---|---|---|
+| Start | Problem framing, upload, audit, split, preprocessing, baseline | Classification + regression |
+| 01 | K-Nearest Neighbours | Classification + regression |
+| 02 | Linear Regression, Ridge, and Lasso | Regression |
+| 03 | Logistic Regression | Classification |
+| 04 | Decision Trees | Classification + regression |
+| 05 | Random Forests | Classification + regression |
+| 06 | Gradient Boosting and the learner's results table | Classification + regression |
+| 07 | K-Means | Coming soon · unsupervised |
 
-## How the lessons work
+## Course principles
 
-Each lesson is a single web page of numbered steps. Every step has a copyable code cell and a "what you should see" slip showing the exact expected output (verified by actually running the code). Learners open a fresh notebook at [colab.research.google.com](https://colab.research.google.com), paste each cell, and run it — no installs, no downloads, no uploads.
+- Learners select `TARGET`, `FEATURES`, and the task explicitly.
+- Data is uploaded into Colab; no course dataset or fixed output is required.
+- Random, time-based, and group-based train/test splits are supported.
+- Missing numeric and categorical values are handled inside scikit-learn
+  pipelines, so preprocessing is learned from training data only.
+- Every model is compared with a problem-appropriate dummy baseline.
+- Hyperparameters are selected with cross-validation on training data. The
+  held-out test set is used as the final exam.
+- Model searches call `.fit(X_train, y_train, **CV_FIT_PARAMS)` so grouped
+  cross-validation receives group labels without using them as model features.
+- “What you should see” means a structural checkpoint or interpretation
+  question, not an exact score.
 
-## The dataset
+## Scope
 
-`data/india_bulk_block_deals.csv` — 119,156 real bulk & block deals from the Indian exchanges (NSE & BSE, 2020 → July 2026): date, symbol, deal type (BULK/BLOCK), side (BUY/SELL), quantity, price, and trade value in ₹ crore. The code cells load it directly from this repo's raw URL.
+The course covers supervised learning on tabular rows and columns. Images, raw
+text, audio, and forecasting need specialised workflows. Datasets without a
+target belong to the upcoming clustering path.
 
-## Repo layout
+## Repository layout
 
+```text
+index.html                    course home
+start/                        shared bring-your-own-data foundation
+knn/                          Lesson 01
+linear-regression/            Lesson 02
+logistic-regression/          Lesson 03
+decision-trees/               Lesson 04
+random-forests/               Lesson 05
+gradient-boosting/            Lesson 06
+assets/                       shared design and course interactions
+scripts/build_course.py       static page generator
 ```
-index.html                     → course home page (GitHub Pages)
-knn/                           → Lesson 01 · K-Nearest Neighbours
-linear-regression/             → Lesson 02 · Linear Regression, feature engineering, Ridge & Lasso
-logistic-regression/           → Lesson 03 · Logistic Regression
-decision-trees/                → Lesson 04 · Decision Trees
-random-forests/                → Lesson 05 · Random Forests
-gradient-boosting/             → Lesson 06 · Gradient Boosting + course leaderboard
-data/                          → the shared dataset
-```
 
-Lessons 03–06 use the identical balanced BULK/BLOCK split as Lesson 01 (`random_state=42`, 75/25), so every model's score is directly comparable. The course leaderboard in Lesson 06: Random Forest 83.8% · Decision Tree (unlimited) 83.0% · Gradient Boosting 80.4% · KNN 79.8% · Decision Tree (depth 3) 78.7% · Logistic Regression 75.3% · coin flip 50%.
+## Rebuilding the static pages
 
-## Adding a lesson
-
-1. Create `<lesson>/index.html` following the design system in `knn/index.html`, with copyable cells and receipts.
-2. Run every code cell locally and paste the exact outputs into the receipts (`random_state=42` everywhere so everyone gets identical results).
-3. Link it from `index.html` and this README.
+Run `python3 scripts/build_course.py`. The generator writes the shared assets,
+home page, and foundation page. Model lesson pages are maintained in their own
+directories and are not overwritten by this script.

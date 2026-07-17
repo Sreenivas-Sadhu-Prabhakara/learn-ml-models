@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Start with Your Problem · Learn ML Models</title>
+  <meta name="description" content="Upload your own tabular dataset, frame a prediction task, split it honestly, prepare mixed columns, and build a baseline in Google Colab.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Serif:wght@500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+  <nav class="topbar" aria-label="Course navigation">
+    <div class="topbar-inner">
+      <a class="wordmark" href="../">LEARN<span>·</span>ML<span>·</span>MODELS</a>
+      <span class="lesson-tag">START / FOUNDATION</span>
+    </div>
+  </nav>
+
+  <header class="hero wrap">
+    <p class="eyebrow">Start here · before every model</p>
+    <h1>Make the course yours.</h1>
+    <p class="lede">Bring one tabular dataset and one question you care about. You will turn them into a reusable, leakage-safe Colab workflow—then keep the same notebook and swap models one lesson at a time.</p>
+    <div class="meta-chips"><span class="chip">CSV or Excel</span><span class="chip">classification or regression</span><span class="chip">~35 minutes</span></div>
+  </header>
+
+  <main class="wrap">
+
+<section class="scope-banner">
+  <h3>Do not start by choosing a model</h3>
+  <p>Start by defining what one row represents, what must be predicted, what information will exist at prediction time, and which mistake costs more. Those choices determine the target, features, split, and metric.</p>
+</section>
+
+<section class="step">
+  <span class="step-chip">DECISION 1</span>
+  <h2>Which learning path fits your target?</h2>
+  <div class="decision-grid">
+    <div class="decision-card"><h3>Classification</h3><p>The target is a category: approved/declined, species, status, segment, or another finite label.</p></div>
+    <div class="decision-card"><h3>Regression</h3><p>The target is a measured number: time, amount, demand, score, temperature, or another continuous quantity.</p></div>
+    <div class="decision-card"><h3>No target</h3><p>You have no answer column. This supervised path is not the right one; use the upcoming clustering path.</p></div>
+  </div>
+</section>
+
+<section class="step">
+  <span class="step-chip">DECISION 2</span>
+  <h2>Choose an exam that resembles reality</h2>
+  <div class="decision-grid">
+    <div class="decision-card"><h3>Random</h3><p>Use when rows are independent and future rows come from the same process as past rows.</p></div>
+    <div class="decision-card"><h3>Time</h3><p>Use when the real job predicts later events from earlier events. Training must come before testing.</p></div>
+    <div class="decision-card"><h3>Group</h3><p>Use when the same person, device, company, patient, or case can appear in several rows.</p></div>
+  </div>
+  <div class="callout danger"><h3>Why this matters</h3><p>A random split can leak information when related rows land on both sides. A high score from the wrong exam is worse than a modest score from the right one.</p></div>
+</section>
+
+
+    <section class="step">
+      <span class="step-chip">CELL 1 OF 6</span>
+      <h2>Upload your data into Colab</h2>
+      <p>Open a new Colab notebook and keep it for the whole course. Upload one CSV or Excel file; the code reads the uploaded bytes directly.</p>
+
+    <div class="codecard">
+      <div class="codecard-head">
+        <span>CELL 1 · UPLOAD + LOAD</span>
+        <button class="copy" type="button" aria-label="Copy UPLOAD + LOAD code">Copy</button>
+      </div>
+      <pre><code>from google.colab import files
+import io
+import pandas as pd
+import numpy as np
+
+uploaded = files.upload()
+
+if len(uploaded) != 1:
+    raise ValueError(&quot;Please upload exactly one CSV or Excel file.&quot;)
+
+file_name, file_bytes = next(iter(uploaded.items()))
+lower_name = file_name.lower()
+
+if lower_name.endswith(&quot;.csv&quot;):
+    df = pd.read_csv(io.BytesIO(file_bytes))
+elif lower_name.endswith((&quot;.xlsx&quot;, &quot;.xls&quot;)):
+    df = pd.read_excel(io.BytesIO(file_bytes))
+else:
+    raise ValueError(&quot;Please upload a .csv, .xlsx, or .xls file.&quot;)
+
+print(f&quot;Loaded: {file_name}&quot;)
+print(f&quot;Rows: {len(df):,}&quot;)
+print(f&quot;Columns: {len(df.columns)}&quot;)
+display(df.head())</code></pre>
+    </div>
+
+        <div class="checkpoint">
+          <span>CHECKPOINT</span>
+          <p>You should see your own file name, row count, column count, and first five rows. There is no course-wide expected number.</p>
+        </div>
+
+
+    </section>
+
+
+
+    <section class="step">
+      <span class="step-chip">CELL 2 OF 6</span>
+      <h2>Write your project card</h2>
+      <p>Replace every placeholder. Feature selection is deliberately explicit: automatic “use everything” code would quietly include IDs, future information, or the answer under another name.</p>
+
+    <div class="codecard">
+      <div class="codecard-head">
+        <span>CELL 2 · PROJECT CONFIGURATION</span>
+        <button class="copy" type="button" aria-label="Copy PROJECT CONFIGURATION code">Copy</button>
+      </div>
+      <pre><code># Explain the project before configuring the model.
+ROW_MEANING = &quot;One row represents ...&quot;
+PREDICTION_GOAL = &quot;I want to predict ...&quot;
+COSTLY_MISTAKE = &quot;The most costly wrong prediction would be ...&quot;
+
+# Choose the task and columns from your uploaded file.
+TASK = &quot;classification&quot;       # &quot;classification&quot; or &quot;regression&quot;
+TARGET = &quot;replace_with_your_target_column&quot;
+FEATURES = [
+    &quot;replace_with_a_feature_column&quot;,
+    # &quot;add_more_feature_columns&quot;,
+]
+
+# Choose the split that imitates how new data will arrive.
+SPLIT_MODE = &quot;random&quot;         # &quot;random&quot;, &quot;time&quot;, or &quot;group&quot;
+TIME_COLUMN = None             # example: &quot;event_date&quot;
+GROUP_COLUMN = None            # example: &quot;customer_id&quot;
+TEST_SIZE = 0.25
+RANDOM_STATE = 42</code></pre>
+    </div>
+
+        <div class="checkpoint">
+          <span>CHECKPOINT</span>
+          <p>Read the three sentences aloud. If the goal or costly mistake still sounds vague, pause before modelling.</p>
+        </div>
+
+
+    </section>
+
+
+
+    <section class="step">
+      <span class="step-chip">CELL 3 OF 6</span>
+      <h2>Validate and inspect before modelling</h2>
+      <p>This cell catches missing configuration, removes rows with no target, profiles feature types and missingness, and flags possible identifiers. A warning is a prompt to think, not an automatic deletion.</p>
+
+    <div class="codecard">
+      <div class="codecard-head">
+        <span>CELL 3 · DATA AUDIT</span>
+        <button class="copy" type="button" aria-label="Copy DATA AUDIT code">Copy</button>
+      </div>
+      <pre><code>if TASK not in {&quot;classification&quot;, &quot;regression&quot;}:
+    raise ValueError(&quot;TASK must be &#x27;classification&#x27; or &#x27;regression&#x27;.&quot;)
+
+if not 0 &lt; TEST_SIZE &lt; 1:
+    raise ValueError(&quot;TEST_SIZE must be a number between 0 and 1.&quot;)
+
+if TARGET not in df.columns:
+    raise ValueError(f&quot;TARGET &#x27;{TARGET}&#x27; is not a column in your file.&quot;)
+
+if not FEATURES:
+    raise ValueError(&quot;Choose at least one feature.&quot;)
+
+if len(FEATURES) != len(set(FEATURES)):
+    raise ValueError(&quot;Each feature should appear only once in FEATURES.&quot;)
+
+if TARGET in FEATURES:
+    raise ValueError(&quot;Remove TARGET from FEATURES. The answer cannot be a clue.&quot;)
+
+extra_columns = [
+    column for column in (TIME_COLUMN, GROUP_COLUMN)
+    if column is not None
+]
+required_columns = list(dict.fromkeys(FEATURES + [TARGET] + extra_columns))
+missing_columns = [column for column in required_columns if column not in df.columns]
+
+if missing_columns:
+    raise ValueError(f&quot;These configured columns do not exist: {missing_columns}&quot;)
+
+model_data = df[required_columns].dropna(subset=[TARGET]).copy()
+
+if TASK == &quot;regression&quot;:
+    model_data[TARGET] = pd.to_numeric(model_data[TARGET], errors=&quot;raise&quot;)
+    if not np.isfinite(model_data[TARGET]).all():
+        raise ValueError(&quot;A regression target cannot contain infinity.&quot;)
+elif model_data[TARGET].nunique() &lt; 2:
+    raise ValueError(&quot;Classification needs at least two target classes.&quot;)
+
+numeric_input_features = model_data[FEATURES].select_dtypes(
+    include=&quot;number&quot;
+).columns.tolist()
+infinite_counts = np.isinf(model_data[numeric_input_features]).sum()
+infinite_counts = infinite_counts[infinite_counts &gt; 0]
+if not infinite_counts.empty:
+    print(&quot;Treating these infinite feature values as missing:&quot;)
+    display(infinite_counts.to_frame(&quot;infinite_values&quot;))
+    model_data[numeric_input_features] = model_data[
+        numeric_input_features
+    ].replace([np.inf, -np.inf], np.nan)
+
+print(&quot;One row:&quot;, ROW_MEANING)
+print(&quot;Goal:&quot;, PREDICTION_GOAL)
+print(&quot;Costly mistake:&quot;, COSTLY_MISTAKE)
+print(&quot;Usable rows:&quot;, len(model_data))
+
+profile = pd.DataFrame({
+    &quot;dtype&quot;: model_data[FEATURES].dtypes.astype(str),
+    &quot;missing&quot;: model_data[FEATURES].isna().sum(),
+    &quot;unique_values&quot;: model_data[FEATURES].nunique(dropna=True),
+})
+display(profile)
+
+if TASK == &quot;classification&quot;:
+    target_profile = pd.DataFrame({
+        &quot;rows&quot;: model_data[TARGET].value_counts(dropna=False),
+        &quot;share&quot;: model_data[TARGET].value_counts(normalize=True, dropna=False),
+    })
+    display(target_profile)
+else:
+    display(model_data[TARGET].describe().to_frame(&quot;target&quot;))
+
+possible_identifiers = []
+for column in FEATURES:
+    name_looks_like_id = &quot;id&quot; in column.lower().replace(&quot;-&quot;, &quot;_&quot;).split(&quot;_&quot;)
+    mostly_unique_text = (
+        not pd.api.types.is_numeric_dtype(model_data[column])
+        and model_data[column].nunique(dropna=True) &gt; 0.5 * len(model_data)
+    )
+    if name_looks_like_id or mostly_unique_text:
+        possible_identifiers.append(column)
+
+if possible_identifiers:
+    print(&quot;Review these possible identifier/high-cardinality columns:&quot;, possible_identifiers)</code></pre>
+    </div>
+
+        <div class="checkpoint">
+          <span>CHECKPOINT</span>
+          <p>Explain the target distribution and name any feature that might leak the answer or identify a row rather than describe it.</p>
+        </div>
+
+
+    </section>
+
+
+<div class="callout green"><h3>Keep the real class distribution</h3><p>Do not force every classification dataset to be 50/50. Preserve the distribution by default, use stratification where possible, and inspect balanced accuracy and macro-F1 alongside accuracy. Class weights or resampling can help when the costs justify them, but they belong inside training folds—never in the held-out test set.</p></div>
+
+
+    <section class="step">
+      <span class="step-chip">CELL 4 OF 6</span>
+      <h2>Create the honest train/test split</h2>
+      <p>The learner—not the library—chooses the split mode. Classification uses stratification when possible; time and group modes protect their real-world boundaries.</p>
+
+    <div class="codecard">
+      <div class="codecard-head">
+        <span>CELL 4 · TRAIN / TEST SPLIT</span>
+        <button class="copy" type="button" aria-label="Copy TRAIN / TEST SPLIT code">Copy</button>
+      </div>
+      <pre><code>from sklearn.model_selection import train_test_split, GroupShuffleSplit
+
+if SPLIT_MODE == &quot;random&quot;:
+    stratify = None
+    if TASK == &quot;classification&quot;:
+        class_counts = model_data[TARGET].value_counts()
+        if class_counts.min() &gt;= 2:
+            stratify = model_data[TARGET]
+
+    train_rows, test_rows = train_test_split(
+        model_data,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+        stratify=stratify,
+    )
+
+elif SPLIT_MODE == &quot;time&quot;:
+    if not TIME_COLUMN:
+        raise ValueError(&quot;Set TIME_COLUMN before using a time split.&quot;)
+
+    if model_data[TIME_COLUMN].isna().any():
+        raise ValueError(
+            f&quot;TIME_COLUMN &#x27;{TIME_COLUMN}&#x27; contains missing values. &quot;
+            &quot;Fill or remove them before splitting.&quot;
+        )
+
+    model_data[TIME_COLUMN] = pd.to_datetime(
+        model_data[TIME_COLUMN], errors=&quot;raise&quot;
+    )
+    ordered = model_data.sort_values(TIME_COLUMN)
+    split_at = int(len(ordered) * (1 - TEST_SIZE))
+
+    if split_at &lt; 1 or split_at &gt;= len(ordered):
+        raise ValueError(&quot;TEST_SIZE leaves an empty train or test set.&quot;)
+
+    # Keep identical timestamps on the same side of the boundary.
+    test_start_time = ordered.iloc[split_at][TIME_COLUMN]
+    train_rows = ordered[ordered[TIME_COLUMN] &lt; test_start_time]
+    test_rows = ordered[ordered[TIME_COLUMN] &gt;= test_start_time]
+
+    if train_rows.empty or test_rows.empty:
+        raise ValueError(
+            &quot;The time boundary leaves an empty train or test set. &quot;
+            &quot;Choose a different TEST_SIZE or review the timestamp values.&quot;
+        )
+
+elif SPLIT_MODE == &quot;group&quot;:
+    if not GROUP_COLUMN:
+        raise ValueError(&quot;Set GROUP_COLUMN before using a group split.&quot;)
+
+    if model_data[GROUP_COLUMN].isna().any():
+        raise ValueError(
+            f&quot;GROUP_COLUMN &#x27;{GROUP_COLUMN}&#x27; contains missing values. &quot;
+            &quot;Fill or remove them before splitting.&quot;
+        )
+
+    if model_data[GROUP_COLUMN].nunique() &lt; 2:
+        raise ValueError(&quot;A group split needs at least two distinct groups.&quot;)
+
+    splitter = GroupShuffleSplit(
+        n_splits=1,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+    )
+    train_index, test_index = next(
+        splitter.split(model_data, groups=model_data[GROUP_COLUMN])
+    )
+    train_rows = model_data.iloc[train_index]
+    test_rows = model_data.iloc[test_index]
+
+else:
+    raise ValueError(&quot;SPLIT_MODE must be &#x27;random&#x27;, &#x27;time&#x27;, or &#x27;group&#x27;.&quot;)
+
+X_train = train_rows[FEATURES].copy()
+X_test = test_rows[FEATURES].copy()
+y_train = train_rows[TARGET].copy()
+y_test = test_rows[TARGET].copy()
+
+if TASK == &quot;classification&quot; and y_train.nunique() &lt; 2:
+    raise ValueError(
+        &quot;The training split contains fewer than two classes. &quot;
+        &quot;Use more data or choose a different valid split.&quot;
+    )
+
+print(&quot;Training rows:&quot;, len(X_train))
+print(&quot;Testing rows: &quot;, len(X_test))
+print(&quot;Split mode:   &quot;, SPLIT_MODE)
+
+if SPLIT_MODE == &quot;time&quot;:
+    print(&quot;Train ends:&quot;, train_rows[TIME_COLUMN].max())
+    print(&quot;Test starts:&quot;, test_rows[TIME_COLUMN].min())
+elif SPLIT_MODE == &quot;group&quot;:
+    overlap = set(train_rows[GROUP_COLUMN]) &amp; set(test_rows[GROUP_COLUMN])
+    print(&quot;Groups shared across train and test:&quot;, len(overlap))</code></pre>
+    </div>
+
+        <div class="checkpoint">
+          <span>CHECKPOINT</span>
+          <p>Training rows plus testing rows should equal the usable rows. A group split should report zero shared groups. A time split should put all test dates after the training boundary.</p>
+        </div>
+
+
+    </section>
+
+
+
+    <section class="step">
+      <span class="step-chip">CELL 5 OF 6</span>
+      <h2>Prepare mixed data without leakage</h2>
+      <p>The reusable preprocessor learns medians, categories, encodings, and scales from the training fold only. Numeric and categorical columns can coexist; unseen categories are handled safely.</p>
+
+    <div class="codecard">
+      <div class="codecard-head">
+        <span>CELL 5 · PREPROCESSOR FACTORY</span>
+        <button class="copy" type="button" aria-label="Copy PREPROCESSOR FACTORY code">Copy</button>
+      </div>
+      <pre><code>from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+numeric_features = X_train.select_dtypes(include=&quot;number&quot;).columns.tolist()
+categorical_features = [
+    column for column in FEATURES
+    if column not in numeric_features
+]
+
+print(&quot;Numeric features:&quot;, numeric_features)
+print(&quot;Categorical features:&quot;, categorical_features)
+
+high_cardinality = [
+    column for column in categorical_features
+    if X_train[column].nunique(dropna=True) &gt; 100
+]
+if high_cardinality:
+    print(&quot;Review high-cardinality features before continuing:&quot;, high_cardinality)
+
+def make_encoder():
+    try:
+        return OneHotEncoder(handle_unknown=&quot;ignore&quot;, sparse_output=False)
+    except TypeError:  # Compatibility with older scikit-learn versions
+        return OneHotEncoder(handle_unknown=&quot;ignore&quot;, sparse=False)
+
+def make_preprocessor(scale_numeric=False):
+    transformers = []
+
+    if numeric_features:
+        numeric_steps = [
+            (&quot;fill_missing&quot;, SimpleImputer(strategy=&quot;median&quot;)),
+        ]
+        if scale_numeric:
+            numeric_steps.append((&quot;scale&quot;, StandardScaler()))
+
+        transformers.append((
+            &quot;numeric&quot;,
+            Pipeline(numeric_steps),
+            numeric_features,
+        ))
+
+    if categorical_features:
+        categorical_steps = Pipeline([
+            (&quot;fill_missing&quot;, SimpleImputer(strategy=&quot;most_frequent&quot;)),
+            (&quot;encode&quot;, make_encoder()),
+        ])
+        transformers.append((
+            &quot;categorical&quot;,
+            categorical_steps,
+            categorical_features,
+        ))
+
+    return ColumnTransformer(
+        transformers,
+        remainder=&quot;drop&quot;,
+        verbose_feature_names_out=False,
+    )</code></pre>
+    </div>
+
+        <div class="checkpoint">
+          <span>CHECKPOINT</span>
+          <p>Review the detected numeric and categorical lists. Raw dates, free text, and high-cardinality labels usually need deliberate feature engineering before continuing.</p>
+        </div>
+
+
+    </section>
+
+
+
+    <section class="step">
+      <span class="step-chip">CELL 6 OF 6</span>
+      <h2>Build the baseline and results log</h2>
+      <p>A baseline is the simplest defensible strategy: always predict the most frequent training class or the training mean. Every later model will be measured against it using the same held-out rows. The cross-validation helper also preserves your random, time, or group boundary while models are tuned; model lessons pass <code>**CV_FIT_PARAMS</code> when fitting each search.</p>
+
+    <div class="codecard">
+      <div class="codecard-head">
+        <span>CELL 6 · EVALUATION + BASELINE</span>
+        <button class="copy" type="button" aria-label="Copy EVALUATION + BASELINE code">Copy</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+from sklearn.dummy import DummyClassifier, DummyRegressor
+from sklearn.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    classification_report,
+    ConfusionMatrixDisplay,
+    f1_score,
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score,
+)
+from sklearn.model_selection import (
+    GroupKFold,
+    KFold,
+    StratifiedKFold,
+    TimeSeriesSplit,
+)
+
+results_log = []
+
+# Pass this dictionary into every cross-validation search&#x27;s fit() call.
+# Group labels are needed while folds are constructed, but are never features.
+CV_FIT_PARAMS = (
+    {&quot;groups&quot;: train_rows[GROUP_COLUMN].to_numpy()}
+    if SPLIT_MODE == &quot;group&quot;
+    else {}
+)
+
+def make_cv():
+    if SPLIT_MODE == &quot;time&quot;:
+        folds = min(5, len(y_train) - 1)
+        if folds &lt; 2:
+            raise ValueError(
+                &quot;Time-based CV needs at least three training rows.&quot;
+            )
+        return TimeSeriesSplit(n_splits=folds)
+
+    if SPLIT_MODE == &quot;group&quot;:
+        groups = train_rows[GROUP_COLUMN]
+        folds = min(5, groups.nunique())
+        if folds &lt; 2:
+            raise ValueError(
+                &quot;Group-based CV needs at least two training groups.&quot;
+            )
+        return GroupKFold(n_splits=folds)
+
+    if TASK == &quot;classification&quot;:
+        folds = min(5, int(y_train.value_counts().min()))
+        if folds &lt; 2:
+            raise ValueError(&quot;Every class needs at least two training rows for CV.&quot;)
+        return StratifiedKFold(
+            n_splits=folds,
+            shuffle=True,
+            random_state=RANDOM_STATE,
+        )
+
+    folds = min(5, len(y_train))
+    if folds &lt; 2:
+        raise ValueError(&quot;Regression needs at least two training rows for CV.&quot;)
+    return KFold(
+        n_splits=folds,
+        shuffle=True,
+        random_state=RANDOM_STATE,
+    )
+
+PRIMARY_SCORING = (
+    &quot;balanced_accuracy&quot; if TASK == &quot;classification&quot;
+    else &quot;neg_mean_absolute_error&quot;
+)
+
+def evaluate_predictions(name, y_true, y_pred, show_details=True):
+    if TASK == &quot;classification&quot;:
+        row = {
+            &quot;model&quot;: name,
+            &quot;accuracy&quot;: accuracy_score(y_true, y_pred),
+            &quot;balanced_accuracy&quot;: balanced_accuracy_score(y_true, y_pred),
+            &quot;macro_f1&quot;: f1_score(
+                y_true, y_pred, average=&quot;macro&quot;, zero_division=0
+            ),
+        }
+    else:
+        row = {
+            &quot;model&quot;: name,
+            &quot;MAE&quot;: mean_absolute_error(y_true, y_pred),
+            &quot;RMSE&quot;: np.sqrt(mean_squared_error(y_true, y_pred)),
+            &quot;R2&quot;: r2_score(y_true, y_pred),
+        }
+
+    results_log[:] = [item for item in results_log if item[&quot;model&quot;] != name]
+    results_log.append(row)
+    display(pd.DataFrame(results_log))
+
+    if show_details and TASK == &quot;classification&quot;:
+        print(classification_report(y_true, y_pred, zero_division=0))
+        ConfusionMatrixDisplay.from_predictions(
+            y_true, y_pred, xticks_rotation=45
+        )
+        plt.show()
+
+    return row
+
+dummy_train = np.zeros((len(y_train), 1))
+dummy_test = np.zeros((len(y_test), 1))
+
+if TASK == &quot;classification&quot;:
+    baseline_model = DummyClassifier(strategy=&quot;most_frequent&quot;)
+else:
+    baseline_model = DummyRegressor(strategy=&quot;mean&quot;)
+
+baseline_model.fit(dummy_train, y_train)
+baseline_predictions = baseline_model.predict(dummy_test)
+evaluate_predictions(&quot;Baseline&quot;, y_test, baseline_predictions, show_details=False)</code></pre>
+    </div>
+
+        <div class="checkpoint">
+          <span>CHECKPOINT</span>
+          <p>Your baseline score is not supposed to be 50%. Record what it reveals about class imbalance or target variation.</p>
+        </div>
+
+
+    </section>
+
+
+<section class="step">
+  <span class="step-chip">FOUNDATION COMPLETE</span>
+  <h2>Keep this notebook</h2>
+  <p>Each model lesson adds cells beneath these six. If Colab disconnects, choose <strong>Runtime → Run all</strong> to rebuild the variables. Do not create a new train/test split for each model; a fair comparison requires the same exam.</p>
+
+    <div class="reflection">
+      <span>PAUSE &amp; WRITE</span>
+      <ol><li>What information will genuinely be available when this prediction is made?</li><li>Which wrong prediction is more expensive, and does your chosen metric reflect that?</li><li>What would make a result suspiciously good?</li></ol>
+    </div>
+
+</section>
+
+    <section class="completion-card">
+      <div>
+        <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
+        <h2>Save your work before moving on.</h2>
+        <p>Your result is evidence about your dataset—not a grade. Record what changed, what improved, and what you still do not understand.</p>
+      </div>
+      <button class="complete-button" type="button" data-complete="start">Mark complete</button>
+    </section>
+    <nav class="lesson-nav" aria-label="Previous and next lessons">
+      <a href="../">← Course home</a>
+      <a href="../knn/">Lesson 01 · KNN →</a>
+    </nav>
+  </main>
+
+  <footer>
+    <div class="foot-inner">
+      <span>Bring your own tabular data. Keep your test set honest.</span>
+      <a href="../">All lessons</a>
+    </div>
+  </footer>
+  <script src="../assets/course.js"></script>
+</body>
+</html>

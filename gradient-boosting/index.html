@@ -1,654 +1,369 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gradient Boosting, step by step — Learn ML Models</title>
-<meta name="description" content="Lesson 06: Gradient Boosting in Google Colab — the team that learns from its mistakes, trained on real Indian bulk &amp; block deals. Ends with the full course leaderboard.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --paper:#F2F5F7; --card:#FFFFFF; --ink:#182A3A; --muted:#52657A;
-  --terminal:#0E1B26; --terminal-ink:#D9E6F2; --comment:#7E97AB;
-  --green:#0E7C52; --green-soft:#E3F1EA; --saffron:#C77C11; --saffron-text:#9A5F0A; --saffron-soft:#F8EEDD;
-  --rule:#D9E2EA; --receipt:#FBFDFE;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:72px}
-@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
-body{
-  background:var(--paper); color:var(--ink);
-  font-family:"IBM Plex Sans",system-ui,sans-serif;
-  font-size:17px; line-height:1.65;
-}
-a{color:var(--green)}
-a:focus-visible,button:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
-
-.topbar{
-  border-bottom:1px solid var(--rule); background:var(--card);
-  position:sticky; top:0; z-index:10;
-}
-.topbar-inner{
-  max-width:840px;margin:0 auto;padding:14px 20px;
-  display:flex;justify-content:space-between;align-items:baseline;gap:12px;
-}
-.wordmark{
-  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;
-  letter-spacing:.14em;text-decoration:none;color:var(--ink);
-}
-.wordmark span{color:var(--green)}
-.lesson-tag{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
-
-.wrap{max-width:840px;margin:0 auto;padding:0 20px}
-
-/* ---------- hero ---------- */
-.hero{padding:56px 0 40px}
-.eyebrow{
-  font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;
-  letter-spacing:.16em;color:var(--saffron-text);text-transform:uppercase;
-}
-h1{
-  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
-  font-size:clamp(34px,6vw,52px);line-height:1.12;margin:10px 0 16px;
-  letter-spacing:-.01em;
-}
-.lede{font-size:19px;color:var(--muted);max-width:60ch}
-.lede strong{color:var(--ink)}
-.meta-chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 26px}
-.chip{
-  font-family:"IBM Plex Mono",monospace;font-size:13px;
-  background:var(--card);border:1px solid var(--rule);border-radius:999px;
-  padding:6px 14px;color:var(--muted);
-}
-.cta-row{display:flex;flex-wrap:wrap;gap:12px}
-.btn{
-  display:inline-block;text-decoration:none;font-weight:600;font-size:16px;
-  padding:12px 22px;border-radius:8px;transition:transform .12s ease;
-}
-.btn:hover{transform:translateY(-1px)}
-.btn-primary{background:var(--green);color:#fff}
-.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--rule)}
-
-/* ---------- sections ---------- */
-section{padding:36px 0}
-h2{
-  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
-  font-size:clamp(24px,4vw,32px);line-height:1.2;margin-bottom:14px;
-}
-h3{font-size:19px;font-weight:600;margin:26px 0 8px}
-p{margin:12px 0;max-width:68ch}
-ul,ol{margin:12px 0 12px 24px;max-width:66ch}
-li{margin:6px 0}
-.divider{border:none;border-top:1px solid var(--rule);margin:12px 0}
-
-/* ---------- idea figure ---------- */
-.figure-card{
-  background:var(--card);border:1px solid var(--rule);border-radius:12px;
-  padding:26px 22px 18px;margin:20px 0;
-}
-.figure-card svg{width:100%;height:auto;display:block}
-.figcap{
-  font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);
-  text-align:center;margin-top:12px;
-}
-
-/* ---------- definition cards ---------- */
-.def-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
-@media (max-width:640px){.def-grid{grid-template-columns:1fr}}
-.def{border-radius:12px;padding:18px 20px;border:1px solid var(--rule)}
-.def h4{font-family:"IBM Plex Mono",monospace;font-size:14px;letter-spacing:.12em;margin-bottom:8px}
-.def p{font-size:15.5px;margin:0}
-.def-bulk{background:var(--saffron-soft)} .def-bulk h4{color:var(--saffron)}
-.def-block{background:var(--green-soft)} .def-block h4{color:var(--green)}
-
-/* ---------- steps ---------- */
-.step{
-  background:var(--card);border:1px solid var(--rule);border-radius:14px;
-  padding:28px 26px;margin:26px 0;
-}
-@media (max-width:640px){.step{padding:22px 16px}}
-.step-chip{
-  display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:600;
-  font-size:12.5px;letter-spacing:.14em;color:#fff;background:var(--ink);
-  border-radius:6px;padding:4px 10px;margin-bottom:10px;
-}
-.step h3{font-family:"IBM Plex Serif",Georgia,serif;font-size:23px;font-weight:600;margin:0 0 8px}
-.step p{font-size:16.5px}
-
-/* ---------- code cards ---------- */
-.codecard{
-  background:var(--terminal);border-radius:10px;margin:18px 0 0;
-  position:relative;overflow:hidden;
-}
-.codecard-head{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:8px 14px;border-bottom:1px solid rgba(217,230,242,.12);
-}
-.codecard-title{
-  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;
-  color:var(--comment);
-}
-.copy{
-  font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;
-  color:var(--terminal-ink);background:rgba(217,230,242,.1);
-  border:1px solid rgba(217,230,242,.25);border-radius:6px;
-  padding:5px 12px;cursor:pointer;transition:background .12s ease;
-}
-.copy:hover{background:rgba(217,230,242,.22)}
-.copy.done{color:#8CE0B0;border-color:#8CE0B0}
-.codecard pre{
-  padding:16px 18px;overflow-x:auto;
-}
-.codecard code{
-  font-family:"IBM Plex Mono",monospace;font-size:14px;line-height:1.6;
-  color:var(--terminal-ink);white-space:pre;
-}
-
-/* ---------- receipts (expected output) ---------- */
-.receipt{
-  background:var(--receipt);border:1.5px dashed var(--rule);border-top:none;
-  border-radius:0 0 10px 10px;padding:14px 18px 16px;margin-bottom:6px;
-}
-.receipt-label{
-  font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;
-  letter-spacing:.16em;color:var(--green);margin-bottom:8px;
-}
-.receipt pre{
-  font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:1.55;
-  color:var(--ink);overflow-x:auto;white-space:pre;
-}
-.receipt .note{font-size:14px;color:var(--muted);margin:8px 0 0}
-
-/* ---------- tables ---------- */
-.tablewrap{overflow-x:auto;margin:16px 0}
-table{border-collapse:collapse;font-size:15px;min-width:420px}
-th,td{border:1px solid var(--rule);padding:9px 14px;text-align:left;background:var(--card)}
-th{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.06em;background:var(--paper)}
-td strong{font-weight:600}
-
-/* ---------- callouts ---------- */
-.callout{
-  border-left:4px solid var(--saffron);background:var(--saffron-soft);
-  border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0;font-size:16px;
-}
-.callout-green{border-left-color:var(--green);background:var(--green-soft)}
-.callout p{margin:6px 0;font-size:16px}
-
-footer{
-  border-top:1px solid var(--rule);margin-top:40px;padding:28px 0 48px;
-  color:var(--muted);font-size:14.5px;
-}
-footer a{color:var(--muted)}
-.foot-inner{max-width:840px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gradient Boosting · Learn ML Models</title>
+  <meta name="description" content="Train and tune Gradient Boosting on your own uploaded classification or regression dataset, then compare the models in your personal results log.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Serif:wght@500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/course.css">
 </head>
 <body>
+  <nav class="topbar" aria-label="Course navigation">
+    <div class="topbar-inner">
+      <a class="wordmark" href="../">LEARN<span>·</span>ML<span>·</span>MODELS</a>
+      <span class="lesson-tag">LESSON 06 / GRADIENT BOOSTING</span>
+    </div>
+  </nav>
 
-<nav class="topbar">
-  <div class="topbar-inner">
-    <a class="wordmark" href="../">LEARN<span>·</span>ML<span>·</span>MODELS</a>
-    <span class="lesson-tag">LESSON 06 / BOOSTING</span>
-  </div>
-</nav>
+  <header class="hero wrap">
+    <p class="eyebrow">Lesson 06 · Classification + regression</p>
+    <h1>A team that corrects itself.</h1>
+    <p class="lede"><strong>Gradient Boosting</strong> builds small trees in sequence. Each round concentrates on what the current team still handles badly. You will tune that sequence on training folds, open the test set once, and finish with a leaderboard that belongs to your problem—not this course.</p>
+    <div class="meta-chips">
+      <span class="chip">your uploaded dataset</span>
+      <span class="chip">both supervised tasks</span>
+      <span class="chip">~35 minutes</span>
+    </div>
+  </header>
 
-<header class="hero wrap">
-  <p class="eyebrow">Lesson 06 · Classification</p>
-  <h1>Gradient Boosting: the team that learns from its mistakes</h1>
-  <p class="lede">The final lesson. A Random Forest asks 200 trees to answer <em>independently</em> and vote. <strong>Gradient Boosting builds its trees one at a time — each new tree trained specifically on the deals the previous ones got wrong.</strong> Then, the finale: every model from this course sits the exact same exam, and we print the course leaderboard.</p>
-  <div class="meta-chips">
-    <span class="chip">⏱ about 30 minutes</span>
-    <span class="chip">🧠 builds on every classification lesson</span>
-    <span class="chip">🏆 ends with the course leaderboard</span>
-  </div>
-  <div class="cta-row">
-    <a class="btn btn-primary" href="#start">Start the lesson ↓</a>
-  </div>
-</header>
+  <main class="wrap">
+    <section class="scope-banner">
+      <h3>Continue in your course notebook</h3>
+      <p>Run the six foundation cells from <a href="../start/">Start Here</a> first. This lesson expects your existing split, preprocessing factory, cross-validation helper, baseline, and results log. Do not upload again or create a new test set.</p>
+    </section>
 
-<main class="wrap">
+    <section class="step">
+      <span class="step-chip">THE IDEA</span>
+      <h2>Many small corrections, added together</h2>
+      <p>A Random Forest grows many varied trees independently and averages their answers. Gradient Boosting is a relay: tree 1 starts the prediction, tree 2 learns a small correction, tree 3 corrects what remains, and the process continues.</p>
+      <div class="idea-grid">
+        <div class="idea-card">
+          <h3>Number of rounds</h3>
+          <p><code>n_estimators</code> controls how many correction trees join the sequence. Too few can underfit; too many can waste time or overfit.</p>
+        </div>
+        <div class="idea-card">
+          <h3>Size of each correction</h3>
+          <p><code>learning_rate</code> controls how strongly each new tree changes the team. Smaller steps usually need more rounds.</p>
+        </div>
+      </div>
+      <p>The model works for classification and regression. It does not require numeric scaling, but the shared preprocessor still fills missing values and encodes categories.</p>
+    </section>
 
-<section id="idea">
-  <h2>The whole idea, in one picture</h2>
-  <p>Think of a study group preparing for one big exam. Week 1, the group attempts the full question paper. Week 2, they don't re-study everything — they spend the whole week <strong>only on the questions they got wrong</strong>. Week 3 targets whatever is <em>still</em> wrong. Every new week's work is a specialist in last week's mistakes.</p>
-  <p>That is Gradient Boosting. It builds small decision trees <strong>one after another</strong>: tree 2 is trained to correct tree 1's errors, tree 3 to correct what's still wrong, and so on for 100 rounds. The final answer adds up all the corrections. The word <em>gradient</em> is just the maths compass that points each new tree toward "fewer mistakes" — you never have to touch the maths yourself.</p>
+    <section class="step">
+      <span class="step-chip">STEP 1 OF 6</span>
+      <h2>Build a pipeline for your task</h2>
+      <p>The task switch chooses the correct estimator. The rest of the workflow stays identical.</p>
+      <div class="codecard">
+        <div class="codecard-head"><span>CELL 1 · MODEL PIPELINE</span><button class="copy" type="button">Copy</button></div>
+        <pre><code># Check that the shared foundation is available.
+required_names = [
+    "TASK", "X_train", "X_test", "y_train", "y_test",
+    "make_preprocessor", "make_cv", "PRIMARY_SCORING",
+    "CV_FIT_PARAMS", "evaluate_predictions", "results_log",
+]
+missing_names = [name for name in required_names if name not in globals()]
+if missing_names:
+    raise RuntimeError(
+        "Run the Start Here foundation cells first. Missing: "
+        + ", ".join(missing_names)
+    )
 
-  <div class="figure-card">
-    <svg viewBox="0 0 760 430" role="img" aria-label="Two panels. Top: Random Forest, five trees answering at the same time, feeding one majority vote. Bottom: Gradient Boosting, trees built in sequence — tree 1, its mistakes, tree 2 fixing them, fewer mistakes, tree 3 — all corrections added up at the end.">
-      <defs>
-        <g id="gbtree">
-          <polygon points="0,-26 20,6 -20,6" fill="#0E7C52"/>
-          <polygon points="0,-12 16,14 -16,14" fill="#0E7C52" opacity="0.85"/>
-          <rect x="-3.5" y="14" width="7" height="13" rx="2" fill="#7E97AB"/>
-        </g>
-        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" fill="#52657A"/>
-        </marker>
-      </defs>
-
-      <!-- ===== top panel: random forest ===== -->
-      <text x="40" y="42" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#182A3A">RANDOM FOREST (last lesson) — everyone answers at once</text>
-      <use href="#gbtree" x="80" y="110"/>
-      <use href="#gbtree" x="160" y="110"/>
-      <use href="#gbtree" x="240" y="110"/>
-      <use href="#gbtree" x="320" y="110"/>
-      <use href="#gbtree" x="400" y="110"/>
-      <line x1="440" y1="110" x2="540" y2="110" stroke="#52657A" stroke-width="2" marker-end="url(#arr)"/>
-      <rect x="552" y="82" width="168" height="56" rx="9" fill="#E3F1EA" stroke="#0E7C52" stroke-width="1.5"/>
-      <text x="636" y="106" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0E7C52" text-anchor="middle">MAJORITY</text>
-      <text x="636" y="124" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0E7C52" text-anchor="middle">VOTE</text>
-      <text x="240" y="168" font-family="IBM Plex Mono, monospace" font-size="12" fill="#52657A" text-anchor="middle">200 independent trees, built in parallel</text>
-
-      <line x1="40" y1="196" x2="720" y2="196" stroke="#D9E2EA" stroke-width="1.5" stroke-dasharray="6 6"/>
-
-      <!-- ===== bottom panel: boosting ===== -->
-      <text x="40" y="230" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#182A3A">GRADIENT BOOSTING (today) — one at a time, each fixes the last</text>
-      <!-- round numbers -->
-      <circle cx="90" cy="270" r="12" fill="#182A3A"/>
-      <text x="90" y="275" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">1</text>
-      <circle cx="270" cy="270" r="12" fill="#182A3A"/>
-      <text x="270" y="275" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">2</text>
-      <circle cx="450" cy="270" r="12" fill="#182A3A"/>
-      <text x="450" y="275" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">3</text>
-      <!-- trees and mistakes -->
-      <use href="#gbtree" x="90" y="330"/>
-      <line x1="118" y1="330" x2="238" y2="330" stroke="#52657A" stroke-width="2" marker-end="url(#arr)"/>
-      <g fill="#C77C11">
-        <circle cx="158" cy="318" r="5"/><circle cx="176" cy="326" r="5"/><circle cx="164" cy="338" r="5"/>
-      </g>
-      <text x="168" y="362" font-family="IBM Plex Mono, monospace" font-size="12" fill="#9A5F0A" text-anchor="middle">mistakes</text>
-      <use href="#gbtree" x="270" y="330"/>
-      <line x1="298" y1="330" x2="418" y2="330" stroke="#52657A" stroke-width="2" marker-end="url(#arr)"/>
-      <g fill="#C77C11">
-        <circle cx="348" cy="322" r="5"/><circle cx="362" cy="336" r="5"/>
-      </g>
-      <text x="355" y="362" font-family="IBM Plex Mono, monospace" font-size="12" fill="#9A5F0A" text-anchor="middle">fewer</text>
-      <use href="#gbtree" x="450" y="330"/>
-      <line x1="478" y1="330" x2="538" y2="330" stroke="#52657A" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arr)"/>
-      <text x="508" y="316" font-family="IBM Plex Mono, monospace" font-size="12" fill="#52657A" text-anchor="middle">…×100</text>
-      <rect x="552" y="302" width="168" height="56" rx="9" fill="#E3F1EA" stroke="#0E7C52" stroke-width="1.5"/>
-      <text x="636" y="326" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0E7C52" text-anchor="middle">ADD UP ALL</text>
-      <text x="636" y="344" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0E7C52" text-anchor="middle">CORRECTIONS</text>
-      <text x="380" y="410" font-family="IBM Plex Mono, monospace" font-size="12" fill="#52657A" text-anchor="middle">each new tree studies only what is still being got wrong</text>
-    </svg>
-    <p class="figcap">A forest polls everyone at once. Boosting builds tree 2 to fix tree 1's mistakes, tree 3 to fix what's left — 100 rounds of corrections, added together.</p>
-  </div>
-
-  <p>The task is the same exam as the whole course: look at three numbers — <strong>quantity, price, value in crore</strong> — and guess whether a deal is <strong>BULK</strong> (big trading spread across a normal day) or <strong>BLOCK</strong> (one giant pre-negotiated trade in a special window). Same data, same 50/50 balancing, same 75/25 split — so today's score can be compared, fairly, with every lesson before it.</p>
-</section>
-
-<section id="start">
-  <h2>Before you start: open Google Colab</h2>
-  <p>You know the drill from Lesson 01: go to <a href="https://colab.research.google.com">colab.research.google.com</a>, sign in, click <strong>+ New notebook</strong>, and paste each cell below into its own cell (the <strong>Copy</strong> button does it in one click). Run each with <strong>Shift + Enter</strong> and compare against the <strong>"what you should see"</strong> slip.</p>
-  <div class="callout callout-green">
-    <p><strong>Two things worth knowing before you start:</strong></p>
-    <ul style="margin:8px 0 4px 22px">
-      <li>The first cell takes a few extra seconds while Colab connects to a computer in the cloud. Not broken, just warming up.</li>
-      <li>Cells build on earlier cells, so <strong>run them in order</strong>. If you ever see an error like <em>NameError: name 'deals' is not defined</em>, or Colab says the runtime disconnected, just click <strong>Runtime → Run all</strong> in the menu — everything comes back in under a minute.</li>
-    </ul>
-  </div>
-</section>
-
-<!-- ================= STEP 1 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 1 OF 7</span>
-  <h3>Load the toolbox</h3>
-  <p>Same cupboard, one new instrument: <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">GradientBoostingClassifier</code> — the mistake-fixing team itself.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 1 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 1: Load our toolbox
-import pandas as pd                                        # works with tables of data (like Excel)
-from sklearn.model_selection import train_test_split       # splits data into train / test
-from sklearn.ensemble import GradientBoostingClassifier    # today's model: the mistake-fixing team
-from sklearn.metrics import (accuracy_score, classification_report,
-                             ConfusionMatrixDisplay)       # report cards for the model
-import matplotlib.pyplot as plt                            # draws charts
-
-print("Toolbox ready!")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Toolbox ready!</pre>
-  </div>
-</div>
-
-<!-- ================= STEP 2 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 2 OF 7</span>
-  <h3>Load the deals and balance them 50/50</h3>
-  <p>The prep is <strong>identical to Lesson 01</strong>, condensed into one cell: download the 1,19,156 real deals, keep all 8,938 BLOCK deals, and randomly pick an equal number of BULK deals — so a blind guess scores only 50% and any real learning shows up above that line.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 2 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 2: Load the deals and balance them 50/50 — same prep as Lesson 01
-url = "https://raw.githubusercontent.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models/main/data/india_bulk_block_deals.csv"
-deals = pd.read_csv(url)
-
-block_deals = deals[deals["deal_type"] == "BLOCK"]
-bulk_deals  = deals[deals["deal_type"] == "BULK"].sample(n=len(block_deals), random_state=42)
-data = pd.concat([block_deals, bulk_deals])
-
-print("Total deals downloaded:", len(deals))
-data["deal_type"].value_counts()</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Total deals downloaded: 119156
-deal_type
-BLOCK    8938
-BULK     8938
-Name: count, dtype: int64</pre>
-    <p class="note">Colab prints the first line, then displays the counts because they're the last line of the cell. <code style="font-family:'IBM Plex Mono',monospace;font-size:14px">random_state=42</code> means "random, but the <em>same</em> random for everyone" — your numbers should match these exactly.</p>
-  </div>
-</div>
-
-<!-- ================= STEP 3 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 3 OF 7</span>
-  <h3>Choose the clues, then split 75/25</h3>
-  <p>Three clues in, one word out — and a quarter of the deals locked away as the final exam. Notice what's <strong>missing</strong>: no <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">StandardScaler</code> today. Boosted trees don't measure distances like KNN did — they ask yes/no questions ("is the price above ₹319.30?" — the very first question Lesson 04's tree asked), and the answer to a question doesn't change if you rescale the numbers.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 3 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 3: Choose the clues, then split 75/25 — identical to every lesson
-features = ["quantity", "price_inr", "trade_value_crore"]
-X = data[features]       # the clues
-y = data["deal_type"]    # the answer
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y,
-    train_size=0.75,     # 75% training, 25% testing
-    random_state=42,     # same split for everyone
-    stratify=y,          # keep the 50/50 mix in both halves
+from sklearn.ensemble import (
+    GradientBoostingClassifier,
+    GradientBoostingRegressor,
 )
+from sklearn.pipeline import Pipeline
 
-print("Deals for training:", len(X_train))
-print("Deals for testing: ", len(X_test))</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Deals for training: 13407
-Deals for testing:  4469</pre>
-    <p class="note">The same 13,407 training deals and 4,469 exam deals as every classification lesson — that's what makes the finale's leaderboard a fair contest.</p>
-  </div>
-</div>
+if TASK == "classification":
+    gradient_estimator = GradientBoostingClassifier(
+        random_state=RANDOM_STATE
+    )
+else:
+    gradient_estimator = GradientBoostingRegressor(
+        random_state=RANDOM_STATE
+    )
 
-<!-- ================= STEP 4 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 4 OF 7</span>
-  <h3>Train the team, take the exam</h3>
-  <p>Out of the box, the team runs <strong>100 rounds of corrections</strong>, and each round's fix is applied gently (more on that dial in Step 5). Training takes a few seconds — the trees are built one after another, so this is genuinely 100 models being trained in sequence.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 4 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 4: Train the team that learns from its mistakes, then take the exam
-gb = GradientBoostingClassifier(random_state=42)   # 100 rounds, learning_rate 0.1 (the defaults)
-gb.fit(X_train, y_train)
+gradient_pipeline = Pipeline([
+    ("prepare", make_preprocessor(scale_numeric=False)),
+    ("model", gradient_estimator),
+])
 
-predictions = gb.predict(X_test)
-accuracy = accuracy_score(y_test, predictions)
-print(f"Accuracy: {accuracy:.1%}")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Accuracy: 80.4%</pre>
-  </div>
-  <div class="callout callout-green">
-    <p><strong>Is 80.4% good?</strong> The coin flip scores ~50%, and Lesson 01's KNN scored 79.8% on this exact exam — so the mistake-fixing team starts a whisker ahead, on cautious factory settings. Hold that thought: in Step 5, turning its dials pushes it past 82%.</p>
-  </div>
-</div>
+print("Pipeline ready for:", TASK)</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>The printed task should match the project card at the top of your notebook. If it does not, fix the project definition rather than changing the model code.</p>
+      </div>
+    </section>
 
-<!-- ================= STEP 5 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 5 OF 7</span>
-  <h3>The two dials, in plain words</h3>
-  <p>Gradient Boosting has two dials that matter most:</p>
-  <ul>
-    <li><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:15px">n_estimators</code> — the number of correction rounds.</strong> How many weeks the study group meets. Default: 100.</li>
-    <li><strong><code style="font-family:'IBM Plex Mono',monospace;font-size:15px">learning_rate</code> — how big each correction is.</strong> At the default 0.1, each new tree's fix is applied at only 10% strength — like salting dal a pinch at a time and tasting, instead of tipping in a spoonful. Small and careful needs more rounds; big and bold gets there fast but can overshoot.</li>
-  </ul>
-  <p>Let's turn each dial while holding the other at its default. This cell trains ten separate teams, so give it a minute or two.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 5 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 5: The two dials — correction rounds, and the size of each correction
-print("Dial 1: number of correction rounds (learning_rate stays at 0.1)")
-rounds_list = [25, 50, 100, 200, 400]
-round_scores = []
-for rounds in rounds_list:
-    model = GradientBoostingClassifier(n_estimators=rounds, random_state=42)
-    model.fit(X_train, y_train)
-    score = accuracy_score(y_test, model.predict(X_test))
-    round_scores.append(score)
-    print(f"  {rounds:&gt;3} rounds  →  accuracy {score:.1%}")
+    <section class="step">
+      <span class="step-chip">STEP 2 OF 6</span>
+      <h2>Choose the dials with training-only cross-validation</h2>
+      <p>This search compares combinations across folds made only from <code>X_train</code>. The held-out test rows remain closed. Start with this modest grid; a large dataset may take several minutes.</p>
+      <div class="codecard">
+        <div class="codecard-head"><span>CELL 2 · CROSS-VALIDATED SEARCH</span><button class="copy" type="button">Copy</button></div>
+        <pre><code>from sklearn.model_selection import GridSearchCV
 
-print()
-print("Dial 2: size of each correction (rounds stay at 100)")
-for rate in [0.01, 0.05, 0.1, 0.3, 1.0]:
-    model = GradientBoostingClassifier(learning_rate=rate, random_state=42)
-    model.fit(X_train, y_train)
-    score = accuracy_score(y_test, model.predict(X_test))
-    print(f"  learning_rate {rate:&lt;4}  →  accuracy {score:.1%}")
-
-plt.plot(rounds_list, round_scores, marker="o")
-plt.xlabel("Number of correction rounds (n_estimators)")
-plt.ylabel("Accuracy on the test set")
-plt.title("More rounds of corrections")
-plt.grid(True, alpha=0.3)
-plt.show()</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Dial 1: number of correction rounds (learning_rate stays at 0.1)
-   25 rounds  →  accuracy 80.0%
-   50 rounds  →  accuracy 80.2%
-  100 rounds  →  accuracy 80.4%
-  200 rounds  →  accuracy 81.4%
-  400 rounds  →  accuracy 82.7%
-
-Dial 2: size of each correction (rounds stay at 100)
-  learning_rate 0.01  →  accuracy 79.5%
-  learning_rate 0.05  →  accuracy 80.2%
-  learning_rate 0.1   →  accuracy 80.4%
-  learning_rate 0.3   →  accuracy 82.3%
-  learning_rate 1.0   →  accuracy 82.4%</pre>
-    <p class="note">…plus a line chart of the Dial 1 numbers, climbing from 80.0% at 25 rounds to 82.7% at 400.</p>
-  </div>
-  <div class="callout">
-    <p><strong>Reading the dials:</strong> more rounds kept helping here — 400 rounds reached 82.7%. Bigger corrections also scored well <em>on this dataset</em>, but be careful copying that habit: on messier data, <code style="font-family:'IBM Plex Mono',monospace;font-size:14px">learning_rate=1.0</code> is notorious for overshooting — like turning the shower tap a full rotation each time. The cautious default exists for a reason, and the two dials trade off: tiny corrections need many more rounds (the homework proves this on real numbers).</p>
-    <p><strong>One honest confession:</strong> to keep this lesson short, we compared dial settings using the test set. In a real project that's cheating — you'd pick them using a separate slice of the <em>training</em> data (called a <em>validation set</em>), and touch the test set exactly once, at the very end.</p>
-  </div>
-</div>
-
-<!-- ================= STEP 6 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 6 OF 7</span>
-  <h3>Judge the model properly</h3>
-  <p>Back to our Step 4 model (the default one — that's the one entering the leaderboard). Accuracy is one number; these two tools show <strong>where</strong> it goes right and wrong.</p>
-
-  <h3 style="font-size:18px;margin-top:22px">6a · The confusion matrix</h3>
-  <p>The 2×2 scoreboard: rows are the <strong>truth</strong>, columns are the model's <strong>guess</strong>. Big numbers on the top-left → bottom-right diagonal = a good model.</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 6 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 6a: The confusion matrix — where is it right, where does it slip?
-from sklearn.metrics import confusion_matrix
-
-ConfusionMatrixDisplay.from_predictions(y_test, predictions, cmap="Greens")
-plt.show()
-
-cm = confusion_matrix(y_test, predictions)
-print("Truly BLOCK → model said BLOCK:", cm[0][0], "| model said BULK:", cm[0][1])
-print("Truly BULK  → model said BLOCK:", cm[1][0], "| model said BULK:", cm[1][1])</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>Truly BLOCK → model said BLOCK: 2004 | model said BULK: 231
-Truly BULK  → model said BLOCK: 643 | model said BULK: 1591</pre>
-    <p class="note">…with the same numbers drawn as a green-shaded chart above the text. Of 2,235 real BLOCK deals, the team caught 2,004 and missed only 231. But it wrongly called 643 real BULK deals "BLOCK".</p>
-  </div>
-
-  <h3 style="font-size:18px;margin-top:26px">6b · The full report card</h3>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 7 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 6b: The full report card
-print(classification_report(y_test, predictions))</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>              precision    recall  f1-score   support
-
-       BLOCK       0.76      0.90      0.82      2235
-        BULK       0.87      0.71      0.78      2234
-
-    accuracy                           0.80      4469
-   macro avg       0.82      0.80      0.80      4469
-weighted avg       0.82      0.80      0.80      4469</pre>
-  </div>
-  <div class="tablewrap">
-    <table>
-      <tr><th>Term</th><th>Plain-language meaning</th></tr>
-      <tr><td><strong>Precision</strong></td><td>When the model <em>says</em> BLOCK, how often is it actually BLOCK? (How trustworthy are its claims?)</td></tr>
-      <tr><td><strong>Recall</strong></td><td>Of all the <em>real</em> BLOCK deals, how many did the model catch? (How much does it miss?)</td></tr>
-      <tr><td><strong>F1-score</strong></td><td>One number balancing precision and recall.</td></tr>
-      <tr><td><strong>Support</strong></td><td>How many test deals of that type existed.</td></tr>
-    </table>
-  </div>
-  <p>This model has a clear personality: it's a <strong>BLOCK-hunter</strong>. Recall of 0.90 on BLOCK means it misses barely one real block deal in ten — but precision of 0.76 means when it shouts "BLOCK!", it's wrong about a quarter of the time. Whether that trade-off is good depends on the job: a surveillance analyst who must not miss big block trades would love it; someone auto-publishing "block deal alerts" would want fewer false alarms.</p>
-</div>
-
-<!-- ================= STEP 7 ================= -->
-<div class="step">
-  <span class="step-chip">STEP 7 OF 7</span>
-  <h3>THE FINALE: the course leaderboard</h3>
-  <p>One course, one dataset, one honest exam. This last cell re-trains <strong>every model you've met in this course</strong> on the same 13,407 training deals and scores each on the same 4,469 hidden test deals — KNN and Logistic Regression get their scaled clues, the tree family works raw, exactly as taught. One table settles it. (Takes about a minute — you're training six models.)</p>
-  <div class="codecard">
-    <div class="codecard-head"><span class="codecard-title">CELL 8 · PYTHON</span><button class="copy" type="button">Copy</button></div>
-    <pre><code># Step 7: THE FINALE — every model from the course, same exam, one leaderboard
-from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)   # KNN and Logistic Regression need scaled clues
-X_test_scaled  = scaler.transform(X_test)
-
-contestants = {
-    "KNN (k = 5, scaled clues)":          (KNeighborsClassifier(n_neighbors=5), True),
-    "Logistic Regression (scaled clues)": (LogisticRegression(max_iter=1000, random_state=42), True),
-    "Decision Tree (depth 3)":            (DecisionTreeClassifier(max_depth=3, random_state=42), False),
-    "Decision Tree (unlimited depth)":    (DecisionTreeClassifier(random_state=42), False),
-    "Random Forest (200 trees)":          (RandomForestClassifier(n_estimators=200, random_state=42), False),
-    "Gradient Boosting (today's model)":  (GradientBoostingClassifier(random_state=42), False),
+parameter_grid = {
+    "model__n_estimators": [50, 100, 200],
+    "model__learning_rate": [0.03, 0.1, 0.3],
+    "model__max_depth": [2, 3],
 }
 
-leaderboard = [("Coin flip (the baseline)", 0.50)]
-for name, (model, needs_scaling) in contestants.items():
-    clues_train = X_train_scaled if needs_scaling else X_train
-    clues_test  = X_test_scaled  if needs_scaling else X_test
-    model.fit(clues_train, y_train)
-    leaderboard.append((name, accuracy_score(y_test, model.predict(clues_test))))
+gradient_search = GridSearchCV(
+    estimator=gradient_pipeline,
+    param_grid=parameter_grid,
+    scoring=PRIMARY_SCORING,
+    cv=make_cv(),
+    n_jobs=-1,
+    refit=True,
+)
+gradient_search.fit(X_train, y_train, **CV_FIT_PARAMS)
 
-leaderboard.sort(key=lambda row: row[1], reverse=True)
+print("Best training-CV settings:")
+for name, value in gradient_search.best_params_.items():
+    print(f"  {name}: {value}")
 
-print("COURSE LEADERBOARD — same 4,469 hidden test deals for every model")
-print("=" * 60)
-for rank, (name, acc) in enumerate(leaderboard, start=1):
-    print(f"{rank}. {name:&lt;36} {acc:.1%}")</code></pre>
-  </div>
-  <div class="receipt">
-    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
-    <pre>COURSE LEADERBOARD — same 4,469 hidden test deals for every model
-============================================================
-1. Random Forest (200 trees)            83.8%
-2. Decision Tree (unlimited depth)      83.0%
-3. Gradient Boosting (today's model)    80.4%
-4. KNN (k = 5, scaled clues)            79.8%
-5. Decision Tree (depth 3)              78.7%
-6. Logistic Regression (scaled clues)   75.3%
-7. Coin flip (the baseline)             50.0%</pre>
-  </div>
+if TASK == "classification":
+    print(f"Best mean CV balanced accuracy: {gradient_search.best_score_:.3f}")
+else:
+    print(f"Best mean CV MAE: {-gradient_search.best_score_:.3f}")</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>Write down which pair won. A larger number of rounds is not automatically better, and a higher learning rate is not automatically faster learning in the useful sense.</p>
+      </div>
+      <div class="callout green">
+        <h3>If this search is too slow</h3>
+        <p>Use <code>[50, 100]</code> for the rounds, <code>[0.05, 0.1]</code> for the rate, and <code>[2]</code> for depth. Compute limits are part of model selection; reducing the search is better than abandoning honest validation.</p>
+      </div>
+    </section>
 
-  <div class="tablewrap">
-    <table>
-      <tr><th>#</th><th>Model</th><th>In one line</th><th>Accuracy</th></tr>
-      <tr><td>1</td><td><strong>Random Forest (200 trees)</strong></td><td>Many independent trees, majority vote</td><td><strong>83.8%</strong></td></tr>
-      <tr><td>2</td><td>Decision Tree (unlimited depth)</td><td>One tree, allowed to memorise deeply</td><td>83.0%</td></tr>
-      <tr style="background:var(--green-soft)"><td>3</td><td><strong>Gradient Boosting</strong> (today)</td><td>Trees built one at a time, each fixing the last</td><td>80.4%</td></tr>
-      <tr><td>4</td><td>KNN (k = 5)</td><td>Vote of the 5 most similar deals</td><td>79.8%</td></tr>
-      <tr><td>5</td><td>Decision Tree (depth 3)</td><td>One tree, three questions only</td><td>78.7%</td></tr>
-      <tr><td>6</td><td>Logistic Regression</td><td>One weighted formula</td><td>75.3%</td></tr>
-      <tr><td>7</td><td>Coin flip</td><td>The dumbest possible strategy</td><td>50.0%</td></tr>
-    </table>
-  </div>
+    <section class="step">
+      <span class="step-chip">STEP 3 OF 6</span>
+      <h2>Open the test set once</h2>
+      <p>The search has finished making choices. Its refitted winner can now sit the same held-out exam as your baseline and previous models.</p>
+      <div class="codecard">
+        <div class="codecard-head"><span>CELL 3 · FINAL TEST</span><button class="copy" type="button">Copy</button></div>
+        <pre><code>best_gradient = gradient_search.best_estimator_
+gradient_predictions = best_gradient.predict(X_test)
 
-  <div class="callout callout-green">
-    <p><strong>Reading the leaderboard honestly.</strong> The forest wins <em>on this dataset</em>, with the unlimited tree close behind. Remember Lesson 01's warning: our data contains near-twin rows (the buy side and sell side of the same trade), which flatters models that memorise — deep trees and forests thrive on exactly that. Today's boosting team entered on cautious factory settings and still placed third at 80.4%; you watched it reach 82.7% with 400 rounds in Step 5. And every single model beat the coin flip — all six genuinely learned that block deals tend to be bigger.</p>
-  </div>
+evaluate_predictions(
+    "Gradient Boosting",
+    y_test,
+    gradient_predictions,
+    show_details=True,
+)</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>Compare with the baseline using the metric your problem needs. If Gradient Boosting loses, that is a result—not a broken lesson.</p>
+      </div>
+      <div class="reflection">
+        <span>PAUSE &amp; WRITE</span>
+        <ol>
+          <li>How large is the improvement over the baseline?</li>
+          <li>Which class or numeric range still performs poorly?</li>
+          <li>Would that error be acceptable in the real decision described by your project card?</li>
+        </ol>
+      </div>
+    </section>
 
-  <p><strong>Why this family still matters most.</strong> Out in the real world, on tables of data like this one — loans, insurance claims, customer churn, crop yields — <strong>boosted trees win more machine-learning competitions than any other method</strong>, including fancy deep learning. The winning entries almost always use gradient boosting's turbo-charged cousins, <strong>XGBoost</strong> and <strong>LightGBM</strong>: the same one-tree-fixes-the-last idea you just built, engineered for speed and tuned hard (on a validation set, of course). With this lesson, you haven't just finished a course — you've met the practical state of the art for everyday tabular data.</p>
-</div>
+    <section class="step">
+      <span class="step-chip">STEP 4 OF 6</span>
+      <h2>Read the search instead of guessing</h2>
+      <p>The cross-validation table shows how the dials interacted before the test was opened. Sort it by the training-fold score and inspect the strongest and weakest combinations.</p>
+      <div class="codecard">
+        <div class="codecard-head"><span>CELL 4 · CV RESULTS</span><button class="copy" type="button">Copy</button></div>
+        <pre><code>cv_results = pd.DataFrame(gradient_search.cv_results_)
 
-<section id="judging">
-  <h2>How to judge any model — the cheat sheet</h2>
-  <p>One last time — the four questions you'll reuse on every ML project you ever do:</p>
-  <div class="tablewrap">
-    <table>
-      <tr><th>Question</th><th>Tool</th><th>What to look for</th></tr>
-      <tr><td><strong>1. Better than dumb luck?</strong></td><td>Compare with a baseline</td><td>Our 80.4% vs a 50% coin flip. If a model can't clearly beat the dumbest strategy, it learned nothing.</td></tr>
-      <tr><td><strong>2. Where does it fail?</strong></td><td>Confusion matrix</td><td>Big numbers on the diagonal. Ours misses only 231 of 2,235 BLOCKs but mislabels 643 BULKs — know <em>which</em> mistake your model makes more.</td></tr>
-      <tr><td><strong>3. Can I trust a "yes"? Does it miss?</strong></td><td>Precision &amp; recall</td><td>Precision = trustworthiness of its claims (0.76 for BLOCK). Recall = how much it misses (0.90 — barely misses). Pick the one your problem cares about.</td></tr>
-      <tr><td><strong>4. Was the exam fair?</strong></td><td>Train/test split</td><td>Score must come from data the model never saw — our 4,469 locked-away deals. And the leaderboard is only fair because every model sat the <em>same</em> exam.</td></tr>
-    </table>
-  </div>
-  <p>Rough accuracy guide for a balanced 50/50 problem like ours: <strong>~50%</strong> = learned nothing · <strong>60–75%</strong> = learned something · <strong>75–90%</strong> = solid · <strong>95%+</strong> = be suspicious — usually the answer leaked into the clues. Too perfect is not a triumph; it's a symptom.</p>
-</section>
+columns_to_show = [
+    "param_model__n_estimators",
+    "param_model__learning_rate",
+    "param_model__max_depth",
+    "mean_test_score",
+    "std_test_score",
+    "mean_fit_time",
+]
 
-<section id="recap">
-  <h2>The course, in one look back</h2>
-  <p>Five classification lessons, and the recipe never once changed: <strong>load → look → balance → split → train → judge against a baseline</strong>. Only the model in the middle was swapped out. Along the way you met the whole family:</p>
-  <ol>
-    <li><strong>KNN</strong> — judge a deal by its most similar neighbours, and let them vote (Lesson 01, 79.8%).</li>
-    <li><strong>Logistic Regression</strong> — one weighted formula that adds up the evidence (75.3%).</li>
-    <li><strong>Decision Trees</strong> — a game of 20 questions; three questions keep it honest (78.7%), unlimited questions memorise (83.0%).</li>
-    <li><strong>Random Forest</strong> — hundreds of trees, each seeing a different slice, majority wins (83.8%).</li>
-    <li><strong>Gradient Boosting</strong> — trees in sequence, each new one trained on the last one's mistakes (80.4% out of the box, 82.7% with more rounds).</li>
-  </ol>
-  <p>And the habits that matter more than any model: never trust a score without a <strong>baseline</strong>, always look at the <strong>confusion matrix</strong>, keep the <strong>test set locked away</strong>, tune dials on a <strong>validation set</strong>, and treat a <strong>too-perfect score as a symptom</strong>, not a triumph.</p>
+cv_summary = cv_results[columns_to_show].copy()
+if TASK == "regression":
+    cv_summary["mean_test_score"] *= -1
+    cv_summary = cv_summary.rename(
+        columns={"mean_test_score": "mean_validation_MAE"}
+    )
+    cv_summary = cv_summary.sort_values("mean_validation_MAE")
+else:
+    cv_summary = cv_summary.rename(
+        columns={"mean_test_score": "mean_validation_balanced_accuracy"}
+    )
+    cv_summary = cv_summary.sort_values(
+        "mean_validation_balanced_accuracy", ascending=False
+    )
 
-  <h3>Homework (optional, fun)</h3>
-  <ul>
-    <li><strong>Watch it underfit:</strong> in Step 4, change the model line to <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">GradientBoostingClassifier(n_estimators=100, learning_rate=0.01, random_state=42)</code> and re-run the cell. Accuracy drops to <strong>79.5%</strong> — below even Lesson 01's KNN. With corrections at 1% strength, 100 rounds simply isn't enough polishing: that's <em>underfitting</em>. Now keep <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">learning_rate=0.01</code> but raise <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">n_estimators</code> to <strong>2000</strong> (this one takes a couple of minutes to train): accuracy climbs to <strong>81.2%</strong>, beating the default. Tiny steps work — if you take enough of them.</li>
-    <li><strong>Beat the forest:</strong> the leaderboard's target is 83.8%. You already know 400 rounds at the default rate scores 82.7% — play with both dials together and see how close you can get. (The Step 5 confession applies: you're tuning on the test set, which is fine in this sandbox and cheating anywhere else.)</li>
-  </ul>
-</section>
+display(cv_summary.head(10))</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>Look beyond the first row. If several settings perform almost identically, prefer the smaller or faster model rather than pretending a tiny difference is certain.</p>
+      </div>
+    </section>
 
-</main>
+    <section class="step">
+      <span class="step-chip">STEP 5 OF 6</span>
+      <h2>Measure which original columns matter</h2>
+      <p>Permutation importance shuffles one original feature at a time and measures how much the final score deteriorates. Because it wraps the whole pipeline, categorical features stay grouped under their original column names.</p>
+      <div class="codecard">
+        <div class="codecard-head"><span>CELL 5 · PERMUTATION IMPORTANCE</span><button class="copy" type="button">Copy</button></div>
+        <pre><code>from sklearn.inspection import permutation_importance
 
-<footer>
-  <div class="foot-inner">
-    <span>Data: NSE &amp; BSE bulk &amp; block deals, 2020 → today · 1,19,156 rows</span>
-    <span><a href="../">← All lessons</a> · <a href="https://github.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models">Source on GitHub</a></span>
-  </div>
-</footer>
+gradient_importance = permutation_importance(
+    best_gradient,
+    X_test,
+    y_test,
+    scoring=PRIMARY_SCORING,
+    n_repeats=5,
+    random_state=RANDOM_STATE,
+    n_jobs=-1,
+)
 
-<script>
-document.querySelectorAll('.codecard').forEach(function (card) {
-  var btn = card.querySelector('.copy');
-  btn.addEventListener('click', function () {
-    var text = card.querySelector('code').innerText;
-    function done() {
-      btn.textContent = 'Copied ✓'; btn.classList.add('done');
-      setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done, function () { fallback(); done(); });
-    } else { fallback(); done(); }
-    function fallback() {
-      var ta = document.createElement('textarea');
-      ta.value = text; document.body.appendChild(ta);
-      ta.select(); document.execCommand('copy'); ta.remove();
-    }
-  });
-});
-</script>
+importance_table = pd.DataFrame({
+    "feature": X_test.columns,
+    "importance": gradient_importance.importances_mean,
+    "variation": gradient_importance.importances_std,
+}).sort_values("importance", ascending=False)
+
+display(importance_table)
+
+importance_table.sort_values("importance").plot.barh(
+    x="feature",
+    y="importance",
+    xerr="variation",
+    legend=False,
+    figsize=(8, max(4, len(importance_table) * 0.35)),
+)
+plt.xlabel("Score lost after shuffling this feature")
+plt.title("Gradient Boosting permutation importance")
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+      <div class="callout danger">
+        <h3>Importance is not causation</h3>
+        <p>A feature can be useful because it is a proxy, correlated with another feature, or produced by the same process as the target. Correlated columns may also share importance. Treat this as a description of the fitted model, not a law about the world.</p>
+      </div>
+    </section>
+
+    <section class="step">
+      <span class="step-chip">STEP 6 OF 6</span>
+      <h2>Finish with your own course leaderboard</h2>
+      <p>The results log contains only models you actually ran on the same split. Sort it using a metric that matches your task, then add practical considerations before choosing a model.</p>
+      <div class="codecard">
+        <div class="codecard-head"><span>CELL 6 · PERSONAL LEADERBOARD</span><button class="copy" type="button">Copy</button></div>
+        <pre><code>leaderboard = pd.DataFrame(results_log)
+
+if TASK == "classification":
+    leaderboard = leaderboard.sort_values(
+        "balanced_accuracy", ascending=False
+    )
+else:
+    leaderboard = leaderboard.sort_values("MAE")
+
+display(leaderboard.reset_index(drop=True))</code></pre>
+      </div>
+      <div class="checkpoint">
+        <span>CHECKPOINT</span>
+        <p>The table should contain your baseline and every compatible lesson you completed. It should not contain a course-wide score or a model trained on somebody else's data.</p>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Question</th><th>Why it can change the winner</th></tr></thead>
+          <tbody>
+            <tr><td>Does it beat the baseline by enough to matter?</td><td>A measurable gain may still be too small to justify operational complexity.</td></tr>
+            <tr><td>Which mistake does it favour?</td><td>Two models with similar headline scores can create very different real-world costs.</td></tr>
+            <tr><td>Can the decision be explained?</td><td>A slightly weaker linear model or small tree may be preferable when people must challenge decisions.</td></tr>
+            <tr><td>How expensive is prediction and retraining?</td><td>Latency, memory, energy, and maintenance are part of model quality.</td></tr>
+            <tr><td>Will the data process change?</td><td>The best historical model can fail first when categories, behaviour, or measurement rules drift.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="step">
+      <span class="step-chip">OPTIONAL DEEP DIVE</span>
+      <h2>Estimated probabilities for classification</h2>
+      <p>For a classification project, inspect the model's estimated class probabilities. These numbers can rank confidence, but they are not guaranteed to be calibrated and should never be described as certainty.</p>
+      <div class="codecard">
+        <div class="codecard-head"><span>OPTIONAL CELL · PROBABILITY PREVIEW</span><button class="copy" type="button">Copy</button></div>
+        <pre><code>if TASK != "classification":
+    print("Probability output applies to classification only.")
+else:
+    class_names = best_gradient.named_steps["model"].classes_
+    probabilities = best_gradient.predict_proba(X_test)
+
+    probability_preview = X_test.head(10).copy()
+    probability_preview["truth"] = y_test.head(10).values
+    probability_preview["prediction"] = gradient_predictions[:10]
+    probability_preview["largest_estimated_probability"] = (
+        probabilities[:10].max(axis=1)
+    )
+
+    print("Probability column order:", list(class_names))
+    display(probability_preview)</code></pre>
+      </div>
+      <details>
+        <summary>Why “estimated probability” instead of “confidence”?</summary>
+        <p>A model can output 0.90 and still be correct much less than 90% of the time. Calibration must be checked separately on validation data. Probability describes the model's fitted scale, not how trustworthy the dataset or world is.</p>
+      </details>
+    </section>
+
+    <section class="step">
+      <span class="step-chip">COURSE RECAP</span>
+      <h2>The reusable workflow was the real model</h2>
+      <ol>
+        <li>Define one row, the target, available features, and the costly mistake.</li>
+        <li>Choose a random, time, or group split that resembles deployment.</li>
+        <li>Learn preprocessing from training data inside a pipeline.</li>
+        <li>Build a dummy baseline before using a sophisticated estimator.</li>
+        <li>Choose dials with cross-validation—not the final test set.</li>
+        <li>Open the test once and inspect errors, not only the headline metric.</li>
+        <li>Prefer the model whose trade-offs fit the actual decision.</li>
+      </ol>
+      <div class="reflection">
+        <span>FINAL PROJECT NOTE</span>
+        <ol>
+          <li>Which model would you choose today, and why?</li>
+          <li>What evidence would make you reverse that choice?</li>
+          <li>What new data should be collected next?</li>
+          <li>Who could be harmed by a wrong prediction?</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="completion-card">
+      <div>
+        <p class="eyebrow">YOUR PACE, YOUR PROJECT</p>
+        <h2>Save the notebook and your final project note.</h2>
+        <p>Your leaderboard is a snapshot of one dataset and one split—not a universal ranking of algorithms.</p>
+      </div>
+      <button class="complete-button" type="button" data-complete="gradient-boosting">Mark complete</button>
+    </section>
+
+    <nav class="lesson-nav" aria-label="Previous and next lessons">
+      <a href="../random-forests/">← Lesson 05 · Random Forests</a>
+      <a href="../">Course home →</a>
+    </nav>
+  </main>
+
+  <footer>
+    <div class="foot-inner">
+      <span>Bring your own tabular data. Keep your test set honest.</span>
+      <a href="../">All lessons</a>
+    </div>
+  </footer>
+  <script src="../assets/course.js"></script>
 </body>
 </html>
