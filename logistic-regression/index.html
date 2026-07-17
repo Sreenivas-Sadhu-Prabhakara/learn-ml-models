@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logistic Regression, the confidence machine — Learn ML Models</title>
+<meta name="description" content="Lesson 03: Logistic regression in Google Colab — the classifier that reports its confidence with every guess, trained on 1,19,156 real Indian bulk &amp; block deals. Plain language, copyable code.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F5F7; --card:#FFFFFF; --ink:#182A3A; --muted:#52657A;
+  --terminal:#0E1B26; --terminal-ink:#D9E6F2; --comment:#7E97AB;
+  --green:#0E7C52; --green-soft:#E3F1EA; --saffron:#C77C11; --saffron-text:#9A5F0A; --saffron-soft:#F8EEDD;
+  --rule:#D9E2EA; --receipt:#FBFDFE;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:17px; line-height:1.65;
+}
+a{color:var(--green)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+
+.topbar{
+  border-bottom:1px solid var(--rule); background:var(--card);
+  position:sticky; top:0; z-index:10;
+}
+.topbar-inner{
+  max-width:840px;margin:0 auto;padding:14px 20px;
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+}
+.wordmark{
+  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;
+  letter-spacing:.14em;text-decoration:none;color:var(--ink);
+}
+.wordmark span{color:var(--green)}
+.lesson-tag{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
+
+.wrap{max-width:840px;margin:0 auto;padding:0 20px}
+
+/* ---------- hero ---------- */
+.hero{padding:56px 0 40px}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;
+  letter-spacing:.16em;color:var(--saffron-text);text-transform:uppercase;
+}
+h1{
+  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+  font-size:clamp(34px,6vw,52px);line-height:1.12;margin:10px 0 16px;
+  letter-spacing:-.01em;
+}
+.lede{font-size:19px;color:var(--muted);max-width:60ch}
+.lede strong{color:var(--ink)}
+.meta-chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 26px}
+.chip{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;
+  background:var(--card);border:1px solid var(--rule);border-radius:999px;
+  padding:6px 14px;color:var(--muted);
+}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px}
+.btn{
+  display:inline-block;text-decoration:none;font-weight:600;font-size:16px;
+  padding:12px 22px;border-radius:8px;transition:transform .12s ease;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--green);color:#fff}
+.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--rule)}
+
+/* ---------- sections ---------- */
+section{padding:36px 0}
+h2{
+  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+  font-size:clamp(24px,4vw,32px);line-height:1.2;margin-bottom:14px;
+}
+h3{font-size:19px;font-weight:600;margin:26px 0 8px}
+p{margin:12px 0;max-width:68ch}
+ul,ol{margin:12px 0 12px 24px;max-width:66ch}
+li{margin:6px 0}
+.divider{border:none;border-top:1px solid var(--rule);margin:12px 0}
+
+/* ---------- idea figure ---------- */
+.figure-card{
+  background:var(--card);border:1px solid var(--rule);border-radius:12px;
+  padding:26px 22px 18px;margin:20px 0;
+}
+.figure-card svg{width:100%;height:auto;display:block}
+.figcap{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);
+  text-align:center;margin-top:12px;
+}
+
+/* ---------- steps ---------- */
+.step{
+  background:var(--card);border:1px solid var(--rule);border-radius:14px;
+  padding:28px 26px;margin:26px 0;
+}
+@media (max-width:640px){.step{padding:22px 16px}}
+.step-chip{
+  display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:600;
+  font-size:12.5px;letter-spacing:.14em;color:#fff;background:var(--ink);
+  border-radius:6px;padding:4px 10px;margin-bottom:10px;
+}
+.step h3{font-family:"IBM Plex Serif",Georgia,serif;font-size:23px;font-weight:600;margin:0 0 8px}
+.step p{font-size:16.5px}
+
+/* ---------- code cards ---------- */
+.codecard{
+  background:var(--terminal);border-radius:10px;margin:18px 0 0;
+  position:relative;overflow:hidden;
+}
+.codecard-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 14px;border-bottom:1px solid rgba(217,230,242,.12);
+}
+.codecard-title{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;
+  color:var(--comment);
+}
+.copy{
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;
+  color:var(--terminal-ink);background:rgba(217,230,242,.1);
+  border:1px solid rgba(217,230,242,.25);border-radius:6px;
+  padding:5px 12px;cursor:pointer;transition:background .12s ease;
+}
+.copy:hover{background:rgba(217,230,242,.22)}
+.copy.done{color:#8CE0B0;border-color:#8CE0B0}
+.codecard pre{
+  padding:16px 18px;overflow-x:auto;
+}
+.codecard code{
+  font-family:"IBM Plex Mono",monospace;font-size:14px;line-height:1.6;
+  color:var(--terminal-ink);white-space:pre;
+}
+
+/* ---------- receipts (expected output) ---------- */
+.receipt{
+  background:var(--receipt);border:1.5px dashed var(--rule);border-top:none;
+  border-radius:0 0 10px 10px;padding:14px 18px 16px;margin-bottom:6px;
+}
+.receipt-label{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;
+  letter-spacing:.16em;color:var(--green);margin-bottom:8px;
+}
+.receipt pre{
+  font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:1.55;
+  color:var(--ink);overflow-x:auto;white-space:pre;
+}
+.receipt .note{font-size:14px;color:var(--muted);margin:8px 0 0}
+
+/* ---------- tables ---------- */
+.tablewrap{overflow-x:auto;margin:16px 0}
+table{border-collapse:collapse;font-size:15px;min-width:420px}
+th,td{border:1px solid var(--rule);padding:9px 14px;text-align:left;background:var(--card)}
+th{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.06em;background:var(--paper)}
+td strong{font-weight:600}
+
+/* ---------- callouts ---------- */
+.callout{
+  border-left:4px solid var(--saffron);background:var(--saffron-soft);
+  border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0;font-size:16px;
+}
+.callout-green{border-left-color:var(--green);background:var(--green-soft)}
+.callout p{margin:6px 0;font-size:16px}
+
+footer{
+  border-top:1px solid var(--rule);margin-top:40px;padding:28px 0 48px;
+  color:var(--muted);font-size:14.5px;
+}
+footer a{color:var(--muted)}
+.foot-inner{max-width:840px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-inner">
+    <a class="wordmark" href="../">LEARN<span>·</span>ML<span>·</span>MODELS</a>
+    <span class="lesson-tag">LESSON 03 / LOGISTIC REGRESSION</span>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <p class="eyebrow">Lesson 03 · Classification</p>
+  <h1>The model that tells you how sure it is</h1>
+  <p class="lede">In Lesson 01, KNN gave you a verdict — BULK or BLOCK — and nothing else. Today's model, <strong>logistic regression</strong>, gives you the verdict <strong>plus a confidence score</strong>: "92% sure" vs "barely 51% sure". Same 1,19,156 real deals, same exam, one big new superpower.</p>
+  <div class="meta-chips">
+    <span class="chip">⏱ about 25 minutes</span>
+    <span class="chip">🧠 builds on Lesson 01 (KNN)</span>
+    <span class="chip">📊 same data, same exam — scores comparable</span>
+  </div>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="#start">Start the lesson ↓</a>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="mission">
+  <h2>The task, in two sentences</h2>
+  <p>Same as <a href="../knn/">Lesson 01</a>: look at three numbers about a large Indian stock-market trade — <strong>quantity, price per share, total value in crore</strong> — and guess whether it was a <strong>BULK</strong> deal (big buying/selling spread across a normal trading day) or a <strong>BLOCK</strong> deal (one giant pre-negotiated trade in a special window). Last time the 5 nearest <em>neighbours voted</em>; this time the model <strong>draws the best dividing line</strong> through the data — and tells you how confident it is about every single call.</p>
+</section>
+
+<section id="idea">
+  <h2>The whole idea, in one picture</h2>
+  <p>Think of a land border between two states. Deep inside one state, there's no doubt where you are. Standing right on the border line? Could be either.</p>
+  <p>Logistic regression learns one <strong>straight dividing line</strong> between BULK-land and BLOCK-land. Then, for any new deal, it does two things: checks <strong>which side</strong> of the line the deal falls on (that's the verdict) and <strong>how far</strong> from the line it sits (that's the confidence). Far from the line → 95%+ sure. On the line → an honest 50/50 shrug.</p>
+
+  <div class="figure-card">
+    <svg viewBox="0 0 760 340" role="img" aria-label="Scatter plot with BULK deals clustered on the left, BLOCK deals on the right, and a dashed dividing line between them. A shaded band around the line marks the unsure zone where the model is about 50/50; deals far from the line get 95 percent plus confidence.">
+      <!-- axes -->
+      <line x1="70" y1="290" x2="710" y2="290" stroke="#D9E2EA" stroke-width="2"/>
+      <line x1="70" y1="290" x2="70" y2="30" stroke="#D9E2EA" stroke-width="2"/>
+      <text x="390" y="322" font-family="IBM Plex Mono, monospace" font-size="13" fill="#52657A" text-anchor="middle">share price (₹) →</text>
+      <text x="38" y="160" font-family="IBM Plex Mono, monospace" font-size="13" fill="#52657A" text-anchor="middle" transform="rotate(-90 38 160)">deal value →</text>
+      <!-- unsure band -->
+      <polygon points="375,30 485,30 365,290 255,290" fill="#DEE7EE" opacity="0.55"/>
+      <line x1="430" y1="30" x2="310" y2="290" stroke="#182A3A" stroke-width="2" stroke-dasharray="7 6"/>
+      <!-- BULK cluster (saffron, left) -->
+      <g fill="#C77C11">
+        <circle cx="115" cy="235" r="8"/><circle cx="150" cy="200" r="8"/>
+        <circle cx="135" cy="165" r="8"/><circle cx="190" cy="245" r="8"/>
+        <circle cx="215" cy="185" r="8"/><circle cx="175" cy="145" r="8"/>
+        <circle cx="240" cy="220" r="8"/><circle cx="250" cy="165" r="8"/>
+        <circle cx="205" cy="265" r="8"/><circle cx="260" cy="250" r="8"/>
+      </g>
+      <!-- BLOCK cluster (green, right) -->
+      <g fill="#0E7C52">
+        <circle cx="500" cy="120" r="8"/><circle cx="540" cy="85" r="8"/>
+        <circle cx="575" cy="130" r="8"/><circle cx="610" cy="65" r="8"/>
+        <circle cx="640" cy="110" r="8"/><circle cx="670" cy="85" r="8"/>
+        <circle cx="690" cy="140" r="8"/><circle cx="620" cy="170" r="8"/>
+        <circle cx="560" cy="180" r="8"/><circle cx="695" cy="55" r="8"/>
+      </g>
+      <!-- mystery point on the line -->
+      <circle cx="370" cy="160" r="13" fill="#182A3A"/>
+      <text x="370" y="165" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="600" fill="#FFFFFF" text-anchor="middle">?</text>
+      <text x="443" y="155" font-family="IBM Plex Mono, monospace" font-size="13" fill="#52657A">on the line: 50/50</text>
+      <!-- cluster labels -->
+      <text x="100" y="112" font-family="IBM Plex Mono, monospace" font-size="13" fill="#9A5F0A">deep in BULK-land:</text>
+      <text x="100" y="130" font-family="IBM Plex Mono, monospace" font-size="13" fill="#9A5F0A">95%+ sure</text>
+      <text x="530" y="212" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0E7C52">deep in BLOCK-land:</text>
+      <text x="530" y="230" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0E7C52">95%+ sure</text>
+      <!-- legend -->
+      <g font-family="IBM Plex Mono, monospace" font-size="13">
+        <circle cx="92" cy="52" r="7" fill="#C77C11"/><text x="106" y="57" fill="#182A3A">BULK deal</text>
+        <circle cx="92" cy="80" r="7" fill="#0E7C52"/><text x="106" y="85" fill="#182A3A">BLOCK deal</text>
+      </g>
+    </svg>
+    <p class="figcap">One dividing line. Verdict = which side you're on. Confidence = how far from the line you sit.</p>
+  </div>
+
+  <p>It's the difference between a friend who shouts "it will rain!" and the weather app that says <strong>"90% chance of rain"</strong>. Same forecast, but the second one lets <em>you</em> decide whether the umbrella is worth carrying.</p>
+</section>
+
+<section id="start">
+  <h2>Before you start: open Google Colab</h2>
+  <p>You know the drill from Lesson 01 — Colab is a free Google website that runs Python in your browser, nothing to install:</p>
+  <ol>
+    <li>Go to <a href="https://colab.research.google.com">colab.research.google.com</a> and sign in with any Google account.</li>
+    <li>Click <strong>+ New notebook</strong> (start fresh — don't reuse the Lesson 01 notebook).</li>
+    <li>Paste each cell below into its own cell (the <strong>Copy</strong> button does it in one click), press <strong>▶</strong> (or <strong>Shift + Enter</strong>) to run, then click <strong>+ Code</strong> for the next one. Compare what you get with the <strong>"what you should see"</strong> slip under each block.</li>
+  </ol>
+  <div class="callout callout-green">
+    <p><strong>Two things worth knowing before you start:</strong></p>
+    <ul style="margin:8px 0 4px 22px">
+      <li>The first cell takes a few extra seconds while Colab connects to a computer in the cloud. Not broken, just warming up.</li>
+      <li>Cells build on earlier cells, so <strong>run them in order</strong>. If you ever see an error like <em>NameError: name 'deals' is not defined</em>, or Colab says the runtime disconnected, just click <strong>Runtime → Run all</strong> in the menu — everything comes back in under a minute.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= STEP 1 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 1 OF 11</span>
+  <h3>Load the toolbox</h3>
+  <p>Almost the same cupboard as Lesson 01. Only one instrument is new: <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">LogisticRegression</code> replaces <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">KNeighborsClassifier</code>. That one-line swap is the entire model change — everything else in the recipe stays put.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 1 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 1: Load our toolbox
+import pandas as pd                                     # works with tables of data (like Excel)
+from sklearn.model_selection import train_test_split    # splits data into train / test
+from sklearn.preprocessing import StandardScaler        # puts all numbers on the same scale
+from sklearn.linear_model import LogisticRegression     # today's model — the confidence machine
+from sklearn.metrics import (accuracy_score, classification_report,
+                             confusion_matrix, ConfusionMatrixDisplay)
+import matplotlib.pyplot as plt                         # draws charts
+
+print("Toolbox ready!")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Toolbox ready!</pre>
+  </div>
+</div>
+
+<!-- ================= STEP 2 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 2 OF 11</span>
+  <h3>Load the dataset</h3>
+  <p>Same table of real bulk &amp; block deals from the Indian exchanges, straight from GitHub — no file uploads.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 2 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 2: Load the dataset (same 1,19,156 deals as Lesson 01)
+url = "https://raw.githubusercontent.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models/main/data/india_bulk_block_deals.csv"
+deals = pd.read_csv(url)
+
+print("Number of deals:", len(deals))</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Number of deals: 119156</pre>
+  </div>
+</div>
+
+<!-- ================= STEP 3 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 3 OF 11</span>
+  <h3>Balance the dataset to 50/50</h3>
+  <p>Quick reminder of why: about 92% of the raw deals are BULK, so a lazy model shouting "BULK!" every time would score 92% while learning nothing. Exactly as in Lesson 01, we keep <strong>all 8,938 BLOCK deals</strong> and randomly pick an equal number of BULK deals — now blind guessing scores only 50%.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 3 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 3: Balance the dataset — the same 50/50 recipe as Lesson 01
+block_deals = deals[deals["deal_type"] == "BLOCK"]
+bulk_deals  = deals[deals["deal_type"] == "BULK"].sample(n=len(block_deals), random_state=42)
+
+data = pd.concat([block_deals, bulk_deals])
+data["deal_type"].value_counts()</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>deal_type
+BLOCK    8938
+BULK     8938
+Name: count, dtype: int64</pre>
+    <p class="note"><strong>random_state=42</strong> again means "pick randomly, but pick the <em>same</em> random deals every time" — it's the same 42 as Lesson 01, so we're literally working with the same deals. That's what makes today's score comparable with KNN's.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 4 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 4 OF 11</span>
+  <h3>Same clues, same answer, same split</h3>
+  <p>Clues (X): the three numbers. Answer (y): BULK or BLOCK. Then the honesty rule: <strong>75% for studying, 25% locked away as the final exam</strong> — the model never sees the exam while learning.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 4 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 4: Same clues, same answer, same 75/25 split as Lesson 01
+features = ["quantity", "price_inr", "trade_value_crore"]
+
+X = data[features]        # the clues
+y = data["deal_type"]     # the answer
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    train_size=0.75,     # 75% training, 25% testing
+    random_state=42,     # same split for everyone
+    stratify=y,          # keep the 50/50 mix in both halves
+)
+
+print("Deals for training:", len(X_train))
+print("Deals for testing: ", len(X_test))</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Deals for training: 13407
+Deals for testing:  4469</pre>
+    <p class="note">Identical numbers to Lesson 01 — same 13,407 study deals, same 4,469 exam deals. Today's model sits the <em>exact same exam</em> KNN sat.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 5 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 5 OF 11</span>
+  <h3>Put all clues on the same scale</h3>
+  <p>KNN needed scaling because it measures distances. Logistic regression wants it too, for its own reasons: it assigns each clue a <strong>weight</strong> (how hard that clue pushes the verdict), and weights are only comparable when the clues speak at the same volume. Scaling also helps the line-fitting finish quickly and cleanly. Same subtle detail as before: learn the scale from training data only, then apply it to the test data.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 5 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 5: Scale the clues so no single one dominates
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)   # learn the scale from training data
+X_test_scaled  = scaler.transform(X_test)        # apply that same scale to test data
+
+print("All clues are now on the same scale.")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>All clues are now on the same scale.</pre>
+    <p class="note">Keep this cell in mind for Step 10 — the weights the model learns apply to these <em>scaled</em> clues, which is exactly what makes them fair to compare.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 6 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 6 OF 11</span>
+  <h3>Train the model</h3>
+  <p>Unlike KNN — which just memorises the training deals — logistic regression genuinely <em>learns</em> here: it searches for the one dividing line that best separates the 13,407 training deals. On this data, that search still takes well under a second.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 6 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 6: Train the logistic regression model
+logreg = LogisticRegression(random_state=42)
+logreg.fit(X_train_scaled, y_train)
+
+print("Model trained on", len(X_train), "deals.")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Model trained on 13407 deals.</pre>
+  </div>
+  <div class="callout">
+    <p><strong>About that terrible name.</strong> Despite being called logistic <em>regression</em>, this is a <strong>classifier</strong> — it sorts things into categories, exactly like KNN did. (In ML, "regression" normally means predicting a number, like a price.) The name is a historical hand-me-down from the 1800s: under the hood it borrows regression's line-drawing machinery, then squashes the line's output into a probability between 0% and 100%. Blame history, not yourself — everyone finds the name confusing at first.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 7 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 7 OF 11</span>
+  <h3>Exam time!</h3>
+  <p>Predict all 4,469 locked-away test deals and check the answers against the truth.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 7 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 7: Exam time — predict the hidden 25%
+predictions = logreg.predict(X_test_scaled)
+
+accuracy = accuracy_score(y_test, predictions)
+print(f"Accuracy: {accuracy:.1%}")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Accuracy: 75.3%</pre>
+  </div>
+  <div class="callout callout-green">
+    <p><strong>Is 75.3% good?</strong> Three reference points, all on this exact same exam:</p>
+    <ul style="margin:8px 0 4px 22px">
+      <li><strong>Coin flip: ~50%.</strong> We clearly beat dumb luck — the model got about 3 out of 4 deals right.</li>
+      <li><strong>Lesson 01's KNN: 79.8%.</strong> The single straight line loses about 4½ points to the neighbours' vote. A straight border is a blunt instrument, and this data's border is a bit curvy.</li>
+      <li><strong>But wait for Steps 9 and 10.</strong> In exchange for those points, logistic regression gives you two things KNN never did: a smooth <em>confidence score</em> on every call, and an <em>explanation</em> of which clue pushed the decision. In many real jobs — medicine, lending — those are worth far more than 4 points of accuracy.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ================= STEP 8 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 8 OF 11</span>
+  <h3>Judge the model properly</h3>
+  <p>One accuracy number hides the model's personality. Let's see <em>where</em> it goes right and wrong.</p>
+
+  <h3 style="font-size:18px;margin-top:22px">8a · The confusion matrix</h3>
+  <p>The same 2×2 scoreboard as Lesson 01: rows are the <strong>truth</strong>, columns are the model's <strong>guess</strong>. Big numbers on the top-left → bottom-right diagonal = good. This time we also print the raw numbers.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 8 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 8a: The confusion matrix — where is it right, where does it slip?
+print(confusion_matrix(y_test, predictions))
+
+ConfusionMatrixDisplay.from_predictions(y_test, predictions, cmap="Greens")
+plt.show()</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>[[1425  810]
+ [ 293 1941]]</pre>
+    <p class="note">…plus the same numbers as a green-shaded chart. Reading it: of 2,235 real BLOCK deals, the model caught 1,425 and mislabelled 810. Of 2,234 real BULK deals, it caught 1,941 and mislabelled only 293.</p>
+  </div>
+  <div class="callout">
+    <p><strong>Spot the personality.</strong> This model is a <strong>cautious inspector</strong>: it rarely cries "BLOCK!" without reason (only 293 false alarms), but it lets a lot of real BLOCK deals slip past (810 missed). KNN was more even-handed in both directions. Neither style is "better" — it depends on which mistake costs you more.</p>
+  </div>
+
+  <h3 style="font-size:18px;margin-top:26px">8b · The full report card</h3>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 9 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 8b: The full report card
+print(classification_report(y_test, predictions))</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>              precision    recall  f1-score   support
+
+       BLOCK       0.83      0.64      0.72      2235
+        BULK       0.71      0.87      0.78      2234
+
+    accuracy                           0.75      4469
+   macro avg       0.77      0.75      0.75      4469
+weighted avg       0.77      0.75      0.75      4469</pre>
+    <p class="note">In plain words: <strong>precision 0.83</strong> for BLOCK = when this model says BLOCK, it's right 83% of the time (trustworthy claims). <strong>Recall 0.64</strong> for BLOCK = it only catches 64% of the real BLOCK deals (misses a lot). The numbers agree perfectly with the cautious-inspector story from the matrix.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 9 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 9 OF 11</span>
+  <h3>The headline act: ask the model how sure it is</h3>
+  <p>Everything so far, KNN could also do. Here's the new superpower. <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">predict_proba</code> ("predict probability") returns, for every deal, <strong>two percentages: the chance it's BLOCK and the chance it's BULK</strong> — always adding up to 100%. Let's attach the model's confidence to some real test deals.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 10 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 9: The headline act — ask the model HOW SURE it is
+probabilities = logreg.predict_proba(X_test_scaled)
+print("Column order:", logreg.classes_)
+
+results = X_test.copy()
+results["truth"]      = y_test.values
+results["model_says"] = predictions
+results["sure_%"]     = (probabilities.max(axis=1) * 100).round(1)
+
+results.head(4)</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Column order: ['BLOCK' 'BULK']
+         quantity  price_inr  trade_value_crore  truth model_says  sure_%
+56476     93849.0    1193.70            11.2028  BLOCK      BLOCK    76.4
+7992     570000.0     442.00            25.1940  BLOCK       BULK    56.2
+93364    618348.0      33.95             2.0993   BULK       BULK    75.0
+62532  11302326.0       4.30             4.8600   BULK       BULK    75.9</pre>
+    <p class="note">Colab shows this as a nicely formatted table; the strange row numbers are the deals' original positions in the big table. <strong>Look at the second row:</strong> the model got that deal wrong — but it warned you it was barely sure (56.2%). A wrong answer delivered with a shrug is far less dangerous than a wrong answer delivered with a straight face. KNN gave you no such warning.</p>
+  </div>
+
+  <h3 style="font-size:18px;margin-top:26px">9b · Its most confident calls</h3>
+  <p>Sort by confidence and look at the deals the model considers open-and-shut cases:</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 11 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 9b: The model's three most confident calls
+results.sort_values("sure_%", ascending=False).head(3)</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>       quantity  price_inr  trade_value_crore  truth model_says  sure_%
+20788   28602.0     5354.5            15.3149  BLOCK      BLOCK   100.0
+26857   37051.0     5612.0            20.7930  BLOCK      BLOCK   100.0
+42092  119900.0     7080.0            84.8892  BLOCK      BLOCK   100.0</pre>
+    <p class="note">All three: expensive shares (₹5,354–₹7,080 each), all truly BLOCK, all called correctly. That "100.0" is rounding — the raw probabilities are 99.99-something percent. (A model claiming <em>literally</em> 100% certainty should always make you raise an eyebrow.) Notice the pattern in the prices — Step 10 will explain it.</p>
+  </div>
+
+  <h3 style="font-size:18px;margin-top:26px">9c · Is the confidence honest? Check it.</h3>
+  <p>A confidence score is only useful if it means something. So let's audit it: when the model claims to be very sure, is it right more often?</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 12 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 9c: Is the confidence honest? Let's check.
+confident = results[results["sure_%"] &gt;= 90]
+hesitant  = results[results["sure_%"] &lt;  60]
+
+right_confident = (confident["truth"] == confident["model_says"]).mean()
+right_hesitant  = (hesitant["truth"]  == hesitant["model_says"]).mean()
+
+print(f"When 90%+ sure ({len(confident)} deals): right {right_confident:.1%} of the time")
+print(f"When under 60% sure ({len(hesitant)} deals): right {right_hesitant:.1%} of the time")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>When 90%+ sure (633 deals): right 92.4% of the time
+When under 60% sure (781 deals): right 51.5% of the time</pre>
+    <p class="note">The confidence is genuinely informative: on deals where it claims 90%+ certainty it scores 92.4%, and on deals where it admits it's nearly guessing, it performs like a coin flip — just as it warned you.</p>
+  </div>
+  <div class="callout callout-green">
+    <p><strong>Why confidence is the superpower.</strong> Imagine two doctors reading the same scan. One says "it's fine." The other says "92% sure it's fine — but this one's a 55%, let's order one more test." Same for a bank: the loan model saying APPROVE at 99% confidence and APPROVE at 51% confidence are <em>very</em> different situations — the 51% file goes to a human officer. Confidence lets you <strong>automate the easy calls and escalate the doubtful ones</strong>. That's how ML is actually used in serious workplaces.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 10 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 10 OF 11</span>
+  <h3>Open the hood: which clue decides the verdict?</h3>
+  <p>Second superpower: the model can <strong>show its working</strong>. Each clue gets a learned <strong>weight</strong> — how hard, and in which direction, that clue pushes the verdict. (This is why KNN felt like a black box: neighbours vote, but nobody tells you <em>why</em>.)</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 13 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 10: Open the hood — which clue pushes which way?
+weights = pd.DataFrame({
+    "clue":   features,
+    "weight": logreg.coef_[0].round(3),
+})
+print(weights.to_string(index=False))
+print()
+print("Positive weight → pushes the guess toward", logreg.classes_[1])
+print("Negative weight → pushes the guess toward", logreg.classes_[0])</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>             clue  weight
+         quantity  -0.003
+        price_inr  -6.786
+trade_value_crore  -0.703
+
+Positive weight → pushes the guess toward BULK
+Negative weight → pushes the guess toward BLOCK</pre>
+  </div>
+  <p>In plain words — remembering these weights apply to the <strong>scaled</strong> clues from Step 5 (one "notch" = one typical-sized move in that clue, which is exactly what makes the three weights fair to compare):</p>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Clue</th><th>Weight</th><th>What the model concluded</th></tr>
+      <tr><td><strong>price_inr</strong></td><td>−6.786</td><td><strong>The star clue, by far.</strong> The pricier the share, the harder the push toward BLOCK. That's why the Step 9b deals — shares costing ₹5,000+ each — got near-100% BLOCK calls.</td></tr>
+      <tr><td><strong>trade_value_crore</strong></td><td>−0.703</td><td>A bigger total deal value gives a mild extra push toward BLOCK — the "block deals are bigger" pattern from Lesson 01.</td></tr>
+      <tr><td><strong>quantity</strong></td><td>−0.003</td><td>Almost zero. Once the model knows the price and the total value, the share count adds nearly nothing new.</td></tr>
+    </table>
+  </div>
+  <p>Does the price story make sense? It does: block deals are institution-to-institution trades in big, established companies — whose shares tend to be pricier — while the bulk-deal list is full of low-priced small-company shares. Nobody told the model this. It found the pattern in the data, and now it can <em>tell you</em> it found it. Try explaining a decision like that with KNN.</p>
+</div>
+
+<!-- ================= STEP 11 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 11 OF 11</span>
+  <h3>The fun part: invent a deal, get a verdict with confidence</h3>
+  <p>The same imaginary deal you invented in Lesson 01 — 20 lakh shares at ₹950, worth ₹190 crore. KNN just said "BLOCK". Watch what the confidence machine says.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 14 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 11: Invent a deal and get a verdict WITH confidence
+my_deal = pd.DataFrame({
+    "quantity":          [2_000_000],    # 20 lakh shares
+    "price_inr":         [950.0],        # ₹950 per share
+    "trade_value_crore": [190.0],        # ₹190 crore in total
+})
+
+my_deal_scaled = scaler.transform(my_deal)
+verdict = logreg.predict(my_deal_scaled)[0]
+sure    = logreg.predict_proba(my_deal_scaled).max() * 100
+
+print(f"The model's verdict: {verdict} ({sure:.1f}% sure)")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>The model's verdict: BLOCK (76.1% sure)</pre>
+    <p class="note">Both models agree it's a BLOCK — and now you know it's a <em>fairly confident</em> BLOCK, not a certain one. Try the tiny deal from Lesson 01 — quantity <strong>100000</strong>, price <strong>50</strong>, value <strong>0.5</strong> — and it flips to BULK (74.5% sure). Then try an expensive stock — quantity <strong>30000</strong>, price <strong>5500</strong>, value <strong>16.5</strong> — and watch the confidence rocket to a rounded 100.0%.</p>
+  </div>
+</div>
+
+<section id="judging">
+  <h2>How to judge any model — the cheat sheet</h2>
+  <p>The four questions from Lesson 01, plus a fifth that exists only for models that report confidence:</p>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Question</th><th>Tool</th><th>What to look for</th></tr>
+      <tr><td><strong>1. Better than dumb luck?</strong></td><td>Compare with a baseline</td><td>Our 75.3% vs a 50% coin flip. If a model can't clearly beat the dumbest strategy, it learned nothing.</td></tr>
+      <tr><td><strong>2. Where does it fail?</strong></td><td>Confusion matrix</td><td>Big numbers on the diagonal — and check <em>which</em> mistake it favours. Ours misses BLOCK deals (810) far more than it falsely accuses (293).</td></tr>
+      <tr><td><strong>3. Can I trust a "yes"? Does it miss?</strong></td><td>Precision &amp; recall</td><td>Precision = when it claims BLOCK, how often is it right (0.83 here). Recall = how many real BLOCKs it catches (0.64 here). Pick the one your problem cares about.</td></tr>
+      <tr><td><strong>4. Was the exam fair?</strong></td><td>Train/test split</td><td>Score must come from data the model never saw. Our 4,469 test deals stayed locked away until Step 7.</td></tr>
+      <tr><td><strong>5. Is the confidence honest?</strong></td><td>predict_proba audit</td><td>Group predictions by claimed confidence and check the hit rate in each group — like our Step 9c (90%+ sure → 92.4% right; under 60% → coin flip).</td></tr>
+    </table>
+  </div>
+  <p>The scoreboard so far, on the identical balanced data, identical split, identical 4,469-deal exam:</p>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Strategy</th><th>Accuracy</th><th>Tells you how sure?</th><th>Explains itself?</th></tr>
+      <tr><td>Coin flip</td><td>~50%</td><td>No</td><td>No</td></tr>
+      <tr><td><strong>Logistic regression (this lesson)</strong></td><td><strong>75.3%</strong></td><td><strong>Yes — smooth 50–100% score</strong></td><td><strong>Yes — one weight per clue</strong></td></tr>
+      <tr><td>KNN, K=5, scaled (Lesson 01)</td><td>79.8%</td><td>Only crudely (neighbour votes)</td><td>No</td></tr>
+    </table>
+  </div>
+  <p>Rough accuracy guide for a balanced 50/50 problem like ours: <strong>~50%</strong> = learned nothing · <strong>60–75%</strong> = learned something · <strong>75–90%</strong> = solid · <strong>95%+</strong> = be suspicious — usually the answer leaked into the clues.</p>
+</section>
+
+<section id="recap">
+  <h2>The recipe you just reused</h2>
+  <p>Notice what happened today: steps 1–5 and 7–8 were <em>Lesson 01 verbatim</em>. The only genuinely new lines were one import and one model. That's the whole point of the recipe:</p>
+  <ol>
+    <li><strong>Load</strong> the data (Step 2)</li>
+    <li><strong>Fix problems</strong> — balance 92/8 down to 50/50 (Step 3)</li>
+    <li><strong>Choose</strong> clues X and answer y, <strong>split</strong> 75/25 (Step 4)</li>
+    <li><strong>Scale</strong> the clues (Step 5)</li>
+    <li><strong>Train</strong> — the only swapped ingredient (Step 6)</li>
+    <li><strong>Judge honestly</strong> — baseline, confusion matrix, precision &amp; recall (Steps 7–8)</li>
+    <li><strong>NEW — ask how sure it is</strong>, and audit that confidence (Step 9)</li>
+    <li><strong>NEW — ask it to explain itself</strong> with one weight per clue (Step 10)</li>
+  </ol>
+  <p>And the honest trade-off of the day: the straight line scored 75.3% against KNN's 79.8%, but it hands you a confidence score and an explanation with every prediction. In real deployments, that trade is taken all the time.</p>
+
+  <h3>Homework (optional, fun)</h3>
+  <ul>
+    <li><strong>Visit the border.</strong> Add a cell with <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">results.sort_values("sure_%").head(5)</code> — the deals the model finds genuinely confusing, all at 50.0–50.1% confidence. Look at them: mid-priced shares (roughly ₹473–₹605), middling values — they sit exactly where BULK-land and BLOCK-land overlap in the picture at the top of this page. The model calls two of those five wrong, which is precisely what "50/50" should mean. An honest machine!</li>
+    <li><strong>Prove price is the star clue.</strong> Step 10 claims <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">price_inr</code> does most of the work. Test it: remove <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">"price_inr"</code> from the features list in Step 4 and click Runtime → Run all — accuracy falls from 75.3% to ~65.8%. Now keep <em>only</em> <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">"price_inr"</code> in the list: ~73.5% all by itself. One clue carries almost the whole model — exactly what that −6.786 weight was telling you. (Same honest confession as Lesson 01: comparing variants on the test set is peeking at the exam again — fine for a learning exercise, but in a real project you'd run this comparison on a validation slice of the training data and touch the test set exactly once.)</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <span>Data: NSE &amp; BSE bulk &amp; block deals, 2020 → today · 1,19,156 rows</span>
+    <span><a href="../">← All lessons</a> · <a href="https://github.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models">Source on GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.codecard').forEach(function (card) {
+  var btn = card.querySelector('.copy');
+  btn.addEventListener('click', function () {
+    var text = card.querySelector('code').innerText;
+    function done() {
+      btn.textContent = 'Copied ✓'; btn.classList.add('done');
+      setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(); done(); });
+    } else { fallback(); done(); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+    }
+  });
+});
+</script>
+</body>
+</html>

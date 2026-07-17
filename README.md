@@ -9,11 +9,12 @@ Hands-on machine learning lessons for friends learning together — plain langua
 | # | Model | Status | Guide |
 |---|-------|--------|-------|
 | 01 | K-Nearest Neighbours | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/knn/) |
-| 02 | Linear Regression (+ feature engineering, Ridge, Lasso) | 🔜 Coming soon | — |
-| 03 | Logistic Regression | 🔜 Coming soon | — |
-| 04 | Decision Trees | 🔜 Coming soon | — |
-| 05 | Random Forests | 🔜 Coming soon | — |
-| 06 | Gradient Boosting | 🔜 Coming soon | — |
+| 02 | Linear Regression (two practical examples, feature engineering, Ridge L2, Lasso L1) | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/linear-regression/) |
+| 03 | Logistic Regression | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/logistic-regression/) |
+| 04 | Decision Trees | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/decision-trees/) |
+| 05 | Random Forests | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/random-forests/) |
+| 06 | Gradient Boosting (+ course leaderboard finale) | ✅ Ready | [Step-by-step guide](https://sreenivas-sadhu-prabhakara.github.io/learn-ml-models/gradient-boosting/) |
+| 07 | K-Means | 🔜 Coming soon | — |
 
 ## How the lessons work
 
@@ -26,10 +27,17 @@ Each lesson is a single web page of numbered steps. Every step has a copyable co
 ## Repo layout
 
 ```
-index.html          → course home page (GitHub Pages)
-knn/index.html      → Lesson 01 guide page
-data/               → the shared dataset
+index.html                     → course home page (GitHub Pages)
+knn/                           → Lesson 01 · K-Nearest Neighbours
+linear-regression/             → Lesson 02 · Linear Regression, feature engineering, Ridge & Lasso
+logistic-regression/           → Lesson 03 · Logistic Regression
+decision-trees/                → Lesson 04 · Decision Trees
+random-forests/                → Lesson 05 · Random Forests
+gradient-boosting/             → Lesson 06 · Gradient Boosting + course leaderboard
+data/                          → the shared dataset
 ```
+
+Lessons 03–06 use the identical balanced BULK/BLOCK split as Lesson 01 (`random_state=42`, 75/25), so every model's score is directly comparable. The course leaderboard in Lesson 06: Random Forest 83.8% · Decision Tree (unlimited) 83.0% · Gradient Boosting 80.4% · KNN 79.8% · Decision Tree (depth 3) 78.7% · Logistic Regression 75.3% · coin flip 50%.
 
 ## Adding a lesson
 

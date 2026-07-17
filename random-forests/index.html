@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Random forests, step by step — Learn ML Models</title>
+<meta name="description" content="Lesson 05: Random forests in Google Colab — grow 200 slightly-different decision trees, let them vote, and beat both the single tree and KNN on 1,19,156 real Indian stock market deals. Plain language, copyable code.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F5F7; --card:#FFFFFF; --ink:#182A3A; --muted:#52657A;
+  --terminal:#0E1B26; --terminal-ink:#D9E6F2; --comment:#7E97AB;
+  --green:#0E7C52; --green-soft:#E3F1EA; --saffron:#C77C11; --saffron-text:#9A5F0A; --saffron-soft:#F8EEDD;
+  --rule:#D9E2EA; --receipt:#FBFDFE;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:17px; line-height:1.65;
+}
+a{color:var(--green)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+
+.topbar{
+  border-bottom:1px solid var(--rule); background:var(--card);
+  position:sticky; top:0; z-index:10;
+}
+.topbar-inner{
+  max-width:840px;margin:0 auto;padding:14px 20px;
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+}
+.wordmark{
+  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;
+  letter-spacing:.14em;text-decoration:none;color:var(--ink);
+}
+.wordmark span{color:var(--green)}
+.lesson-tag{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
+
+.wrap{max-width:840px;margin:0 auto;padding:0 20px}
+
+/* ---------- hero ---------- */
+.hero{padding:56px 0 40px}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;
+  letter-spacing:.16em;color:var(--saffron-text);text-transform:uppercase;
+}
+h1{
+  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+  font-size:clamp(34px,6vw,52px);line-height:1.12;margin:10px 0 16px;
+  letter-spacing:-.01em;
+}
+.lede{font-size:19px;color:var(--muted);max-width:60ch}
+.lede strong{color:var(--ink)}
+.meta-chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 26px}
+.chip{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;
+  background:var(--card);border:1px solid var(--rule);border-radius:999px;
+  padding:6px 14px;color:var(--muted);
+}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px}
+.btn{
+  display:inline-block;text-decoration:none;font-weight:600;font-size:16px;
+  padding:12px 22px;border-radius:8px;transition:transform .12s ease;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--green);color:#fff}
+.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--rule)}
+
+/* ---------- sections ---------- */
+section{padding:36px 0}
+h2{
+  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+  font-size:clamp(24px,4vw,32px);line-height:1.2;margin-bottom:14px;
+}
+h3{font-size:19px;font-weight:600;margin:26px 0 8px}
+p{margin:12px 0;max-width:68ch}
+ul,ol{margin:12px 0 12px 24px;max-width:66ch}
+li{margin:6px 0}
+.divider{border:none;border-top:1px solid var(--rule);margin:12px 0}
+
+/* ---------- idea figure ---------- */
+.figure-card{
+  background:var(--card);border:1px solid var(--rule);border-radius:12px;
+  padding:26px 22px 18px;margin:20px 0;
+}
+.figure-card svg{width:100%;height:auto;display:block}
+.figcap{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);
+  text-align:center;margin-top:12px;
+}
+
+/* ---------- definition cards ---------- */
+.def-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+@media (max-width:640px){.def-grid{grid-template-columns:1fr}}
+.def{border-radius:12px;padding:18px 20px;border:1px solid var(--rule)}
+.def h4{font-family:"IBM Plex Mono",monospace;font-size:14px;letter-spacing:.12em;margin-bottom:8px}
+.def p{font-size:15.5px;margin:0}
+.def-bulk{background:var(--saffron-soft)} .def-bulk h4{color:var(--saffron)}
+.def-block{background:var(--green-soft)} .def-block h4{color:var(--green)}
+
+/* ---------- steps ---------- */
+.step{
+  background:var(--card);border:1px solid var(--rule);border-radius:14px;
+  padding:28px 26px;margin:26px 0;
+}
+@media (max-width:640px){.step{padding:22px 16px}}
+.step-chip{
+  display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:600;
+  font-size:12.5px;letter-spacing:.14em;color:#fff;background:var(--ink);
+  border-radius:6px;padding:4px 10px;margin-bottom:10px;
+}
+.step h3{font-family:"IBM Plex Serif",Georgia,serif;font-size:23px;font-weight:600;margin:0 0 8px}
+.step p{font-size:16.5px}
+
+/* ---------- code cards ---------- */
+.codecard{
+  background:var(--terminal);border-radius:10px;margin:18px 0 0;
+  position:relative;overflow:hidden;
+}
+.codecard-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 14px;border-bottom:1px solid rgba(217,230,242,.12);
+}
+.codecard-title{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;
+  color:var(--comment);
+}
+.copy{
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;
+  color:var(--terminal-ink);background:rgba(217,230,242,.1);
+  border:1px solid rgba(217,230,242,.25);border-radius:6px;
+  padding:5px 12px;cursor:pointer;transition:background .12s ease;
+}
+.copy:hover{background:rgba(217,230,242,.22)}
+.copy.done{color:#8CE0B0;border-color:#8CE0B0}
+.codecard pre{
+  padding:16px 18px;overflow-x:auto;
+}
+.codecard code{
+  font-family:"IBM Plex Mono",monospace;font-size:14px;line-height:1.6;
+  color:var(--terminal-ink);white-space:pre;
+}
+
+/* ---------- receipts (expected output) ---------- */
+.receipt{
+  background:var(--receipt);border:1.5px dashed var(--rule);border-top:none;
+  border-radius:0 0 10px 10px;padding:14px 18px 16px;margin-bottom:6px;
+}
+.receipt-label{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;
+  letter-spacing:.16em;color:var(--green);margin-bottom:8px;
+}
+.receipt pre{
+  font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:1.55;
+  color:var(--ink);overflow-x:auto;white-space:pre;
+}
+.receipt .note{font-size:14px;color:var(--muted);margin:8px 0 0}
+
+/* ---------- tables ---------- */
+.tablewrap{overflow-x:auto;margin:16px 0}
+table{border-collapse:collapse;font-size:15px;min-width:420px}
+th,td{border:1px solid var(--rule);padding:9px 14px;text-align:left;background:var(--card)}
+th{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.06em;background:var(--paper)}
+td strong{font-weight:600}
+
+/* ---------- callouts ---------- */
+.callout{
+  border-left:4px solid var(--saffron);background:var(--saffron-soft);
+  border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0;font-size:16px;
+}
+.callout-green{border-left-color:var(--green);background:var(--green-soft)}
+.callout p{margin:6px 0;font-size:16px}
+
+footer{
+  border-top:1px solid var(--rule);margin-top:40px;padding:28px 0 48px;
+  color:var(--muted);font-size:14.5px;
+}
+footer a{color:var(--muted)}
+.foot-inner{max-width:840px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-inner">
+    <a class="wordmark" href="../">LEARN<span>·</span>ML<span>·</span>MODELS</a>
+    <span class="lesson-tag">LESSON 05 / RANDOM FORESTS</span>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <p class="eyebrow">Lesson 05 · Classification</p>
+  <h1>Random forests: the wisdom of many trees</h1>
+  <p class="lede">In <a href="../decision-trees/">Lesson 04</a> you grew <strong>one decision tree</strong>. This time you grow <strong>two hundred slightly-different trees and let them vote</strong> — on the same 1,19,156-deal dataset, sitting the same exam as every lesson so far. New model, new best score, and a chart that shows which clue the forest trusts most.</p>
+  <div class="meta-chips">
+    <span class="chip">⏱ about 25 minutes</span>
+    <span class="chip">🌳 builds on Lessons 01 &amp; 04</span>
+    <span class="chip">📊 real NSE &amp; BSE data, 2020 → today</span>
+  </div>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="#start">Start the lesson ↓</a>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="idea">
+  <h2>The whole idea, in one picture</h2>
+  <p>In 1906, at a country fair, a scientist named Francis Galton watched about 800 visitors pay a small fee to guess the weight of a prize ox. Farmers guessed, butchers guessed, and plenty of people who had never touched cattle guessed too. Almost every single guess was wrong — some wildly so.</p>
+  <p>Then Galton averaged all the guesses. The crowd's average landed <strong>within half a kilo</strong> of the true weight — closer than almost every individual, experts included. Individually wobbly, collectively sharp. That is the entire trick behind a random forest: <strong>don't trust one opinion; average many independent ones, and their mistakes cancel out.</strong></p>
+
+  <div class="figure-card">
+    <svg viewBox="0 0 760 320" role="img" aria-label="A strip of scattered dots showing many individual guesses of an ox's weight, most far from the true weight, while the average of all guesses sits almost exactly on the true weight.">
+      <!-- legend -->
+      <g font-family="IBM Plex Mono, monospace" font-size="13">
+        <circle cx="92" cy="40" r="7" fill="#C77C11"/><text x="106" y="45" fill="#182A3A">one visitor's guess</text>
+        <line x1="330" y1="40" x2="356" y2="40" stroke="#182A3A" stroke-width="2.5" stroke-dasharray="6 5"/><text x="364" y="45" fill="#182A3A">true weight</text>
+        <line x1="530" y1="40" x2="556" y2="40" stroke="#0E7C52" stroke-width="4"/><text x="564" y="45" fill="#182A3A">crowd's average</text>
+      </g>
+      <!-- guesses (saffron dots, strip plot) -->
+      <g fill="#C77C11" opacity="0.9">
+        <circle cx="140" cy="205" r="7"/><circle cx="168" cy="150" r="7"/>
+        <circle cx="196" cy="228" r="7"/><circle cx="222" cy="118" r="7"/>
+        <circle cx="238" cy="182" r="7"/><circle cx="262" cy="140" r="7"/>
+        <circle cx="278" cy="222" r="7"/><circle cx="296" cy="102" r="7"/>
+        <circle cx="308" cy="176" r="7"/><circle cx="322" cy="132" r="7"/>
+        <circle cx="334" cy="214" r="7"/><circle cx="345" cy="96" r="7"/>
+        <circle cx="356" cy="156" r="7"/><circle cx="366" cy="238" r="7"/>
+        <circle cx="378" cy="118" r="7"/><circle cx="388" cy="196" r="7"/>
+        <circle cx="399" cy="144" r="7"/><circle cx="412" cy="226" r="7"/>
+        <circle cx="424" cy="108" r="7"/><circle cx="438" cy="184" r="7"/>
+        <circle cx="452" cy="136" r="7"/><circle cx="468" cy="216" r="7"/>
+        <circle cx="486" cy="160" r="7"/><circle cx="506" cy="112" r="7"/>
+        <circle cx="528" cy="198" r="7"/><circle cx="556" cy="146" r="7"/>
+        <circle cx="590" cy="222" r="7"/><circle cx="628" cy="170" r="7"/>
+      </g>
+      <!-- true weight (dark dashed) and crowd average (green) lines -->
+      <line x1="380" y1="70" x2="380" y2="262" stroke="#182A3A" stroke-width="2.5" stroke-dasharray="6 5"/>
+      <line x1="373" y1="70" x2="373" y2="262" stroke="#0E7C52" stroke-width="4"/>
+      <!-- axis -->
+      <line x1="70" y1="262" x2="710" y2="262" stroke="#D9E2EA" stroke-width="2"/>
+      <g font-family="IBM Plex Mono, monospace" font-size="12" fill="#52657A" text-anchor="middle">
+        <text x="140" y="284">480 kg</text>
+        <text x="330" y="284">530 kg</text>
+        <text x="520" y="284">580 kg</text>
+        <text x="700" y="284">630 kg</text>
+      </g>
+      <text x="390" y="310" font-family="IBM Plex Mono, monospace" font-size="13" fill="#52657A" text-anchor="middle">guessed weight of the ox →</text>
+    </svg>
+    <p class="figcap">Most guesses miss. Their average — the green line — sits almost exactly on the truth.</p>
+  </div>
+
+  <p>One caution from the fair: the magic only works if the guesses are <strong>independent</strong>. If everyone just copies the loudest uncle in the crowd, the "average" is really one opinion wearing 800 hats. Remember that — it explains everything about how a random forest is built.</p>
+</section>
+
+<section id="forest">
+  <h2>So what exactly is a random forest?</h2>
+  <p>Same exam as Lessons 01 and 04: look at three numbers about a deal — <strong>quantity, price per share, total value in crore</strong> — and guess whether it was a <strong>BULK</strong> deal or a <strong>BLOCK</strong> deal. Only the model changes.</p>
+  <div class="def-grid">
+    <div class="def def-bulk">
+      <h4>ONE TREE (LESSON 04)</h4>
+      <p>Studies all the training deals and grows question after question until it can recite them. Sharp memory, jumpy judgement — shuffle the training data slightly and the whole tree can rearrange itself.</p>
+    </div>
+    <div class="def def-block">
+      <h4>A RANDOM FOREST</h4>
+      <p>200 trees, each deliberately made a little different. To classify a new deal, every tree gives its verdict and the <strong>majority vote wins</strong> — the village fair, in code.</p>
+    </div>
+  </div>
+  <p>How do you get 200 <em>honestly different</em> opinions out of one training set? The forest plays two tricks:</p>
+  <ul>
+    <li><strong>Different study material.</strong> Each tree trains on its own random re-sample of the training deals — drawn <em>with repeats</em>, so every tree misses roughly a third of the deals and sees some others two or three times.</li>
+    <li><strong>Different blind spots.</strong> At every question, a tree is only allowed to consider a random subset of the clues — it can't always reach for its favourite.</li>
+  </ul>
+  <p>Two hundred trees, each with slightly different schooling and slightly different blind spots, make <strong>different mistakes</strong>. Different mistakes cancel in a vote. Copied mistakes don't — which is exactly why the randomness is not a bug, it's the whole point.</p>
+</section>
+
+<section id="start">
+  <h2>Before you start: open Google Colab</h2>
+  <p>You know the drill from Lesson 01 — but here it is again in three lines:</p>
+  <ol>
+    <li>Go to <a href="https://colab.research.google.com">colab.research.google.com</a> and sign in with any Google account.</li>
+    <li>Click <strong>+ New notebook</strong>.</li>
+    <li>Paste each code block below into its own <em>cell</em> (the <strong>Copy</strong> button does it in one click), press <strong>▶</strong> (or <strong>Shift + Enter</strong>) to run, then <strong>+ Code</strong> for the next cell. Check your output against the <strong>"what you should see"</strong> slip under each block.</li>
+  </ol>
+  <div class="callout callout-green">
+    <p><strong>Two things worth knowing before you start:</strong></p>
+    <ul style="margin:8px 0 4px 22px">
+      <li>The first cell takes a few extra seconds while Colab connects to a computer in the cloud. Not broken, just warming up.</li>
+      <li>Cells build on earlier cells, so <strong>run them in order</strong>. If you ever see an error like <em>NameError: name 'deals' is not defined</em>, or Colab says the runtime disconnected, just click <strong>Runtime → Run all</strong> in the menu — everything comes back in under a minute.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= STEP 1 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 1 OF 8</span>
+  <h3>Load the toolbox</h3>
+  <p>Two new instruments this time: the single <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">DecisionTreeClassifier</code> from <a href="../decision-trees/">Lesson 04</a> (today's rival) and the <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">RandomForestClassifier</code> (today's star).</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 1 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 1: Load our toolbox
+import pandas as pd                                      # works with tables of data (like Excel)
+from sklearn.model_selection import train_test_split     # splits data into train / test
+from sklearn.tree import DecisionTreeClassifier          # ONE tree (last lesson's model)
+from sklearn.ensemble import RandomForestClassifier      # hundreds of trees voting together
+from sklearn.metrics import (accuracy_score, classification_report,
+                             ConfusionMatrixDisplay)     # report cards for the model
+import matplotlib.pyplot as plt                          # draws charts
+
+print("Toolbox ready!")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Toolbox ready!</pre>
+  </div>
+</div>
+
+<!-- ================= STEP 2 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 2 OF 8</span>
+  <h3>Load the dataset</h3>
+  <p>The same 1,19,156 real deals as every lesson, straight from GitHub — no file uploads needed.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 2 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 2: Load the dataset (real bulk &amp; block deals, 2020 to today)
+url = "https://raw.githubusercontent.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models/main/data/india_bulk_block_deals.csv"
+deals = pd.read_csv(url)
+
+print("Number of deals:", len(deals))
+deals.head()   # shows the first 5 rows</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Number of deals: 119156</pre>
+    <p class="note">…followed by a table showing the first 5 deals. The columns that matter today: <strong>deal_type</strong> (BULK or BLOCK — the answer we predict), <strong>quantity</strong>, <strong>price_inr</strong> and <strong>trade_value_crore</strong> (the three clues).</p>
+  </div>
+</div>
+
+<!-- ================= STEP 3 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 3 OF 8</span>
+  <h3>Prep the data — the Lesson 01 drill, in one cell</h3>
+  <p>Identical preparation to Lesson 01, so every score today is directly comparable: keep all 8,938 BLOCK deals plus an equal random sample of BULK deals (so a coin flip scores 50%), choose the three clues and the answer, then lock away 25% as the final exam.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 3 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 3: Prep the data — same drill as Lesson 01, condensed into one cell
+# (a) Balance: keep all BLOCK deals + an equal random sample of BULK deals
+block_deals = deals[deals["deal_type"] == "BLOCK"]
+bulk_deals  = deals[deals["deal_type"] == "BULK"].sample(n=len(block_deals), random_state=42)
+data = pd.concat([block_deals, bulk_deals])
+
+# (b) Clues (X) and answer (y)
+features = ["quantity", "price_inr", "trade_value_crore"]
+X = data[features]
+y = data["deal_type"]
+
+# (c) Split: 75% for learning, 25% hidden away for the exam
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    train_size=0.75,
+    random_state=42,
+    stratify=y,
+)
+
+print("Balanced deals:", len(data), "(half BULK, half BLOCK)")
+print("Deals for training:", len(X_train))
+print("Deals for testing: ", len(X_test))</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Balanced deals: 17876 (half BULK, half BLOCK)
+Deals for training: 13407
+Deals for testing:  4469</pre>
+  </div>
+  <div class="callout callout-green">
+    <p><strong>Where did the scaling step go?</strong> Lesson 01's KNN measured <em>distances</em>, so giant quantity numbers bullied the small ones and we needed <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">StandardScaler</code>. Trees don't measure distance — they ask yes/no threshold questions like <em>"is the share price above ₹319.30?"</em> — in fact, that is the exact first question the full-depth tree you'll grow in Step 4 asks on this data. Rescale a column and the tree simply moves its threshold. So trees and forests <strong>don't need scaling at all</strong>. One prep chore, gone.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 4 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 4 OF 8</span>
+  <h3>The rival to beat: one lone tree</h3>
+  <p>First, today's baseline — a single decision tree exactly like <a href="../decision-trees/">Lesson 04</a>'s, left to grow to full depth with no restrictions. Full depth means it keeps asking questions until it can recite the training deals perfectly.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 4 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 4: The rival to beat — ONE decision tree, grown to full depth
+one_tree = DecisionTreeClassifier(random_state=42)
+one_tree.fit(X_train, y_train)
+
+tree_accuracy = accuracy_score(y_test, one_tree.predict(X_test))
+print(f"One tree, full depth: {tree_accuracy:.1%}")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>One tree, full depth: 83.0%</pre>
+    <p class="note">Credit where due: one tree already beats Lesson 01's KNN (79.8%). Trees suit this data. But a fully-grown tree is a <strong>memoriser with jumpy judgement</strong> — retrain it on a slightly different sample and its answers can swing. Let's see what a crowd of them does.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 5 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 5 OF 8</span>
+  <h3>Grow the forest</h3>
+  <p><code style="font-family:'IBM Plex Mono',monospace;font-size:15px">n_estimators=200</code> means 200 trees, each trained on its own random re-sample of the 13,407 training deals with its own random blind spots. This cell takes a few seconds — you are literally growing two hundred trees.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 5 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 5: Grow a forest — 200 slightly-different trees, all voting
+forest = RandomForestClassifier(n_estimators=200, random_state=42)
+forest.fit(X_train, y_train)
+
+forest_predictions = forest.predict(X_test)
+forest_accuracy = accuracy_score(y_test, forest_predictions)
+
+print(f"One tree alone:      {tree_accuracy:.1%}")
+print(f"Forest of 200 trees: {forest_accuracy:.1%}")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>One tree alone:      83.0%
+Forest of 200 trees: 83.8%</pre>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Model</th><th>Test accuracy</th><th>Verdict</th></tr>
+      <tr><td>Coin flip</td><td>~50%</td><td>Learned nothing</td></tr>
+      <tr><td>KNN, K=5, scaled (Lesson 01)</td><td>79.8%</td><td>Solid first model</td></tr>
+      <tr><td>One decision tree (<a href="../decision-trees/">Lesson 04</a>)</td><td>83.0%</td><td>Strong — trees suit this data</td></tr>
+      <tr><td><strong>Random forest, 200 trees</strong></td><td><strong>83.8%</strong></td><td><strong>Best score so far</strong></td></tr>
+    </table>
+  </div>
+  <div class="callout callout-green">
+    <p><strong>Is 0.8 points worth the fuss?</strong> That's 3,745 of the 4,469 test deals right instead of the tree's 3,710 — <strong>35 extra correct answers</strong>, for free, with no extra data and no tuning. And you get something the numbers don't show: a forest's verdicts are far more <em>stable</em> than one memoriser tree's, because no single quirky tree can drag the vote.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 6 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 6 OF 8</span>
+  <h3>How many voters do you actually need?</h3>
+  <p><code style="font-family:'IBM Plex Mono',monospace;font-size:15px">n_estimators</code> is today's dial, like K was in Lesson 01. Let's grow forests of 1, 5, 20, 50, 100 and 200 trees and watch the score.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 6 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 6: How many trees are enough?
+tree_counts = [1, 5, 20, 50, 100, 200]
+scores = []
+
+for n in tree_counts:
+    model = RandomForestClassifier(n_estimators=n, random_state=42)
+    model.fit(X_train, y_train)
+    score = accuracy_score(y_test, model.predict(X_test))
+    scores.append(score)
+    print(f"{n:&gt;3} trees  →  accuracy {score:.1%}")
+
+plt.plot(tree_counts, scores, marker="o")
+plt.xlabel("Number of trees in the forest")
+plt.ylabel("Accuracy on the test set")
+plt.title("More voters help — up to a point")
+plt.grid(True, alpha=0.3)
+plt.show()</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>  1 trees  →  accuracy 79.4%
+  5 trees  →  accuracy 82.6%
+ 20 trees  →  accuracy 83.5%
+ 50 trees  →  accuracy 83.5%
+100 trees  →  accuracy 83.8%
+200 trees  →  accuracy 83.8%</pre>
+    <p class="note">…plus a line chart of the same numbers: a steep climb, then a flat shelf. <strong>Puzzled that "1 tree" scores 79.4% when Step 4's lone tree scored 83.0%?</strong> A forest tree never sees the full training set — it studies its own random re-sample. Alone, that handicap hurts. In a crowd, it's exactly what makes the voters different.</p>
+  </div>
+  <div class="callout">
+    <p><strong>The pattern to remember:</strong> going from 1 to 20 voters buys about four percentage points; going from 100 to 200 buys nothing you can see. Once the crowd is big enough, its average has settled — extra voters just repeat the consensus. More trees never really <em>hurt</em> accuracy; they just cost more compute for nothing.</p>
+    <p><strong>One honest confession:</strong> to keep this lesson short, we compared tree counts using the test set. In a real project that's cheating — you'd pick <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">n_estimators</code> using a separate slice of the <em>training</em> data (called a <em>validation set</em>), and touch the test set exactly once, at the very end.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 7 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 7 OF 8</span>
+  <h3>The headline act: which clue does the forest trust most?</h3>
+  <p>Here is the forest's best party trick. Every time any question in any of the 200 trees cleanly separates BULK from BLOCK, the clue it asked about earns credit. Add up the credit across all 200 trees, scale it to total 100%, and you get <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">feature_importances_</code> — the model telling you <strong>which clues it actually leaned on</strong>.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 7 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 7: Which clue does the forest lean on most?
+importances = pd.Series(forest.feature_importances_, index=features).sort_values()
+
+for clue, weight in importances.items():
+    print(f"{clue:&lt;18} {weight:.1%}")
+
+importances.plot.barh(color="#0E7C52")
+plt.xlabel("Share of the forest's decisions")
+plt.title("Which clue matters most?")
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>quantity           22.6%
+trade_value_crore  36.7%
+price_inr          40.7%</pre>
+    <p class="note">…plus a horizontal bar chart of the same three numbers (they sum to 100%).</p>
+  </div>
+  <p>Two things worth staring at:</p>
+  <ul>
+    <li><strong>Price per share is the forest's favourite single clue</strong> (40.7%) — block deals in this data tend to happen in higher-priced shares, and the forest noticed on its own.</li>
+    <li><strong>No clue dominates.</strong> Remember Lesson 01's homework? Dropping <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">trade_value_crore</code> barely hurt the score, because value = quantity × price — the clues <em>overlap</em>. This chart is the same fact from the other side: when clues carry overlapping information, the forest spreads its trust across them (40.7 / 36.7 / 22.6) instead of piling onto one.</li>
+  </ul>
+  <div class="callout">
+    <p><strong>Read it right:</strong> importance says which clue was <em>useful to this forest</em>, not what <em>causes</em> a block deal. It's a window into the model's mind, not a law of the market.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 8 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 8 OF 8</span>
+  <h3>Judge the forest properly</h3>
+  <p>Accuracy is one number. Same two tools as Lesson 01 to see <strong>where</strong> the forest is right and wrong.</p>
+
+  <h3 style="font-size:18px;margin-top:22px">8a · The confusion matrix</h3>
+  <p>Rows are the <strong>truth</strong>, columns are the forest's <strong>guess</strong>. Big numbers on the diagonal = good.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 8 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 8a: The confusion matrix — where is it right, where does it slip?
+ConfusionMatrixDisplay.from_predictions(y_test, forest_predictions, cmap="Greens")
+plt.show()</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>                 model said      model said
+                   BLOCK            BULK
+truly BLOCK        1989  ✓           246
+truly BULK          478             1756  ✓</pre>
+    <p class="note">Colab draws this as a green-shaded chart. Of 2,235 real BLOCK deals, the forest caught 1,989 and missed 246. Of 2,234 real BULK deals, it caught 1,756 and mislabelled 478. Compare Lesson 01's KNN (1882 / 353 / 551 / 1683): the forest is <strong>better in all four cells</strong>.</p>
+  </div>
+
+  <h3 style="font-size:18px;margin-top:26px">8b · The full report card</h3>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 9 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 8b: The full report card
+print(classification_report(y_test, forest_predictions))</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>              precision    recall  f1-score   support
+
+       BLOCK       0.81      0.89      0.85      2235
+        BULK       0.88      0.79      0.83      2234
+
+    accuracy                           0.84      4469
+   macro avg       0.84      0.84      0.84      4469
+weighted avg       0.84      0.84      0.84      4469</pre>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Term</th><th>Plain-language meaning</th></tr>
+      <tr><td><strong>Precision</strong></td><td>When the forest <em>says</em> BLOCK, how often is it actually BLOCK? (How trustworthy are its claims?)</td></tr>
+      <tr><td><strong>Recall</strong></td><td>Of all the <em>real</em> BLOCK deals, how many did the forest catch? (How much does it miss?)</td></tr>
+      <tr><td><strong>F1-score</strong></td><td>One number balancing precision and recall.</td></tr>
+      <tr><td><strong>Support</strong></td><td>How many test deals of that type existed.</td></tr>
+    </table>
+  </div>
+  <p>Notice the trade-off in the report: the forest catches 89% of real BLOCK deals (high recall) but only 79% of real BULK deals — it leans slightly towards shouting "BLOCK". Whether that's good depends on which mistake costs you more.</p>
+</div>
+
+<section id="judging">
+  <h2>How to judge any model — the cheat sheet</h2>
+  <p>The same four questions as always, with today's answers filled in:</p>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Question</th><th>Tool</th><th>What to look for</th></tr>
+      <tr><td><strong>1. Better than dumb luck?</strong></td><td>Compare with a baseline</td><td>83.8% vs a 50% coin flip — and vs the stronger baselines it had to beat: KNN's 79.8% and the single tree's 83.0%.</td></tr>
+      <tr><td><strong>2. Where does it fail?</strong></td><td>Confusion matrix</td><td>Big numbers on the diagonal (1,989 and 1,756 here). Check <em>which</em> mistake it makes more — ours mislabels BULK as BLOCK more often than the reverse.</td></tr>
+      <tr><td><strong>3. Can I trust a "yes"? Does it miss?</strong></td><td>Precision &amp; recall</td><td>Precision = trustworthiness of its claims. Recall = how much it misses. Pick the one your problem cares about.</td></tr>
+      <tr><td><strong>4. Was the exam fair?</strong></td><td>Train/test split</td><td>Score measured on 4,469 deals the forest never saw. Same locked-away 25% as every lesson.</td></tr>
+    </table>
+  </div>
+  <p>Rough accuracy guide for a balanced 50/50 problem like ours: <strong>~50%</strong> = learned nothing · <strong>60–75%</strong> = learned something · <strong>75–90%</strong> = solid · <strong>95%+</strong> = be suspicious — usually the answer leaked into the clues.</p>
+</section>
+
+<section id="recap">
+  <h2>The recipe you just learned</h2>
+  <ol>
+    <li><strong>Load</strong> the data and <strong>prep</strong> it the standard way — balance, choose X and y, split 75/25 (Steps 2–3)</li>
+    <li><strong>Skip scaling</strong> — trees ask threshold questions, so units don't matter (Step 3)</li>
+    <li><strong>Train the rival first</strong> — one tree, 83.0% (Step 4)</li>
+    <li><strong>Grow the forest</strong> — 200 diverse trees voting, 83.8% (Step 5)</li>
+    <li><strong>Turn the dial honestly</strong> — accuracy climbs, then flattens; more voters stop helping (Step 6)</li>
+    <li><strong>Read the model's mind</strong> — <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">feature_importances_</code> shows which clues it leaned on (Step 7)</li>
+    <li><strong>Judge properly</strong> — baseline, confusion matrix, precision &amp; recall (Step 8)</li>
+  </ol>
+  <p>The deeper idea travels far beyond forests: <strong>many diverse, independent opinions beat one clever opinion</strong> — in models, in markets, and at village fairs. Ensembles like this win real-world ML competitions constantly, and a random forest is the first one every practitioner learns.</p>
+
+  <h3>Homework (optional, fun)</h3>
+  <ul>
+    <li><strong>Turn the dial to 1000:</strong> in Step 5, change <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">n_estimators=200</code> to <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">n_estimators=1000</code> and re-run the cell. The cell takes roughly <strong>five times longer</strong>… and the score stays exactly <strong>83.8%</strong>. (At the fourth decimal place it actually dips by one deal.) That's the flat shelf from Step 6 in action: past a point, extra voters cost electricity and add nothing. Knowing when to <em>stop</em> adding compute is a real skill.</li>
+    <li><strong>Watch the vote itself:</strong> the forest can show you its ballot box. Add a cell with:<br><code style="font-family:'IBM Plex Mono',monospace;font-size:15px">my_deal = pd.DataFrame({"quantity": [2_000_000], "price_inr": [950.0], "trade_value_crore": [190.0]})</code><br><code style="font-family:'IBM Plex Mono',monospace;font-size:15px">print(forest.predict(my_deal))</code><br><code style="font-family:'IBM Plex Mono',monospace;font-size:15px">print(forest.predict_proba(my_deal))</code><br>You'll see <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">['BLOCK']</code> and <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">[[0.83 0.17]]</code> — meaning <strong>83% of the 200 trees voted BLOCK</strong> and 17% voted BULK. Not just a verdict, but how split the jury was. Try shrinking the deal until the vote flips.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <span>Data: NSE &amp; BSE bulk &amp; block deals, 2020 → today · 1,19,156 rows</span>
+    <span><a href="../">← All lessons</a> · <a href="https://github.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models">Source on GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.codecard').forEach(function (card) {
+  var btn = card.querySelector('.copy');
+  btn.addEventListener('click', function () {
+    var text = card.querySelector('code').innerText;
+    function done() {
+      btn.textContent = 'Copied ✓'; btn.classList.add('done');
+      setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(); done(); });
+    } else { fallback(); done(); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+    }
+  });
+});
+</script>
+</body>
+</html>

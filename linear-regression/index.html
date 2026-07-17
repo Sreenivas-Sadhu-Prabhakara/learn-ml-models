@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linear Regression, step by step — Learn ML Models</title>
+<meta name="description" content="Predict a deal's value in ₹ crore with Linear Regression in Google Colab — plus Ridge and Lasso, feature engineering, and how to judge a number-guessing model. Plain language, copyable code.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F5F7; --card:#FFFFFF; --ink:#182A3A; --muted:#52657A;
+  --terminal:#0E1B26; --terminal-ink:#D9E6F2; --comment:#7E97AB;
+  --green:#0E7C52; --green-soft:#E3F1EA; --saffron:#C77C11; --saffron-text:#9A5F0A; --saffron-soft:#F8EEDD;
+  --rule:#D9E2EA; --receipt:#FBFDFE;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:17px; line-height:1.65;
+}
+a{color:var(--green)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+
+.topbar{
+  border-bottom:1px solid var(--rule); background:var(--card);
+  position:sticky; top:0; z-index:10;
+}
+.topbar-inner{
+  max-width:840px;margin:0 auto;padding:14px 20px;
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+}
+.wordmark{
+  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;
+  letter-spacing:.14em;text-decoration:none;color:var(--ink);
+}
+.wordmark span{color:var(--green)}
+.lesson-tag{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
+
+.wrap{max-width:840px;margin:0 auto;padding:0 20px}
+
+/* ---------- hero ---------- */
+.hero{padding:56px 0 40px}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;
+  letter-spacing:.16em;color:var(--saffron-text);text-transform:uppercase;
+}
+h1{
+  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+  font-size:clamp(34px,6vw,52px);line-height:1.12;margin:10px 0 16px;
+  letter-spacing:-.01em;
+}
+.lede{font-size:19px;color:var(--muted);max-width:60ch}
+.lede strong{color:var(--ink)}
+.meta-chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 26px}
+.chip{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;
+  background:var(--card);border:1px solid var(--rule);border-radius:999px;
+  padding:6px 14px;color:var(--muted);
+}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px}
+.btn{
+  display:inline-block;text-decoration:none;font-weight:600;font-size:16px;
+  padding:12px 22px;border-radius:8px;transition:transform .12s ease;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--green);color:#fff}
+.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--rule)}
+
+/* ---------- sections ---------- */
+section{padding:36px 0}
+h2{
+  font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;
+  font-size:clamp(24px,4vw,32px);line-height:1.2;margin-bottom:14px;
+}
+h3{font-size:19px;font-weight:600;margin:26px 0 8px}
+p{margin:12px 0;max-width:68ch}
+ul,ol{margin:12px 0 12px 24px;max-width:66ch}
+li{margin:6px 0}
+.divider{border:none;border-top:1px solid var(--rule);margin:12px 0}
+
+/* ---------- idea figure ---------- */
+.figure-card{
+  background:var(--card);border:1px solid var(--rule);border-radius:12px;
+  padding:26px 22px 18px;margin:20px 0;
+}
+.figure-card svg{width:100%;height:auto;display:block}
+.figcap{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted);
+  text-align:center;margin-top:12px;
+}
+
+/* ---------- definition cards ---------- */
+.def-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+@media (max-width:640px){.def-grid{grid-template-columns:1fr}}
+.def{border-radius:12px;padding:18px 20px;border:1px solid var(--rule)}
+.def h4{font-family:"IBM Plex Mono",monospace;font-size:14px;letter-spacing:.12em;margin-bottom:8px}
+.def p{font-size:15.5px;margin:0}
+.def-bulk{background:var(--saffron-soft)} .def-bulk h4{color:var(--saffron)}
+.def-block{background:var(--green-soft)} .def-block h4{color:var(--green)}
+
+/* ---------- steps ---------- */
+.step{
+  background:var(--card);border:1px solid var(--rule);border-radius:14px;
+  padding:28px 26px;margin:26px 0;
+}
+@media (max-width:640px){.step{padding:22px 16px}}
+.step-chip{
+  display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:600;
+  font-size:12.5px;letter-spacing:.14em;color:#fff;background:var(--ink);
+  border-radius:6px;padding:4px 10px;margin-bottom:10px;
+}
+.step h3{font-family:"IBM Plex Serif",Georgia,serif;font-size:23px;font-weight:600;margin:0 0 8px}
+.step p{font-size:16.5px}
+
+/* ---------- code cards ---------- */
+.codecard{
+  background:var(--terminal);border-radius:10px;margin:18px 0 0;
+  position:relative;overflow:hidden;
+}
+.codecard-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 14px;border-bottom:1px solid rgba(217,230,242,.12);
+}
+.codecard-title{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;
+  color:var(--comment);
+}
+.copy{
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;
+  color:var(--terminal-ink);background:rgba(217,230,242,.1);
+  border:1px solid rgba(217,230,242,.25);border-radius:6px;
+  padding:5px 12px;cursor:pointer;transition:background .12s ease;
+}
+.copy:hover{background:rgba(217,230,242,.22)}
+.copy.done{color:#8CE0B0;border-color:#8CE0B0}
+.codecard pre{
+  padding:16px 18px;overflow-x:auto;
+}
+.codecard code{
+  font-family:"IBM Plex Mono",monospace;font-size:14px;line-height:1.6;
+  color:var(--terminal-ink);white-space:pre;
+}
+
+/* ---------- receipts (expected output) ---------- */
+.receipt{
+  background:var(--receipt);border:1.5px dashed var(--rule);border-top:none;
+  border-radius:0 0 10px 10px;padding:14px 18px 16px;margin-bottom:6px;
+}
+.receipt-label{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;
+  letter-spacing:.16em;color:var(--green);margin-bottom:8px;
+}
+.receipt pre{
+  font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:1.55;
+  color:var(--ink);overflow-x:auto;white-space:pre;
+}
+.receipt .note{font-size:14px;color:var(--muted);margin:8px 0 0}
+
+/* ---------- tables ---------- */
+.tablewrap{overflow-x:auto;margin:16px 0}
+table{border-collapse:collapse;font-size:15px;min-width:420px}
+th,td{border:1px solid var(--rule);padding:9px 14px;text-align:left;background:var(--card)}
+th{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.06em;background:var(--paper)}
+td strong{font-weight:600}
+
+/* ---------- callouts ---------- */
+.callout{
+  border-left:4px solid var(--saffron);background:var(--saffron-soft);
+  border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0;font-size:16px;
+}
+.callout-green{border-left-color:var(--green);background:var(--green-soft)}
+.callout p{margin:6px 0;font-size:16px}
+
+footer{
+  border-top:1px solid var(--rule);margin-top:40px;padding:28px 0 48px;
+  color:var(--muted);font-size:14.5px;
+}
+footer a{color:var(--muted)}
+.foot-inner{max-width:840px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-inner">
+    <a class="wordmark" href="../">LEARN<span>·</span>ML<span>·</span>MODELS</a>
+    <span class="lesson-tag">LESSON 02 / REGRESSION</span>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <p class="eyebrow">Lesson 02 · Regression</p>
+  <h1>Predict a number, not a category</h1>
+  <p class="lede">Lesson 01 taught a computer to pick a bucket: BULK or BLOCK. Today you'll teach it to guess an actual <strong>amount of money</strong> — a deal's value in ₹ crore — with <strong>Linear Regression</strong>, the oldest and most-used model in all of machine learning. Same free Colab, same real dataset of 1,19,156 Indian stock market deals.</p>
+  <div class="meta-chips">
+    <span class="chip">⏱ about 35 minutes</span>
+    <span class="chip">🧠 Lesson 01 helps, but isn't required</span>
+    <span class="chip">📊 real NSE &amp; BSE data, 2020 → today</span>
+  </div>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="#start">Start the lesson ↓</a>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="idea">
+  <h2>The whole idea, in one picture</h2>
+  <p>Machine learning questions come in two flavours. Lesson 01's question was <em>“which bucket does this deal belong to?”</em> Today's question is <em>“how much?”</em> — not “is this parcel heavy or light?” but “what does it weigh?”.</p>
+  <div class="def-grid">
+    <div class="def def-bulk">
+      <h4>CLASSIFICATION (Lesson 01)</h4>
+      <p>The answer is a <strong>category</strong>: BULK or BLOCK, spam or not spam, cat or dog. You judge it with accuracy — how often was it right?</p>
+    </div>
+    <div class="def def-block">
+      <h4>REGRESSION (today)</h4>
+      <p>The answer is a <strong>number</strong>: ₹ crore, kilograms, marks, tomorrow's temperature. “Right” and “wrong” become “close” and “far off”.</p>
+    </div>
+  </div>
+  <p>Linear regression's entire trick: <strong>draw the best straight line through the examples you've seen, then read new answers off the line.</strong> Like a tailor who has measured hundreds of customers and can glance at your height and estimate your kurta length — no tape needed.</p>
+
+  <div class="figure-card">
+    <svg viewBox="0 0 760 340" role="img" aria-label="Scatter plot of deals with a straight line fitted through them; for a new deal's quantity, the predicted value is read off the line.">
+      <!-- axes -->
+      <line x1="70" y1="290" x2="710" y2="290" stroke="#D9E2EA" stroke-width="2"/>
+      <line x1="70" y1="290" x2="70" y2="30" stroke="#D9E2EA" stroke-width="2"/>
+      <text x="390" y="322" font-family="IBM Plex Mono, monospace" font-size="13" fill="#52657A" text-anchor="middle">quantity (shares traded) →</text>
+      <text x="38" y="160" font-family="IBM Plex Mono, monospace" font-size="13" fill="#52657A" text-anchor="middle" transform="rotate(-90 38 160)">deal value (₹ crore) →</text>
+      <!-- fitted line from (90,268) to (700,60) -->
+      <line x1="90" y1="268" x2="700" y2="60" stroke="#0E7C52" stroke-width="3"/>
+      <!-- scattered deals around the line -->
+      <g fill="#52657A" opacity="0.75">
+        <circle cx="120" cy="248" r="7"/><circle cx="155" cy="266" r="7"/>
+        <circle cx="185" cy="228" r="7"/><circle cx="225" cy="252" r="7"/>
+        <circle cx="255" cy="200" r="7"/><circle cx="290" cy="230" r="7"/>
+        <circle cx="330" cy="182" r="7"/><circle cx="362" cy="210" r="7"/>
+        <circle cx="395" cy="160" r="7"/><circle cx="430" cy="188" r="7"/>
+        <circle cx="465" cy="132" r="7"/><circle cx="500" cy="162" r="7"/>
+        <circle cx="535" cy="110" r="7"/><circle cx="572" cy="140" r="7"/>
+        <circle cx="608" cy="88" r="7"/><circle cx="645" cy="118" r="7"/>
+        <circle cx="678" cy="78" r="7"/>
+      </g>
+      <!-- new deal: dashed guides -->
+      <line x1="547" y1="290" x2="547" y2="112" stroke="#C77C11" stroke-width="2" stroke-dasharray="6 5"/>
+      <line x1="547" y1="112" x2="70" y2="112" stroke="#C77C11" stroke-width="2" stroke-dasharray="6 5"/>
+      <circle cx="547" cy="112" r="9" fill="#C77C11"/>
+      <circle cx="547" cy="290" r="6" fill="#182A3A"/>
+      <text x="560" y="310" font-family="IBM Plex Mono, monospace" font-size="13" fill="#182A3A">new deal's quantity</text>
+      <text x="82" y="104" font-family="IBM Plex Mono, monospace" font-size="13" fill="#9A5F0A">predicted value</text>
+    </svg>
+    <p class="figcap">Fit the line once. For any new deal, go up from its quantity, hit the line, read across.</p>
+  </div>
+</section>
+
+<section id="mission">
+  <h2>How do you judge a number-guessing machine?</h2>
+  <p>Accuracy makes no sense here — a guess of ₹99.9 crore for a ₹100 crore deal is “wrong”, but brilliantly wrong. Regression uses two report cards, and you'll compute both for every model today:</p>
+  <div class="def-grid">
+    <div class="def def-bulk">
+      <h4>MAE — MEAN ABSOLUTE ERROR</h4>
+      <p><strong>“On average, how many crore off?”</strong> Take each guess, measure how far it landed from the truth, average those misses. Smaller is better, and it's in real units — ₹ crore — so your gut can judge it.</p>
+    </div>
+    <div class="def def-block">
+      <h4>R² — “R-SQUARED”</h4>
+      <p><strong>“What share of the variation does the model explain?”</strong> 0 means it knows nothing beyond the average; 1 means it explains everything. It can even go below 0 — worse than just guessing the average every time.</p>
+    </div>
+  </div>
+  <div class="callout callout-green">
+    <p><strong>The golden habit of this lesson:</strong> before judging any model, first measure the <em>dumbest possible strategy</em> — always predict the average. Every model must beat that, or it has learned nothing. We'll compute this baseline explicitly in Step 5 and compare everything against it.</p>
+  </div>
+</section>
+
+<section id="start">
+  <h2>Before you start: open Google Colab</h2>
+  <p>You know the drill from Lesson 01 — Colab is a free Google website that runs Python in your browser, nothing to install.</p>
+  <ol>
+    <li>Go to <a href="https://colab.research.google.com">colab.research.google.com</a> and sign in with any Google account.</li>
+    <li>Click <strong>+ New notebook</strong> (start fresh — don't reuse the Lesson 01 notebook).</li>
+    <li>Paste each code block below into its own cell, press <strong>▶</strong> (or <strong>Shift + Enter</strong>), and check your output against the <strong>“what you should see”</strong> slip.</li>
+  </ol>
+  <div class="callout callout-green">
+    <p><strong>Two things worth knowing before you start:</strong></p>
+    <ul style="margin:8px 0 4px 22px">
+      <li>The first cell takes a few extra seconds while Colab connects to a computer in the cloud. Not broken, just warming up.</li>
+      <li>Cells build on earlier cells, so <strong>run them in order</strong>. If you ever see an error like <em>NameError: name 'deals' is not defined</em>, or Colab says the runtime disconnected, just click <strong>Runtime → Run all</strong> in the menu — everything comes back in under a minute.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= STEP 1 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 1 OF 12</span>
+  <h3>Load the toolbox</h3>
+  <p>Mostly the same instruments as Lesson 01, with three newcomers: <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">LinearRegression</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">Ridge</code> and <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">Lasso</code> — plus the two regression report cards instead of accuracy.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 1 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 1: Load our toolbox
+import pandas as pd                                      # works with tables of data (like Excel)
+import numpy as np                                       # number crunching
+from sklearn.model_selection import train_test_split     # splits data into train / test
+from sklearn.preprocessing import StandardScaler         # puts all numbers on the same scale
+from sklearn.linear_model import LinearRegression, Ridge, Lasso   # today's three models
+from sklearn.metrics import mean_absolute_error, r2_score         # report cards for regression
+import matplotlib.pyplot as plt                          # draws charts
+
+print("Toolbox ready!")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Toolbox ready!</pre>
+  </div>
+</div>
+
+<!-- ================= STEP 2 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 2 OF 12</span>
+  <h3>Load the dataset</h3>
+  <p>Same table as Lesson 01: every unusually large share deal published by the Indian exchanges since 2020. One line downloads it from GitHub into a table called <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">deals</code>.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 2 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 2: Load the dataset (the same real deals as Lesson 01)
+url = "https://raw.githubusercontent.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models/main/data/india_bulk_block_deals.csv"
+deals = pd.read_csv(url)
+
+print("Number of deals:", len(deals))
+deals.head()   # shows the first 5 rows</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Number of deals: 119156</pre>
+    <p class="note">…followed by a table showing the first 5 deals. The column we care about today is <strong>trade_value_crore</strong> — the deal's total value in ₹ crore. That's the number our model must learn to guess, from <strong>quantity</strong> (shares traded) and <strong>price_inr</strong> (price per share).</p>
+  </div>
+</div>
+
+<!-- ================= STEP 3 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 3 OF 12</span>
+  <h3>Meet the number we're trying to predict</h3>
+  <p>Rule #1, same as always: <strong>look at your data before modelling it.</strong> <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">describe()</code> gives a quick profile of the target column.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 3 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 3: Meet the number we're trying to predict
+print(deals["trade_value_crore"].describe().round(2))</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>count    119156.00
+mean         31.52
+std         181.32
+min           0.00
+25%           0.87
+50%           4.85
+75%          19.62
+max       12879.97
+Name: trade_value_crore, dtype: float64</pre>
+    <p class="note">Reading it: half of all deals are under ₹4.85 crore (the 50% line), three-quarters are under ₹19.62 crore — yet the <em>average</em> is ₹31.52 crore, and the biggest deal is a monster ₹12,880 crore.</p>
+  </div>
+  <div class="callout">
+    <p><strong>Average ≠ typical.</strong> When one billionaire walks into a canteen, the average salary in the room jumps to crores while everyone's actual pay stays the same. A few giant deals do exactly that to this column. Data like this is called <strong>skewed</strong>, and it will quietly shape every score you see today — keep it in mind.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 4 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 4 OF 12</span>
+  <h3>Split the data: 75% training, 25% testing</h3>
+  <p>The honesty rule from Lesson 01 applies to regression unchanged: the model studies the <strong>training 75%</strong> and sits its final exam on the <strong>test 25%</strong> it has never seen.</p>
+  <p>Two things from Lesson 01 are <em>missing</em> here, deliberately: no balancing (that was a classification fix — every deal has a value, so there's nothing to balance) and no <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">stratify</code> (that keeps a category mix even — a number has no categories).</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 4 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 4: Split — 75% for learning, 25% locked away for the exam
+train_df, test_df = train_test_split(deals, train_size=0.75, random_state=42)
+
+y_train = train_df["trade_value_crore"]   # answers the model may study
+y_test  = test_df["trade_value_crore"]    # answers we keep hidden
+
+print("Deals for training:", len(train_df))
+print("Deals for testing: ", len(test_df))</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Deals for training: 89367
+Deals for testing:  29789</pre>
+    <p class="note"><code style="font-family:'IBM Plex Mono',monospace;font-size:14px">random_state=42</code> again means “random, but the same random for everyone” — your numbers will match these receipts exactly.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 5 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 5 OF 12</span>
+  <h3>The dumbest possible model: always predict the average</h3>
+  <p>Before any real model, we measure the strategy that requires zero intelligence: <strong>whatever the deal, guess the average</strong>. This is the score every model must beat.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 5 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 5: The dumbest possible model — always predict the average
+average_value = y_train.mean()
+print(f"The average training deal: ₹{average_value:.2f} crore")
+
+always_average = [average_value] * len(y_test)
+
+print(f"Baseline MAE: {mean_absolute_error(y_test, always_average):.2f} crore")
+print(f"Baseline R²:  {r2_score(y_test, always_average):.3f}")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>The average training deal: ₹31.29 crore
+Baseline MAE: 42.17 crore
+Baseline R²:  -0.000</pre>
+    <p class="note">Two curiosities, both healthy: the average miss (₹42.17 crore) is <em>bigger than the average deal itself</em> — that's the monster deals from Step 3 blowing up the misses. And R² shows −0.000 instead of a clean 0.000 only because the training average is a hair different from the test average. By definition, always-guessing-the-average explains <strong>nothing</strong>.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 6 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 6 OF 12</span>
+  <h3>Practical example 1: one clue — quantity alone</h3>
+  <p>Now the real thing. We give linear regression exactly one clue — <strong>how many shares changed hands</strong> — and let it find the best straight line from quantity to value. Training actually <em>computes</em> the line (unlike KNN, which just memorised).</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 6 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 6: One clue — can quantity alone predict a deal's value?
+model_one_clue = LinearRegression()
+model_one_clue.fit(train_df[["quantity"]], y_train)
+
+predictions = model_one_clue.predict(test_df[["quantity"]])
+print(f"MAE: {mean_absolute_error(y_test, predictions):.2f} crore")
+print(f"R²:  {r2_score(y_test, predictions):.3f}")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>MAE: 38.42 crore
+R²:  0.110</pre>
+    <p class="note">Honest scorecard: misses shrank from ₹42.17 to ₹38.42 crore, and the model explains about 11% of the variation. Better than dumb — genuinely — but modest. Knowing <em>how many</em> shares traded without knowing <em>at what price</em> only gets you so far.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 7 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 7 OF 12</span>
+  <h3>The classic picture: a straight line through a cloud</h3>
+  <p>This chart is the postcard image of machine learning. We plot a <strong>random sample of 2,000 test deals</strong> (all 29,789 would just make a darker blob) and draw the line the model learned.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 7 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 7: The classic picture — a straight line through a cloud of deals
+sample = test_df.sample(n=2000, random_state=42)   # 2,000 dots are enough for the eye
+
+plt.figure(figsize=(8, 5))
+plt.scatter(sample["quantity"] / 1e5, sample["trade_value_crore"], s=8, alpha=0.35)
+
+line = pd.DataFrame({"quantity": [0, sample["quantity"].max()]})
+plt.plot(line["quantity"] / 1e5, model_one_clue.predict(line), color="red", linewidth=2)
+
+plt.xlabel("quantity (lakh shares)")
+plt.ylabel("deal value (₹ crore)")
+plt.title("Deal value vs quantity, with the fitted straight line")
+plt.show()
+
+slope_per_lakh = model_one_clue.coef_[0] * 1e5
+print(f"The line's rule: start at {model_one_clue.intercept_:.2f} crore,")
+print(f"then add {slope_per_lakh:.2f} crore for every extra lakh shares")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>The line's rule: start at 21.89 crore,
+then add 0.42 crore for every extra lakh shares</pre>
+    <p class="note">…plus a scatter chart: a dense blue blob of dots squashed into the bottom-left corner, a sprinkling of big-deal stragglers above it, and a red line rising gently through the cloud.</p>
+  </div>
+  <div class="callout callout-green">
+    <p><strong>The model's entire brain is two numbers.</strong> Start at ₹21.89 crore, add ₹0.42 crore per lakh shares — that's the whole model. In effect it pretends every share in the market is worth roughly ₹42, plus a flat head start. With real share prices ranging from paise to lakhs, no wonder it's often far off. That's what an 11% R² looks like.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 8 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 8 OF 12</span>
+  <h3>Practical example 2: two clues — quantity and price</h3>
+  <p>Surely adding the <strong>price per share</strong> fixes it? With two clues the model fits the best <em>tilted plane</em> instead of a line — same idea, one more dimension.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 8 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 8: Two clues — quantity AND price together
+two_clues = ["quantity", "price_inr"]
+
+model_two_clues = LinearRegression()
+model_two_clues.fit(train_df[two_clues], y_train)
+
+predictions = model_two_clues.predict(test_df[two_clues])
+print(f"MAE: {mean_absolute_error(y_test, predictions):.2f} crore")
+print(f"R²:  {r2_score(y_test, predictions):.3f}")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>MAE: 36.40 crore
+R²:  0.122</pre>
+    <p class="note">Barely moved: ₹38.42 → ₹36.40 crore, R² 0.110 → 0.122. Both clues are in the model's hands and it still can't crack the problem. Why?</p>
+  </div>
+  <div class="callout">
+    <p><strong>A straight-line model can only weigh and add.</strong> Its guess is always <em>(weight₁ × quantity) + (weight₂ × price) + a constant</em>. But a deal's true value is quantity <em>multiplied by</em> price — 10 lakh shares at ₹2 is ₹2 crore, while 10 lakh shares at ₹2,000 is ₹2,000 crore. Same quantity, wildly different values. No amount of weighing-and-adding can express “multiply these two clues with each other”. The model isn't stupid; the <em>shape</em> we allowed it is too simple.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 9 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 9 OF 12</span>
+  <h3>Feature engineering: build the perfect clue ourselves</h3>
+  <p>If the model can't multiply, <strong>we</strong> can. We create a new column — <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">deal_size</code> = quantity × price ÷ 1,00,00,000 — the deal's value in crore, computed by us. Inventing new clues out of old ones is called <strong>feature engineering</strong>, and it's where real ML projects are won.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 9 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 9: Feature engineering — build the perfect clue ourselves
+# 1 crore = 1,00,00,000 rupees, so: value in crore = quantity × price ÷ 1e7
+train_df["deal_size"] = train_df["quantity"] * train_df["price_inr"] / 1e7
+test_df["deal_size"]  = test_df["quantity"]  * test_df["price_inr"]  / 1e7
+
+three_clues = ["quantity", "price_inr", "deal_size"]
+model_engineered = LinearRegression()
+model_engineered.fit(train_df[three_clues], y_train)
+
+predictions = model_engineered.predict(test_df[three_clues])
+print(f"MAE: {mean_absolute_error(y_test, predictions):.4f} crore")
+print(f"R²:  {r2_score(y_test, predictions):.6f}")
+
+my_deal = pd.DataFrame({"quantity": [2_000_000], "price_inr": [950.0]})
+my_deal["deal_size"] = my_deal["quantity"] * my_deal["price_inr"] / 1e7
+print(f"Invented deal (20 lakh shares at ₹950): predicted ₹{model_engineered.predict(my_deal)[0]:.2f} crore")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>MAE: 0.0000 crore
+R²:  1.000000
+Invented deal (20 lakh shares at ₹950): predicted ₹190.00 crore</pre>
+    <p class="note">From “off by ₹36 crore” to “off by less than ₹1 lakh”, with the same model. The only thing that changed was the clue.</p>
+  </div>
+  <div class="callout">
+    <p><strong>Honest teaching moment: a perfect score is normally a RED FLAG.</strong> In a real project, R² = 1.0 almost always means the answer <em>leaked into the clues</em> — someone accidentally fed the model the very thing it was supposed to predict. That's precisely what we did here, on purpose: in this dataset <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">trade_value_crore</code> literally <em>is</em> quantity × price ÷ 1e7, so our “clue” is the answer wearing a moustache.</p>
+    <p>The real lesson survives the trick: <strong>crafting the right clue matters more than choosing a fancy model.</strong> In real projects you don't know the exact formula — but ratios, logs and differences of existing columns often get you almost-as-good clues. When you see a suspiciously perfect score, don't celebrate. Investigate.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 10 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 10 OF 12</span>
+  <h3>Set an overfitting trap</h3>
+  <p><strong>Overfitting</strong> is the student who memorises last year's question papers — perfect marks in practice, disaster in the real exam. Models do it too: given many clues and few examples, a model starts “explaining” random coincidences. Let's deliberately create those conditions:</p>
+  <ul>
+    <li><strong>Everyday deals only</strong> (₹1–100 crore) — otherwise a few ₹1,000-crore monsters drown out everything we want to show.</li>
+    <li><strong>Hide the price.</strong> Step 9 proved that with quantity <em>and</em> price the game is over — the model just rebuilds the formula. Real projects rarely hand you the full formula, so: quantity only.</li>
+    <li><strong>Only 200 training deals.</strong> With 89,367 examples our models were too well-fed to misbehave. Scarcity invites trouble.</li>
+    <li><strong>Six clues:</strong> quantity wearing four costumes (raw, square root, log, log²) — heavily overlapping — plus two columns of <strong>pure random noise</strong> that mean nothing at all.</li>
+  </ul>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 10 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 10: Set an overfitting trap — few examples, messy overlapping clues
+# Everyday deals only (₹1–100 crore), and this time the model may NOT see the price.
+everyday_train = train_df[train_df["trade_value_crore"].between(1, 100)]
+everyday_test  = test_df[test_df["trade_value_crore"].between(1, 100)]
+
+tiny_train = everyday_train.sample(n=200, random_state=42)   # only 200 deals to learn from
+
+rng = np.random.default_rng(42)
+
+def make_clues(df, rng):
+    clues = pd.DataFrame(index=df.index)
+    clues["quantity"]        = df["quantity"]              # the real clue...
+    clues["sqrt_quantity"]   = np.sqrt(df["quantity"])     # ...and the same clue again,
+    clues["log_quantity"]    = np.log10(df["quantity"])    #    wearing two more costumes
+    clues["log_quantity_sq"] = np.log10(df["quantity"]) ** 2
+    clues["noise_1"]         = rng.normal(size=len(df))    # pure nonsense
+    clues["noise_2"]         = rng.normal(size=len(df))    # more pure nonsense
+    return clues
+
+X_train_wide = make_clues(tiny_train, rng)
+X_test_wide  = make_clues(everyday_test, rng)
+y_train_wide = tiny_train["trade_value_crore"]
+y_test_wide  = everyday_test["trade_value_crore"]
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train_wide)
+X_test_scaled  = scaler.transform(X_test_wide)
+
+print("Training deals:", len(X_train_wide), "| Test deals:", len(X_test_wide))
+print("Clues:", list(X_train_wide.columns))</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Training deals: 200 | Test deals: 20084
+Clues: ['quantity', 'sqrt_quantity', 'log_quantity', 'log_quantity_sq', 'noise_1', 'noise_2']</pre>
+    <p class="note">We scaled the clues (Lesson 01's Step 7 trick) because Ridge and Lasso fine big weights — that only works fairly if all clues speak at the same volume. The exam is still honest: 20,084 unseen test deals.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 11 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 11 OF 12</span>
+  <h3>Ridge and Lasso: penalties that keep weights humble</h3>
+  <p>Plain regression has one goal: fit the training deals as tightly as possible — even if that means wild weights that “explain” noise. <strong>Ridge</strong> and <strong>Lasso</strong> add a fine for big weights, so a weight has to <em>earn its keep</em>:</p>
+  <ul>
+    <li><strong>Ridge (L2):</strong> fines the <em>square</em> of each weight. Shrinks everything towards zero, deletes nothing — an editor who tones down every sentence.</li>
+    <li><strong>Lasso (L1):</strong> fines the <em>size</em> of each weight. Happily pushes useless weights to <strong>exactly zero</strong> — an editor who strikes whole sentences out.</li>
+  </ul>
+  <p>This fining trick has a formal name — <strong>regularisation</strong> — and Ridge and Lasso are its two most famous flavours. The dial <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">alpha</code> sets how harsh the fine is. We settled on alpha=10 for Ridge and alpha=3 for Lasso after a little trial and error.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 11 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 11: Plain regression vs Ridge vs Lasso — same clues, same 200 deals
+plain = LinearRegression().fit(X_train_scaled, y_train_wide)
+ridge = Ridge(alpha=10).fit(X_train_scaled, y_train_wide)
+lasso = Lasso(alpha=3, max_iter=10000, random_state=42).fit(X_train_scaled, y_train_wide)
+
+band_average = [y_train_wide.mean()] * len(y_test_wide)
+print(f"{'Baseline':8s}  MAE: {mean_absolute_error(y_test_wide, band_average):5.2f} crore   R²: {r2_score(y_test_wide, band_average):6.3f}")
+
+for name, model in [("Plain", plain), ("Ridge", ridge), ("Lasso", lasso)]:
+    p = model.predict(X_test_scaled)
+    print(f"{name:8s}  MAE: {mean_absolute_error(y_test_wide, p):5.2f} crore   R²: {r2_score(y_test_wide, p):6.3f}")</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>Baseline  MAE: 15.59 crore   R²: -0.002
+Plain     MAE: 14.43 crore   R²:  0.022
+Ridge     MAE: 14.31 crore   R²:  0.080
+Lasso     MAE: 14.15 crore   R²:  0.126</pre>
+  </div>
+  <div class="callout callout-green">
+    <p><strong>Read the scoreboard:</strong> plain regression, drowning in junk clues with only 200 examples, barely improves on always-guessing-the-average (R² 0.022). Ridge's humility fine rescues it to 0.080, and Lasso — which can throw junk clues away entirely — does best at 0.126. Nobody's a genius here (it's a hard game: mid-range deals, no price), but the penalties clearly stopped the madness.</p>
+    <p><strong>The Lesson 01 confession applies here too:</strong> we compared three models and chose the alpha dials using test-set scores, to keep the lesson short. In a real project you'd tune all of that on a <em>validation</em> slice of the training data, and open the test set exactly once, at the very end.</p>
+  </div>
+</div>
+
+<!-- ================= STEP 12 ================= -->
+<div class="step">
+  <span class="step-chip">STEP 12 OF 12</span>
+  <h3>Look inside: the weights tell the whole story</h3>
+  <p>A linear model is completely transparent — it's just one weight per clue. Let's put the three models' weights side by side.</p>
+  <div class="codecard">
+    <div class="codecard-head"><span class="codecard-title">CELL 12 · PYTHON</span><button class="copy" type="button">Copy</button></div>
+    <pre><code># Step 12: The weights each model put on each clue
+weights = pd.DataFrame({
+    "Plain": plain.coef_,
+    "Ridge": ridge.coef_,
+    "Lasso": lasso.coef_,
+}, index=X_train_wide.columns).round(2) + 0.0   # +0.0 just tidies "-0.00" into "0.00"
+
+print(weights)</code></pre>
+  </div>
+  <div class="receipt">
+    <div class="receipt-label">WHAT YOU SHOULD SEE</div>
+    <pre>                  Plain  Ridge  Lasso
+quantity          12.71  -0.09   0.00
+sqrt_quantity    -39.09   2.31   0.00
+log_quantity    -115.85   3.49   0.00
+log_quantity_sq  151.99   3.93   6.72
+noise_1           -2.56  -2.20   0.00
+noise_2           -2.41  -2.09   0.00</pre>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Model</th><th>What the weights reveal</th></tr>
+      <tr><td><strong>Plain</strong></td><td>Gone wild. A tug-of-war between overlapping clues (−115.85 on one costume of quantity, +151.99 on another, on deals worth ₹1–100 crore!) — and it even bet a couple of crore on the <em>pure-noise</em> columns. It “explained” coincidences in its 200 deals; the exam exposed it.</td></tr>
+      <tr><td><strong>Ridge</strong></td><td>Every weight shrunk to a humble size — but notice it still keeps a small bet on the noise clues. Ridge shrinks; it never deletes.</td></tr>
+      <tr><td><strong>Lasso</strong></td><td>Kept exactly <strong>one</strong> clue and set the other five to exactly 0.00 — including both noise columns. This is <strong>automatic clue selection</strong>, and it's the main reason people reach for Lasso when they have too many features and not enough data.</td></tr>
+    </table>
+  </div>
+  <p>One subtlety: the four quantity costumes carry overlapping information, so <em>which one</em> Lasso keeps is somewhat arbitrary — here it kept <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">log_quantity_sq</code>. The point isn't which costume won; it's that Lasso <em>chose one and binned the rest</em>, all by itself.</p>
+</div>
+
+<section id="judging">
+  <h2>How to judge a regression model — the cheat sheet</h2>
+  <p>The regression version of Lesson 01's four questions:</p>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Question</th><th>Tool</th><th>What to look for</th></tr>
+      <tr><td><strong>1. Better than dumb luck?</strong></td><td>Always-predict-the-average baseline</td><td>Compute its MAE and R² first, every single time (our Step 5). A model that can't beat it has learned nothing.</td></tr>
+      <tr><td><strong>2. How far off, in money?</strong></td><td>MAE</td><td>It's in the units you care about — “off by ₹38 crore on average” is something your gut can judge. Smaller is better.</td></tr>
+      <tr><td><strong>3. How much does it explain?</strong></td><td>R²</td><td>0 = nothing beyond the average, 1 = everything, below 0 = worse than the average. Judge it against the baseline and the problem's difficulty, not against perfection.</td></tr>
+      <tr><td><strong>4. Too perfect?</strong></td><td>Suspicion</td><td>R² ≈ 1.0 usually means the answer leaked into the clues (our Step 9, done deliberately). Don't celebrate a perfect score — investigate it.</td></tr>
+      <tr><td><strong>5. Was the exam fair?</strong></td><td>Train/test split</td><td>All scores must come from the 25% the model never saw. Ours did.</td></tr>
+    </table>
+  </div>
+  <p>Rough R² guide for messy real-world data: <strong>~0</strong> = learned nothing · <strong>0.1–0.4</strong> = found a real pattern (our honest models today lived here) · <strong>0.5–0.9</strong> = strong · <strong>≈1.0</strong> = be suspicious — the answer probably leaked into the clues.</p>
+</section>
+
+<section id="recap">
+  <h2>The recipe you just learned</h2>
+  <ol>
+    <li><strong>Load</strong> the data and <strong>look</strong> at the number you're predicting — averages lie when data is skewed (Steps 2–3)</li>
+    <li><strong>Split</strong> 75% train / 25% test before anything clever (Step 4)</li>
+    <li><strong>Measure the dumb baseline first</strong> — always-predict-the-average (Step 5)</li>
+    <li><strong>Start simple</strong> — one clue, one straight line, and a picture of it (Steps 6–7)</li>
+    <li><strong>Add clues</strong> — but remember a linear model can only weigh-and-add, never multiply (Step 8)</li>
+    <li><strong>Engineer features</strong> — the right derived clue beats a fancier model; a perfect score means a leak (Step 9)</li>
+    <li><strong>Fear overfitting</strong> when clues are many and examples are few — and reach for Ridge (shrinks) or Lasso (deletes) (Steps 10–12)</li>
+  </ol>
+  <p>Swap <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">LinearRegression</code> for any other regression model and steps 1–6 of the recipe don't change. Same skeleton as Lesson 01, different report cards.</p>
+
+  <h3>Homework (optional, fun)</h3>
+  <ul>
+    <li><strong>Try to predict the unpredictable:</strong> re-fit Step 6 with the target flipped — predict <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">price_inr</code> from quantity: <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">LinearRegression().fit(train_df[["quantity"]], train_df["price_inr"])</code> and score it against <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">test_df["price_inr"]</code>. You'll get R² ≈ 0.001 and MAE ≈ ₹429.63 — while always-guessing-the-average scores MAE ≈ ₹430.37. Knowing how many shares traded tells you essentially <em>nothing</em> about the price per share. Some numbers simply aren't predictable from others — and a good analyst finds that out <em>before</em> promising a forecast.</li>
+    <li><strong>Play with the alpha dial:</strong> in Step 11, change Lasso's <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">alpha=3</code> to <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">0.1</code> and re-run Steps 11–12: the fine is now too soft, and the noise clues creep back in (about −2.2 weight each, R² drops to 0.081). Now try <code style="font-family:'IBM Plex Mono',monospace;font-size:15px">30</code>: the fine is so brutal that Lasso zeroes <em>all six</em> clues — MAE 15.59, R² −0.002 — you've reinvented Step 5's always-predict-the-average model. Regularisation is a dial, not magic: too loose lets nonsense in, too tight deletes the truth.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <span>Data: NSE &amp; BSE bulk &amp; block deals, 2020 → today · 1,19,156 rows</span>
+    <span><a href="../">← All lessons</a> · <a href="https://github.com/Sreenivas-Sadhu-Prabhakara/learn-ml-models">Source on GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.codecard').forEach(function (card) {
+  var btn = card.querySelector('.copy');
+  btn.addEventListener('click', function () {
+    var text = card.querySelector('code').innerText;
+    function done() {
+      btn.textContent = 'Copied ✓'; btn.classList.add('done');
+      setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(); done(); });
+    } else { fallback(); done(); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+    }
+  });
+});
+</script>
+</body>
+</html>
